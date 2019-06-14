@@ -39,7 +39,7 @@ rsconnect/
 
 # PROJECT FOLDERS .........................................................
 Figs/
-Input_Data/
+Input_Data/*/
 Output_Data/
 
 # PROJECT FILES ...........................................................

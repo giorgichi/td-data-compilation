@@ -188,6 +188,7 @@ ReadExcelSheets('Input_Data/AGR/STORY Crop Yield Data.xlsx') %>%
   bind_rows() %>%
   select(-contains('Development')) %>%
   rename(year = sheet, plotid = `Plot ID`) %>%
+  filter(plotid %in% c(2, 3, 5, 8, 9, 11)) %>%
   mutate(plotid = as.character(plotid)) %>%
   gather(key, value, -plotid, -year) -> agr_STORY
 

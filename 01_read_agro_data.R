@@ -2,6 +2,7 @@
 source('00_project_settings.R')
 
 
+
 # DOWNLOAD ................................................................
 # Download all agronomic data
 
@@ -16,6 +17,7 @@ for (i in sheets) {
 
 # READ ....................................................................
 # Read each site-data separately
+
 
 # ACRE --------------------------------------------------------------------
 ReadExcelSheets('Input_Data/AGR/ACRE Crop Yield Data.xlsx')
@@ -184,6 +186,7 @@ ReadExcelSheets('Input_Data/AGR/STJOHNS Crop Yield Data.xlsx') %>%
 # STORY -------------------------------------------------------------------
 ReadExcelSheets('Input_Data/AGR/STORY Crop Yield Data.xlsx') %>%
   bind_rows() %>%
+  select(-contains('Development')) %>%
   rename(year = sheet, plotid = `Plot ID`) %>%
   mutate(plotid = as.character(plotid)) %>%
   gather(key, value, -plotid, -year) -> agr_STORY
@@ -230,7 +233,8 @@ ReadExcelSheets('Input_Data/AGR/WILKIN3 Crop Yield Data.xlsx') %>%
 
 
 
-# combnine all data
+# COMBINE .................................................................
+# Combnine all agronomic data
 mget(ls(pattern = 'agr_')) %>%
   bind_rows(.id = 'siteid') %>%
   mutate(siteid = str_remove(siteid, 'agr_')) -> agr_ALL

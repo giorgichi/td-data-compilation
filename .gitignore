@@ -38,7 +38,7 @@ rsconnect/
 
 
 # PROJECT FOLDERS .........................................................
-Figs/
+Figs/*/
 Input_Data/*/*.xlsx
 Output_Data/
 

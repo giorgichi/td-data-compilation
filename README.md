@@ -16,6 +16,6 @@ TD data has been mainly stored in standardized Google Sheets. Some spreadsheets 
 
 The date when the Google Sheet is downloaded from the Google Drive is logged into a file 'log.csv' along with the date when the Google Sheet was updated. 
 
-image: ![](Figs/TD_site_map.png)
+![Map of TD Sites](Figs/TD_site_map_small.png)
   
   

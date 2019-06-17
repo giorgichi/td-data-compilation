@@ -1,6 +1,6 @@
 ## AGR
 
-There are 32 Google Sheets with agronomic data for [TD](../README.md) sites. However not all sites have agronomic data. Few sites have data that needs special processing.
+There are 32 Google Sheets with agronomic data for TD sites. However not all sites actually have agronomic data. Few sites have data that needs special processing.
 
 #### Missing Data (all or some years)
 * BATH_A (missing all years)
@@ -49,14 +49,14 @@ There are 32 Google Sheets with agronomic data for [TD](../README.md) sites. How
     + ACRE
 * __Unclear data and/or variables__
     + SWROC
-* __Yield based on zone of influence [AGRXX]__ 
-    + DEFI_M
-    + HARDIN
-    + HARDIN_NW
-* Corn development data
+* ~~Yield based on zone of influence [AGRXX]~~ 
+    + ~~DEFI_M~~
+    + ~~HARDIN~~
+    + ~~HARDIN_NW~~
+* ~~Corn development data~~
     + ~~STORY~~
-* __Plots to exclude__
-    + STORY has tile flow from plots: 2, 3, 5, 8, 9, 11
+* ~~Plots to exclude~~
+    + ~~STORY has tile flow from plots: 2, 3, 5, 8, 9, 11~~
 * __Plots with multiple treatments (at subplot level)__
     + MUDS1
     + SWROC (N rates)
@@ -65,7 +65,17 @@ There are 32 Google Sheets with agronomic data for [TD](../README.md) sites. How
 
 > Handling of Problematic Data
 
-* Sub-plot level yield data @ ACRE, MUDS1, SWROC and VANWERT
-* Site-average yields @ HICKS_B, 
+* Non-relevant plots at STORY
+    - removed plots 2, 3, 5, 8, 9, 11 (isudatateam/datateam#174)
+* __Sub-plot level yield data @ ACRE, MUDS1, SWROC and VANWERT__
+* __Site-average yields @ HICKS_B, ....__
+* Yield within DWM zone of influence @ DEFI_M, HARDIN and HARDIN_NW
+    - added corresponding variables (isudatateam/datateam#172)
 * Corn development stage @ STORY
-    - we will not publish corn staging data (Lori 2019-06-14)
+    - Lori (2019-06-14): "we will not publish corn staging data" (isudatateam/datateam#171)
+* __Unstandardized variables at SWROC__
+
+For more detials about problem handling and data preparation visit isudatateam at GitHub "Finilizng TD Data" within "Transforming Drainage" project 
+    
+  
+### [BACK TO MAIN PAGE](../README.md)

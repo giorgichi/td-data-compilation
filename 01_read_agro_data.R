@@ -237,7 +237,10 @@ ReadExcelSheets('Input_Data/AGR/WILKIN3 Crop Yield Data.xlsx') %>%
 # COMBINE .................................................................
 # Combnine all agronomic data
 mget(ls(pattern = 'agr_')) %>%
-  bind_rows(.id = 'siteid') %>%
-  mutate(siteid = str_remove(siteid, 'agr_')) -> agr_ALL
+  bind_rows(.id = 'site') %>%
+  filter(site != 'agr_ALL') %>%
+  mutate(siteid = str_remove(site, 'agr_'),
+         site = NULL) %>%
+  select(siteid, plotid, year, key, value)-> agr_ALL
 
 

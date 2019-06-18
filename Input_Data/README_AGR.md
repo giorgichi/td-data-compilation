@@ -43,39 +43,31 @@ There are 32 Google Sheets with agronomic data for TD sites. However not all sit
 * WILKIN3
 
 
-> List of Issues
+> Need to Solve
 
 * __Questionable data__
     + ACRE
 * __Unclear data and/or variables__
     + SWROC
-* ~~Yield based on zone of influence [AGRXX]~~ 
-    + ~~DEFI_M~~
-    + ~~HARDIN~~
-    + ~~HARDIN_NW~~
-* ~~Corn development data~~
-    + ~~STORY~~
-* ~~Plots to exclude~~
-    + ~~STORY has tile flow from plots: 2, 3, 5, 8, 9, 11~~
 * __Plots with multiple treatments (at subplot level)__
     + MUDS1
     + SWROC (N rates)
     + VANWERT (hybrid/cultivar, tillage, foliar fert)
 
 
-> Handling of Problematic Data
+> Issues
 
-* Non-relevant plots at STORY
-    - removed plots 2, 3, 5, 8, 9, 11 (isudatateam/datateam#174)
+* [Non-relevant plots @ STORY](https://github.com/isudatateam/datateam/issues/174)
+    - removed plots 2, 3, 5, 8, 9, 11
 * __Sub-plot level yield data @ ACRE, MUDS1, SWROC and VANWERT__
 * __Site-average yields @ HICKS_B, ....__
-* Yield within DWM zone of influence @ DEFI_M, HARDIN and HARDIN_NW
-    - added corresponding variables (isudatateam/datateam#172)
-* Corn development stage @ STORY
-    - Lori (2019-06-14): "we will not publish corn staging data" (isudatateam/datateam#171)
+* [Yield within DWM zone of influence @ DEFI_M, HARDIN and HARDIN_NW](https://github.com/isudatateam/datateam/issues/172)
+    - added corresponding variables
+* [Corn development stage @ STORY](https://github.com/isudatateam/datateam/issues/171)
+    - Lori (2019-06-14): "we will not publish corn staging data"
 * __Unstandardized variables at SWROC__
 
-For more detials about problem handling and data preparation visit isudatateam at GitHub "Finilizng TD Data" within "Transforming Drainage" project 
-    
+For more detials about problem handling and data preparation visit [isudatateam/datateam issues](https://github.com/isudatateam/datateam/issues) at GitHub (Milstone "Finilizng TD Data" within "Transforming Drainage" project).
+  
   
 ### [BACK TO MAIN PAGE](../README.md)

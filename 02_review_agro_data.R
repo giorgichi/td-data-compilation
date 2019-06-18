@@ -126,6 +126,7 @@ df %>%
   theme_gio2
 
 
+<<<<<<< HEAD
 # Plot Grain TN
 df %>%
   filter(!crop %in% c('Forage', 'Leaf', 'Sugarbeet')) %>%
@@ -175,6 +176,8 @@ df %>%
 ggsave('Figs/AGR/grain_TC.png', width = 10, height = 8)
 
 
+=======
+>>>>>>> b649bbbb2b854c38b47a79bf0d39c3ce4944201b
 
 # Plot Veg Biomass
 df %>%
@@ -182,6 +185,7 @@ df %>%
   filter(str_detect(var, 'vegetative biomass at')) %>%
   ggplot(aes(x=siteid, y=value)) +
   geom_boxplot() +
+<<<<<<< HEAD
   labs(title = 'Vegetative Biomass', 
           x = NULL,
           y = 'Vegetative Biomass, kg/ha') +
@@ -216,3 +220,9 @@ df %>%
   facet_grid(crop ~ ., scales = 'free') +
   theme_gio2
 ggsave('Figs/AGR/vegetative_biomass_TC.png', width = 10, height = 8)
+=======
+  ggtitle('Vegetative Biomass') +
+  facet_grid(crop ~ ., scales = 'free') +
+  theme_gio2
+ggsave('Figs/AGR/vegetative_biomass.png', width = 16, height = 8)
+>>>>>>> b649bbbb2b854c38b47a79bf0d39c3ce4944201b

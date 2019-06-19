@@ -32,7 +32,7 @@ DownloadGoogleSheet <-
 
 # read
 ReadExcelSheets <-
-  function(PATH, GUESS = 10000){
+  function(PATH, GUESS = 30000){
     sheets <- excel_sheets(PATH)
     dl <- vector('list', length = length(sheets))
     for (i in seq_along(sheets)){

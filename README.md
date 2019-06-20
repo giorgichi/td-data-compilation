@@ -10,7 +10,7 @@ TD data has been mainly stored in standardized Google Sheets. Some spreadsheets 
 * [AGR](Input_Data/README_AGR.md)
 * SOIL
 * WATER
-* WEATHER
+* [WEATHER](Input_Date/README_WEATHER.md)
 * OTHER
 * Metadata
 

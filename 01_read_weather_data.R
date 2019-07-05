@@ -333,15 +333,16 @@ ReadExcelSheets('Input_Data/WEATHER/WILKIN1 Weather.xlsx')
 
 
 # WILKIN2 -----------------------------------------------------------------
-ReadExcelSheets('Input_Data/WEATHER/WILKIN2 Weather.xlsx') 
+# ReadExcelSheets('Input_Data/WEATHER/WILKIN2 Weather.xlsx') 
 
 
 # WILKIN3 -----------------------------------------------------------------
-ReadExcelSheets('Input_Data/WEATHER/WILKIN3 Weather.xlsx') 
+# ReadExcelSheets('Input_Data/WEATHER/WILKIN3 Weather.xlsx') 
 
 
 
 # COMBINE .................................................................
+rm(weather_ALL_hourly)
 # Combnine all hourly weather data
 mget(ls(pattern = 'weather_[[:graph:]]+_hourly')) %>%
   map(~ .x %>% gather(key, value, -Date, -Time, -sheet, -starts_with('Station'))) %>%

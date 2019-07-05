@@ -16,10 +16,10 @@ BENTON        1 hr
 CLAY_U       10 min
 CRAWF        30 min
 DEFI_M        - Irregular
-DEFI_R       15 min & 1 hr
+DEFI_R       15 min, 30 min, 1 hr & Irregular
 DIKE          1 hr
 DPAC          1 hr
-FULTON       15 min
+FULTON       30 min
 HARDIN_NW     - Irregular
 HENRY         - Irregular
 HICKORY       1 hr
@@ -27,7 +27,7 @@ HICKS_B       1 hr
 MAASS         1 hr
 SERF_SD       1 hr
 SHEARER       1 hr
-STJOHNS      30 min & Irregular 
+STJOHNS       1 hr 
 TIDE          1 hr
 VANWERT      30 min
 ```
@@ -133,13 +133,18 @@ Wind Direction                              7
 
 > Need to Solve
 
-* __Questionable data__
-    + Hourly `Wind Speed` and `Wind Gust` at DEFI_R, FULTON and VANWERT
 * __Unclear data and/or variables__
     + Daily `Photosynthetically Active Radiation` at TIDE
 
 
 > Issues
+
+#### HOURLY DATA
+
+* __Standartize time intervals__
+    - Make intervals hourly
+
+#### DAILY DATA
 
 * [__Merge variables__](https://github.com/isudatateam/datateam/issues/181)
     - `Relative Humidity` and `Ave Relative Humidity`

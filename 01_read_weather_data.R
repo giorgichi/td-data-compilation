@@ -279,8 +279,7 @@ ReadExcelSheets('Input_Data/WEATHER/SHEARER Weather.xlsx') %>%
 
 # STJOHNS -----------------------------------------------------------------
 ReadExcelSheets('Input_Data/WEATHER/STJOHNS Weather.xlsx') %>%
-  pluck(2) %>%
-  select(-Comments) -> weather_STJOHNS_hourly
+  pluck(2) -> weather_STJOHNS_hourly
 
 ReadExcelSheets('Input_Data/WEATHER/STJOHNS Weather.xlsx') %>%
   pluck(1) -> weather_STJOHNS_daily
@@ -341,6 +340,7 @@ ReadExcelSheets('Input_Data/WEATHER/WILKIN1 Weather.xlsx')
 
 
 
+# ALL ---------------------------------------------------------------------
 # COMBINE .................................................................
 rm(weather_ALL_hourly)
 # Combnine all hourly weather data

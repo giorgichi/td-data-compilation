@@ -141,7 +141,7 @@ Wind Direction                              7
 
 #### HOURLY DATA
 
-* __Standartize time intervals__
+* __Standardize time intervals__
     - Make intervals hourly
 
 #### DAILY DATA
@@ -152,7 +152,8 @@ Wind Direction                              7
     - `Bare Soil Temperature` at 10 cm and 4"
 * [__Drop variables__](https://github.com/isudatateam/datateam/issues/181)
     - `Photosynthetically Active Radiation`
-
+* __Add missing hourly data__
+    - **BENTON**, **DIKE**, **HICKORY**, **SHEARER**, and **DEFI_R (OnSite station)** had only hourly data which need to be aggregated and added to the daily data
 
 
 For more detials about problem handling and data preparation visit [isudatateam/datateam issues](https://github.com/isudatateam/datateam/issues) at GitHub (Milstone "Finilizng TD Data" within "Transforming Drainage" project).

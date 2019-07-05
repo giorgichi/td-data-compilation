@@ -342,8 +342,8 @@ ReadExcelSheets('Input_Data/WEATHER/WILKIN1 Weather.xlsx')
 
 # ALL ---------------------------------------------------------------------
 # COMBINE .................................................................
-rm(weather_ALL_hourly)
 # Combnine all hourly weather data
+rm(weather_ALL_hourly) 
 mget(ls(pattern = 'weather_[[:graph:]]+_hourly')) %>%
   map(~ .x %>% gather(key, value, -Date, -Time, -sheet, -starts_with('Station'))) %>%
   bind_rows(.id = 'site') %>%
@@ -358,17 +358,18 @@ mget(ls(pattern = 'weather_[[:graph:]]+_hourly')) %>%
 
 
 # Combnine all daily weather data
+rm(weather_ALL_daily)
 mget(ls(pattern = 'weather_[[:graph:]]+_daily')) %>%
   map(~ .x %>% gather(key, value, -Date, -sheet, -starts_with('Station'))) %>%
   bind_rows(.id = 'site') %>%
   filter(site != 'weater_ALL_daily') %>%
   mutate(siteid = str_remove(site, 'weather_'),
          siteid = str_remove(siteid, '_daily'),
-         date = as_date(Date)) -> a
-a %>% 
+         date = as_date(Date)) %>%
   select(siteid, station = Station, date, key, value) %>%
-  mutate(key = str_replace(key, 'Refrence', 'Reference')) %>%
-  count(key) %>% tail(15)
+  # correct spelling error
+  mutate(key = str_replace(key, 'Refrence', 'Reference')) ->
+  weather_ALL_daily
 
 
 

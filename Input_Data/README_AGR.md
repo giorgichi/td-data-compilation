@@ -57,15 +57,19 @@ There are 32 Google Sheets with agronomic data for TD sites. However not all sit
 
 > Issues
 
-* [Non-relevant plots @ STORY](https://github.com/isudatateam/datateam/issues/174)
-    - removed plots 2, 3, 5, 8, 9, 11
 * __Sub-plot level yield data @ ACRE, MUDS1, SWROC and VANWERT__
 * __Site-average yields @ HICKS_B, ....__
+* __Unstandardized variables at SWROC__
+
+> Resolved Issues
+
+* [Non-relevant plots @ STORY](https://github.com/isudatateam/datateam/issues/174)
+    - removed plots 2, 3, 5, 8, 9, 11
 * [Yield within DWM zone of influence @ DEFI_M, HARDIN and HARDIN_NW](https://github.com/isudatateam/datateam/issues/172)
     - added corresponding variables
 * [Corn development stage @ STORY](https://github.com/isudatateam/datateam/issues/171)
     - Lori (2019-06-14): "we will not publish corn staging data"
-* __Unstandardized variables at SWROC__
+
 
 For more detials about problem handling and data preparation visit [isudatateam/datateam issues](https://github.com/isudatateam/datateam/issues) at GitHub (Milstone "Finilizng TD Data" within "Transforming Drainage" project).
   

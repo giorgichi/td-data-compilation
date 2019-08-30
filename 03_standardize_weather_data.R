@@ -1,3 +1,13 @@
+# Initialize functions 
+source('00_project_settings.R')
+
+
+# Read weather data
+weather_ALL_hourly <- read_rds('Inter_Data/weather_ALL_hourly.rds')
+weather_ALL_daily <- read_rds('Inter_Data/weather_ALL_daily.rds')
+
+
+
 # HOURLY WEATHER DATA -----------------------------------------------------
 
 # Standartize timestamps (make hourly steps)
@@ -141,6 +151,72 @@ weather_ALL_hourly %>%
   ungroup() %>%
   gather(key, value, -siteid, -station, -date) -> df6
 
+# calculate daily wind gust for WIRSIS sites
+weather_ALL_hourly %>%
+  filter(siteid %in% c('DEFI_R', 'FULTON', 'VANWERT'),
+         str_detect(key, 'Wind Gust')) %>%
+  mutate(date = as_date(tmsp)) %>%
+  group_by(siteid, station, date, key) %>%
+  summarise(count = n(),
+            CHECK = sum(!is.na(value)),
+            value = max(value, na.rm = TRUE)) %>%
+  filter(count > 24 & count < 36)
+  filter(CHECK > 0 & CHECK != count)
+  mutate(value = ifelse(count < 19, NA, value),
+         value = ifelse(is.infinite(value), NA, value)) %>%
+  select(-count) %>%
+  ungroup() -> df7
+
+# calculate daily wind direction for WIRSIS and HICKS_B sites
+weather_ALL_hourly %>%
+  filter(siteid %in% c('DEFI_R', 'FULTON', 'VANWERT', 'HICKS_B'),
+         key %in% c('Wind Direction', 'Wind Speed')) %>%
+  mutate(date = as_date(tmsp)) %>%
+  spread(key, value) %>%
+  mutate(x = `Wind Speed` * cospi(`Wind Direction`/180),
+         y = `Wind Speed` * sinpi(`Wind Direction`/180)) %>%
+  group_by(siteid, station, date) %>%
+  summarise(count = n(),
+            value = max(value, na.rm = TRUE)) %>%
+  mutate(value = ifelse(count < 19, NA, value),
+         value = ifelse(is.infinite(value), NA, value)) %>%
+  select(-count) %>%
+  ungroup() -> df8
+
 # combine with the rest of the daily data
 weather_ALL_daily %>%
-  bind_rows(df5, df6)
+  bind_rows(df5, df6, df7) %>%
+  write_csv('Output_Data/weather_daily_all_variable.csv')
+  
+  # distinct(key, siteid) %>%
+  # count(key) %>% 
+  # write.csv('Output_Data/weather_daily_variable_count_NEW.txt', 
+  #           row.names = FALSE, quote = FALSE)
+
+  # IMPORTANT NOTE: >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+    # SERF_IA ----
+    # there are multiple weather stations to represent on-site data
+    # quality of precipitation data varies and availibility varies accross stations and years
+    # use:
+    # DAILY ISUnetwork (mesonet) for 2014 and forward (station was upgraded in late 2013 to improve data quality)
+    # MANUAL from 2007 to 2013
+    # DAILY LevelRain is actual on-site weather station which was often clogged by bird droppings and other,
+    # hence qaulity of this data is always questionable (Carl does not trust it)
+
+  
+  
+  # drop variables of NO interest
+  filter(!key %in% c('Photosynthetically Active Radiation', 
+                     'Dew-Point Temperature',
+                     'Max Relative Humidity',
+                     'Min Relative Humidity',
+                     'Ave Solar Radiation',
+                     'Max Solar Radiation',
+                     'Min Solar Radiation',
+                     'Max Bare Soil Temperature (2\" depth)',
+                     'Min Bare Soil Temperature (2\" depth)',
+                     'Max Bare Soil Temperature (8\" depth)',
+                     'Min Bare Soil Temperature (8\" depth)')) %>%
+  
+  # filter(key == 'Total Energy Density')
+  count(key) %>% pull(key)

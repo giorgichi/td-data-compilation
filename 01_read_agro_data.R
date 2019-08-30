@@ -243,4 +243,6 @@ mget(ls(pattern = 'agr_')) %>%
          site = NULL) %>%
   select(siteid, plotid, year, key, value)-> agr_ALL
 
+# Save for farther analysis
+write_rds(agr_ALL, 'Inter_Data/agr_ALL.rds')
 

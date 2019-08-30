@@ -372,6 +372,8 @@ mget(ls(pattern = 'weather_[[:graph:]]+_daily')) %>%
   weather_ALL_daily
 
 
-
+# Save weather data for further analysis
+write_rds(weather_ALL_hourly, 'Inter_Data/weather_ALL_hourly.rds')
+write_rds(weather_ALL_daily, 'Inter_Data/weather_ALL_daily.rds')
 
   

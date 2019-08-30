@@ -131,18 +131,11 @@ Wind Direction                              7
 * WILKIN1
 
 
-> Need to Solve
-
-* __Unclear data and/or variables__
-    + Daily `Photosynthetically Active Radiation` at TIDE
-
-
 > Issues
 
 #### HOURLY DATA
 
-* __Standardize time intervals__
-    - Make intervals hourly
+* __Erroneous Air Temp and RH data @ ACRE__
 
 #### DAILY DATA
 
@@ -150,10 +143,18 @@ Wind Direction                              7
     - `Relative Humidity` and `Ave Relative Humidity`
     - `Solar Radiation` and `Ave Solar Radiation`
     - `Bare Soil Temperature` at 10 cm and 4"
-* [__Drop variables__](https://github.com/isudatateam/datateam/issues/181)
+* [__Drop uncommon variables__](https://github.com/isudatateam/datateam/issues/181)
     - `Photosynthetically Active Radiation`
+    - others
 * __Add missing hourly data__
     - **BENTON**, **DIKE**, **HICKORY**, **SHEARER**, and **DEFI_R (OnSite station)** had only hourly data which need to be aggregated and added to the daily data
+
+> Resolved Issues
+
+* [__Standardize time intervals for HOURLY data__](https://github.com/isudatateam/datateam/issues/181)
+    - Make intervals hourly
+* [__Discard unclear or uncommon variables for DAILY data__](https://github.com/isudatateam/datateam/issues/181)
+    + drop: `Photosynthetically Active Radiation`
 
 
 For more detials about problem handling and data preparation visit [isudatateam/datateam issues](https://github.com/isudatateam/datateam/issues) at GitHub (Milstone "Finilizng TD Data" within "Transforming Drainage" project).

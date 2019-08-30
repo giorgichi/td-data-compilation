@@ -1,3 +1,13 @@
+# Initialize functions 
+source('00_project_settings.R')
+
+
+
+# Read All agr data
+agr_ALL <- read_rds('Inter_Data/agr_ALL.rds')
+
+
+
 # Standardize agronomic data
 agr_ALL %>%
   # update variable names

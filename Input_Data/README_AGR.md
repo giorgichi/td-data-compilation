@@ -60,6 +60,7 @@ There are 32 Google Sheets with agronomic data for TD sites. However not all sit
 * __Sub-plot level yield data @ ACRE, MUDS1, SWROC and VANWERT__
 * __Site-average yields @ HICKS_B, ....__
 * __Unstandardized variables at SWROC__
+* __Total Plant vs Vegetative Biomass at MUDS2 and MUDS3_NEW__
 
 > Resolved Issues
 

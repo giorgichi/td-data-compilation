@@ -7,6 +7,45 @@ Water data are organized for simplicity of storing into several groups. There ar
 * Water Quality
 
 
+
+### Water Table Data
+There are 20 Google Sheets for storing water table data, and two of them belongs to the same site (DEFI_R). Therefore there are 19 sites with Water Table sheets, but currently 4 of them have no data.
+
+All of them are hourly, except the data from Iowa Saturated Buffer sites and manual readings at DEFI_R, which are reported as daily. Hence, water table data is grouped into **DAILY** and **HOURLY** sets. 
+
+```
+SITE        FREQUENCY
+ACRE         Hourly
+BATH_A       No Data 
+BEAR         Daily
+BEAR2        Daily
+CLAY_C       Hourly
+CLAY_R       Hourly
+CLAY_U       Hourly
+DEFI_R       Daily (manual reading)
+DEFI_R       Hourly
+DPAC         Hourly
+FAIRM        Hourly
+HICKS_B      Hourly
+HICKS_P      No Data
+MAASS        Daily
+SERF_IA      Hourly
+SERF_SD      Hourly
+STJOHNS      Hourly
+TIDE         Hourly
+WILKIN1      No Data
+WILKIN3      No Data
+```
+
+
+### Water Quality Data
+There are 38 Google Sheets for storing water quality (**WQ**) data, and two of them belongs to the same site (DEFI_R). Therefore there are 37 sites with WQ sheets, but currently 6 of them have no data.
+
+All of them are daily, except 7 sites (HICKS_B, UBWC, WIRSIS, WILKIN1, WILKIN2), which have data with higher frequency or timestamp. Dispite of this difference, water table data is combined in a single file by having separate columns for date and time. 
+
+
+
+
 ## THIS IS FROM WEATHER DATA
 There are 37 Google Sheets for storing weather data. However not all sites actually have the data. Few sites have data that needs special processing including cleaning, unit conversion, and other.
 
@@ -14,77 +53,13 @@ Weather data is grouped into **DAILY** and **HOURLY** sets. Each one contains di
 
 ### Hourly Data
 There are 22 sites with **hourly weather data**.  Measurement frequency ranges from 10 mins to 1 hour. Several sites, all located in OH, have reported weather data (mainly precipitation) at irregular intervals. 
-```
-SITE        FREQUENCY
-ACRE          1 hr
-AUGLA         - Irregular
-BEAR          1 hr
-BEAR2         1 hr
-BENTON        1 hr
-CLAY_U       10 min
-CRAWF        30 min
-DEFI_M        - Irregular
-DEFI_R       15 min, 30 min, 1 hr & Irregular
-DIKE          1 hr
-DPAC          1 hr
-FULTON       30 min
-HARDIN_NW     - Irregular
-HENRY         - Irregular
-HICKORY       1 hr
-HICKS_B       1 hr
-MAASS         1 hr
-SERF_SD       1 hr
-SHEARER       1 hr
-STJOHNS       1 hr 
-TIDE          1 hr
-VANWERT      30 min
-```
 
-Only 7 variables constitute the hourly weather data.
-```
-VARIABLES           NUMBER_OF_SITES
-Air Temperature            13
-Precipitation              22
-Relative Humidity           5
-Solar Radiation             6
-Wind Direction              4
-Wind Gust                   3
-Wind Speed                  6
-```
 
 ### Daily Data
 Currently there are 31 sites with **daily weather data**. Sites that have only hourly data (BENTON, DIKE, HICKORY, SHEARER) can be aggregated into daily and added to the daily weather data.
 
 The daily weather data is comprised of 36 origianl variables. Some of them are redundant and will be merged or removed as data gets finilized.
-```
-VARIABLE                             NUMBER_OF_SITES
-Precipitation                              31
-Snowfall                                    2
-Pan Evaporation                             2
-Reference ET                                3
-Reference ET (Penman-Monteith)              1
-Reference ET (Short Crop)                   3
-Reference ET (Short Grass)                  1
-Reference ET (Tall Grass)                   1
-Relative Humidity                          10
-Ave Relative Humidity                       1
-Min Relative Humidity                       1
-Max Relative Humidity                       1
-Ave Air Temperature                        14
-Min Air Temperature                        18
-Max Air Temperature                        18
-Dew-Point Temperature                       1
-Ave Solar Radiation                         1
-Min Solar Radiation                         1
-Max Solar Radiation                         1
-Photosynthetically Active Radiation         1
-Total Energy Density                        1
-Wind Speed                                 12
-Max Wind Speed                              5
-Wind Gust                                   1
-Wind Run                                    2
-Wind Direction                              7
-```
+
 
 
 #### Missing Data (all or some years)

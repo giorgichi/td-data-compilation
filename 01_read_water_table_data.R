@@ -78,7 +78,7 @@ ReadExcelSheets('Input_Data/WATER/WATER_TABLE/DPAC Water Table Depth.xlsx') %>%
 ReadExcelSheets('Input_Data/WATER/WATER_TABLE/DEFI_R Water Table Depth 2000-2007 manual readings.xlsx') %>%
   bind_rows() %>%
   mutate(date = as.Date(DATE)) %>%
-  # NEED TO incorporate comments: remove data from frozen wells
+  # Remove data from frozen wells (see the commetns)
   gather(key, value, contains('WAT4')) %>%
   mutate(value = ifelse(date %in% ymd(20001122, 20010109), NA, value),
          value = ifelse(date == ymd(20010117) & 
@@ -137,7 +137,7 @@ ReadExcelSheets('Input_Data/WATER/WATER_TABLE/SERF_SD Water Table Depth.xlsx') %
 
 # STJOHNS -----------------------------------------------------------------
 ReadExcelSheets('Input_Data/WATER/WATER_TABLE/STJOHNS Water Table Depth.xlsx') %>%
-  # NEED TO remove 2010 since it was impossible to calculate water table from elevation data
+  # Remove 2010 since it was impossible to calculate water table from elevation data
   .[-1] %>%
   bind_rows() %>%
   mutate(tmsp = Date) %>%

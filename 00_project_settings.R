@@ -43,7 +43,7 @@ ReadExcelSheets <-
                             col_names = column_names, 
                             cell_limits(c(3, 1), c(NA, length(column_names))), 
                             guess_max = GUESS,
-                            na = c('NA', 'N/A', 'n/a', 'dnc', 'NaN', 
+                            na = c('NA', 'N/A', 'n/a', 'dnc', 'NaN', 'nd', 
                                    'did not collect', 'not collected')) %>%
         mutate(sheet = sheets[i])
     }

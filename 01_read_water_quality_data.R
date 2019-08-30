@@ -21,184 +21,232 @@ for (i in sheets) {
 
 
 # ACRE --------------------------------------------------------------------
-ReadExcelSheets('Input_Data/WATER/WQ/ACRE Water Table Depth.xlsx') %>%
-  bind_rows() %>%
-  mutate(tmsp = Date) %>%
-  select(tmsp, contains('WAT4 Water')) -> wq_ACRE_hourly
+ReadExcelSheets('Input_Data/WATER/WQ/ACRE WQ.xlsx') %>%
+  map(.x = ., .f =  ~ .x %>% mutate_at(vars(contains("WAT")), as.character)) %>%
+  bind_rows()  -> wq_ACRE
 
 
 # AUGLA -------------------------------------------------------------------
+ReadExcelSheets('Input_Data/WATER/WQ/AUGLA WQ.xlsx') %>%
+  map(.x = ., .f =  ~ .x %>% mutate_at(vars(contains("WAT")), as.character)) %>%
+  bind_rows() -> wq_AUGLA
 
 
 # BATH_A ------------------------------------------------------------------
-ReadExcelSheets('Input_Data/WATER/WQ/BATH_A Water Table Depth.xlsx')
+ReadExcelSheets('Input_Data/WATER/WQ/BATH_A WQ.xlsx')
 
 
 # BEAR --------------------------------------------------------------------
-ReadExcelSheets('Input_Data/WATER/WQ/BEAR Water Table Depth.xlsx') %>%
-  bind_rows() %>%
-  mutate(date = as.Date(Date)) %>%
-  select(date, contains('WAT4 Water')) -> wq_BEAR_daily
+ReadExcelSheets('Input_Data/WATER/WQ/BEAR WQ.xlsx') %>%
+  map(.x = ., .f =  ~ .x %>% mutate_at(vars(contains("WAT")), as.character)) %>%
+  bind_rows() -> wq_BEAR
 
 
 # BEAR2 -------------------------------------------------------------------
-# Water table is reported from the ground surface -> Dan is going to update it
-# Also, there are 4 measurements per day with no clear timestamp - Need to ask Dan
-ReadExcelSheets('Input_Data/WATER/WQ/BEAR2 Water Table Depth.xlsx') %>%
-  bind_rows() %>%
-  mutate(date = as.Date(Date)) %>%
-  select(date, contains('WAT4 Water')) #-> wq_BEAR2_daily
+ReadExcelSheets('Input_Data/WATER/WQ/BEAR2 WQ.xlsx') %>%
+  map(.x = ., .f =  ~ .x %>% mutate_at(vars(contains("WAT")), as.character)) %>%
+  bind_rows() -> wq_BEAR2
 
 
 # BENTON ------------------------------------------------------------------
+ReadExcelSheets('Input_Data/WATER/WQ/BENTON WQ.xlsx') %>%
+  map(.x = ., .f =  ~ .x %>% mutate_at(vars(contains("WAT")), as.character)) %>%
+  bind_rows() -> wq_BENTON
 
 
 # CLAY_C ------------------------------------------------------------------
-ReadExcelSheets('Input_Data/WATER/WQ/CLAY_C Water Table Depth.xlsx') %>%
+ReadExcelSheets('Input_Data/WATER/WQ/CLAY_C WQ.xlsx') %>%
+  map(.x = ., .f =  ~ .x %>% mutate_at(vars(contains("WAT")), as.character)) %>%
   bind_rows() %>%
-  mutate(tmsp = Date) %>%
-  select(tmsp, contains('WAT4 Water')) -> wq_CLAY_C_hourly
+  filter(!is.na(Date)) -> wq_CLAY_C
 
 
 # CLAY_R ------------------------------------------------------------------
-ReadExcelSheets('Input_Data/WATER/WQ/CLAY_R Water Table Depth.xlsx') %>%
-  bind_rows()  %>%
-  mutate(tmsp = Date) %>%
-  select(tmsp, contains('WAT4 Water')) -> wq_CLAY_R_hourly
+ReadExcelSheets('Input_Data/WATER/WQ/CLAY_R WQ.xlsx') %>%
+  map(.x = ., .f =  ~ .x %>% mutate_at(vars(contains("WAT")), as.character)) %>%
+  bind_rows() -> wq_CLAY_R
 
 
 # CRAWF -------------------------------------------------------------------
-ReadExcelSheets('Input_Data/WATER/WQ/CLAY_U Water Table Depth.xlsx') %>%
-  bind_rows() %>%
-  mutate(tmsp = Date) %>%
-  select(tmsp, contains('WAT4 Water')) -> wq_CRAWF_hourly
+ReadExcelSheets('Input_Data/WATER/WQ/CRAWF WQ.xlsx') %>%
+  map(.x = ., .f =  ~ .x %>% mutate_at(vars(contains("WAT")), as.character)) %>%
+  bind_rows() -> wq_CRAWF
 
 
 # DPAC --------------------------------------------------------------------
-ReadExcelSheets('Input_Data/WATER/WQ/DPAC Water Table Depth.xlsx') %>%
-  bind_rows() %>%
-  mutate(tmsp = Date) %>%
-  select(tmsp, contains('WAT4 Water')) -> wq_DPAC_hourly
+ReadExcelSheets('Input_Data/WATER/WQ/DPAC WQ.xlsx') %>%
+  map(.x = ., .f =  ~ .x %>% mutate_at(vars(contains("WAT")), as.character)) %>%
+  bind_rows() -> wq_DPAC
 
 
 # DEFI_M ------------------------------------------------------------------
-ReadExcelSheets('Input_Data/WATER/WQ/DEFI_R Water Table Depth 2003-2007 from leveloggers.xlsx') %>%
-  bind_rows() %>%
-  mutate(tmsp = `DATE&TIME`) %>%
-  select(tmsp, contains('WAT4')) -> wq_DEFI_R_hourly
+ReadExcelSheets('Input_Data/WATER/WQ/DEFI_M WQ.xlsx') %>%
+  map(.x = ., .f =  ~ .x %>% mutate_at(vars(contains("WAT")), as.character)) %>%
+  bind_rows() -> wq_DEFI_M
 
 
-# DEFI_R ------------------------------------------------------------------
-ReadExcelSheets('Input_Data/WATER/WQ/DEFI_R Water Table Depth 2000-2007 manual readings.xlsx') %>%
-  bind_rows() -> wq_DEFI_R_daily
+# Help >>> DEFI_R ------------------------------------------------------------------
+ReadExcelSheets('Input_Data/WATER/WQ/DEFI_R WQ 1999-2008.xlsx') %>%
+  # NEED a lot to standardize
+  bind_rows() #-> wq_DEFI_R
+
+ReadExcelSheets('Input_Data/WATER/WQ/DEFI_R WQ 2000-2007 Lysimeter.xlsx') %>%
+  # NEED This is unique data, maybe with soil data?
+  bind_rows() #-> wq_DEFI_R_lysimeter
 
 
 # DIKE --------------------------------------------------------------------
+ReadExcelSheets('Input_Data/WATER/WQ/DIKE WQ.xlsx') %>%
+  map(.x = ., .f =  ~ .x %>% mutate_at(vars(contains("WAT")), as.character)) %>%
+  bind_rows() -> wq_DIKE
 
 
 # FAIRM ------------------------------------------------------------------
-ReadExcelSheets('Input_Data/WATER/WQ/FAIRM Water Table Depth.xlsx') %>%
-  bind_rows() %>%
-  mutate(tmsp = Date) %>%
-  select(tmsp, contains('WAT4 Water')) -> wq_FAIRM_hourly
+ReadExcelSheets('Input_Data/WATER/WQ/FAIRM WQ.xlsx') %>%
+  map(.x = ., .f =  ~ .x %>% mutate_at(vars(contains("WAT")), as.character)) %>%
+  bind_rows() -> wq_FAIRM
 
 
-# FULTON ------------------------------------------------------------------
+# Help >>> FULTON ------------------------------------------------------------------
+ReadExcelSheets('Input_Data/WATER/WQ/FULTON WQ 2000-2009.xlsx') %>%
+  # NEED a lot of standardization
+  bind_rows() #-> wq_FULTON
 
 
 # HARDIN ------------------------------------------------------------------
+ReadExcelSheets('Input_Data/WATER/WQ/HARDIN WQ.xlsx') %>%
+  map(.x = ., .f =  ~ .x %>% mutate_at(vars(contains("WAT")), as.character)) %>%
+  bind_rows() -> wq_HARDIN
 
 
 # HARDIIN_NW --------------------------------------------------------------
+ReadExcelSheets('Input_Data/WATER/WQ/HARDIN_NW WQ.xlsx') 
 
 
 # HENRY -------------------------------------------------------------------
+ReadExcelSheets('Input_Data/WATER/WQ/HENRY WQ.xlsx')
 
 
-# HICKS_B -----------------------------------------------------------------
-ReadExcelSheets('Input_Data/WATER/WQ/HICKS_B Water Table Depth.xlsx') %>%
+# Help >>> HICKS_B -----------------------------------------------------------------
+ReadExcelSheets('Input_Data/WATER/WQ/HICKS_B WQ.xlsx') %>%
+  map(.x = ., .f =  ~ .x %>% mutate_at(vars(contains("WAT")), as.character)) %>%
+  # NEED some modification and UPDATED data
   bind_rows() %>%
-  mutate(tmsp = Date) %>%
-  select(tmsp, contains('WAT4 Water')) -> wq_HICKS_B_hourly
+  filter(!is.na(Date)) -> wq_HICKS_B
 
 
 # HICKORY -----------------------------------------------------------------
-ReadExcelSheets('Input_Data/WATER/WQ/HICKORY Water Table Depth.xlsx') 
+ReadExcelSheets('Input_Data/WATER/WQ/HICKORY WQ.xlsx') %>%
+  map(.x = ., .f =  ~ .x %>% mutate_at(vars(contains("WAT")), as.character)) %>%
+  bind_rows() -> wq_HICKORY
 
 
 # MAASS -------------------------------------------------------------------
-ReadExcelSheets('Input_Data/WATER/WQ/MAASS Water Table Depth.xlsx') %>%
-  bind_rows() %>%
-  mutate(date = as.Date(Date)) %>%
-  select(date, contains('WAT4 Water')) -> wq_MAASS_daily
+ReadExcelSheets('Input_Data/WATER/WQ/MAASS WQ.xlsx') %>%
+  map(.x = ., .f =  ~ .x %>% mutate_at(vars(contains("WAT")), as.character)) %>%
+  bind_rows() -> wq_MAASS
 
 
 # MUDS2 -------------------------------------------------------------------
+ReadExcelSheets('Input_Data/WATER/WQ/MUDS2 WQ.xlsx')
 
 
 # MUDS3_NEW ---------------------------------------------------------------
+ReadExcelSheets('Input_Data/WATER/WQ/MUDS3_NEW WQ.xlsx')
 
 
 # MUDS3_OLD ---------------------------------------------------------------
+ReadExcelSheets('Input_Data/WATER/WQ/MUDS3_OLD WQ.xlsx') %>%
+  map(.x = ., .f =  ~ .x %>% mutate_at(vars(contains("WAT")), as.character)) %>%
+  bind_rows() -> wq_MUDS3_OLD
 
 
 # MUDS4 -------------------------------------------------------------------
+ReadExcelSheets('Input_Data/WATER/WQ/MUDS4 WQ.xlsx')
 
 
 # SERF_IA -----------------------------------------------------------------
-ReadExcelSheets('Input_Data/WATER/WQ/SERF_IA Water Table Depth.xlsx') %>%
-  bind_rows() %>%
-  mutate(tmsp = Date) %>%
-  select(tmsp, contains('WAT4 Water')) -> wq_SERF_IA_hourly
+ReadExcelSheets('Input_Data/WATER/WQ/SERF_IA WQ.xlsx') %>%
+  map(.x = ., .f =  ~ .x %>% mutate_at(vars(contains("WAT")), as.character)) %>%
+  bind_rows() -> wq_SERF_IA
 
 
 # SERF_SD -----------------------------------------------------------------
-ReadExcelSheets('Input_Data/WATER/WQ/SERF_SD Water Table Depth.xlsx') %>%
-  bind_rows() %>%
-  mutate(tmsp = update(Date, hour = hour(Time), minute = minute(Time))) %>%
-  select(tmsp, contains('WAT4 Water')) -> wq_SERF_SD_hourly
+ReadExcelSheets('Input_Data/WATER/WQ/SERF_SD WQ.xlsx') %>%
+  map(.x = ., .f =  ~ .x %>% mutate_at(vars(contains("WAT")), as.character)) %>%
+  bind_rows() -> wq_SERF_SD
 
 
 # SHEARER -----------------------------------------------------------------
+ReadExcelSheets('Input_Data/WATER/WQ/SHEARER WQ.xlsx') %>%
+  map(.x = ., .f =  ~ .x %>% mutate_at(vars(contains("WAT")), as.character)) %>%
+  bind_rows() -> wq_SHEARER
 
 
-# STJOHNS -----------------------------------------------------------------
-ReadExcelSheets('Input_Data/WATER/WQ/STJOHNS Water Table Depth.xlsx') %>%
-  # NEED TO remove 2010 since it was impossible to calculate water table from elevation data
-  .[-1] %>%
-  bind_rows() %>%
-  mutate(tmsp = Date) %>%
-  select(tmsp, contains('WAT4 Water')) -> wq_STJOHNS_hourly
+# Help >>> STJOHNS -----------------------------------------------------------------
+ReadExcelSheets('Input_Data/WATER/WQ/STJOHNS WQ.xlsx') %>%
+  map(.x = ., .f =  ~ .x %>% mutate_at(vars(contains("WAT")), as.character)) %>%
+  # NEED to handle sample types, Maybe
+  bind_rows() -> wq_STJOHNS
 
 
-# STORY -------------------------------------------------------------------
+# Help >>> STORY -------------------------------------------------------------------
+ReadExcelSheets('Input_Data/WATER/WQ/STORY WQ.xlsx') %>%
+  map(.x = ., .f =  ~ .x %>% mutate_at(vars(contains("WAT")), as.character)) %>%
+  # NEED to remove plots that are not part of the TD Project
+  bind_rows() -> wq_STORY
 
 
-# SWROC -------------------------------------------------------------------
+# Help >>> SWROC -------------------------------------------------------------------
+ReadExcelSheets('Input_Data/WATER/WQ/SWROC WQ.xlsx') %>%
+  # remove sheet with metadata
+  .[-1] %>% 
+  # NEED TO CHECK METADATA PAGE
+  map(.x = ., .f =  ~ .x %>% mutate_at(vars(contains("WAT")), as.character)) %>%
+  bind_rows() -> wq_SWROC
 
 
-# TIDE --------------------------------------------------------------------
-ReadExcelSheets('Input_Data/WATER/WQ/TIDE Water Table Depth.xlsx') %>%
-  bind_rows() %>%
-  mutate(tmsp = Date) %>%
-  select(tmsp, contains('WAT4 Water')) -> wq_TIDE_hourly
+# Help >>> TIDE --------------------------------------------------------------------
+ReadExcelSheets('Input_Data/WATER/WQ/TIDE WQ.xlsx') %>%
+  map(.x = ., .f =  ~ .x %>% mutate_at(vars(contains("WAT")), as.character)) %>%
+  # NEED to remove variables that are not reported for any year
+  bind_rows() -> wq_TIDE
 
 
-# UBWC --------------------------------------------------------------------
+# Help >>> UBWC --------------------------------------------------------------------
+ReadExcelSheets('Input_Data/WATER/WQ/UBWC WQ.xlsx') %>%
+  map(.x = ., .f =  ~ .x %>% mutate_at(vars(contains("WAT")), as.character)) %>%
+  # NEED to handle timestamp, otherwise it's ok
+  bind_rows() -> wq_UBWC
 
 
-# VANWERT -----------------------------------------------------------------
+# Help >>> VANWERT -----------------------------------------------------------------
+ReadExcelSheets('Input_Data/WATER/WQ/VANWERT WQ 2001-2009.xlsx') %>%
+  # NEED a lot of standardization
+  bind_rows() #-> wq_VANWERT
 
 
-# WILKIN1 -----------------------------------------------------------------
-ReadExcelSheets('Input_Data/WATER/WQ/WILKIN1 Water Table Depth.xlsx') 
+# Help >>> WILKIN1 -----------------------------------------------------------------
+ReadExcelSheets('Input_Data/WATER/WQ/WILKIN1 WQ.xlsx') %>%
+  map(.x = ., .f =  ~ .x %>% mutate_at(vars(contains("WAT")), as.character)) %>%
+  # NEED to handle 'BDL' values
+  # Has timestamp as a separate option 
+  bind_rows() -> wq_WILKIN1
 
 
-# WILKIN2 -----------------------------------------------------------------
+# Help >>> WILKIN2 -----------------------------------------------------------------
+ReadExcelSheets('Input_Data/WATER/WQ/WILKIN2 WQ.xlsx') %>%
+  map(.x = ., .f =  ~ .x %>% mutate_at(vars(contains("WAT")), as.character)) %>%
+  # NEED to handle 'BDL' values
+  # Has timestamp as a separate option 
+  bind_rows() -> wq_WILKIN2
 
 
-# WILKIN3 -----------------------------------------------------------------
-ReadExcelSheets('Input_Data/WATER/WQ/WILKIN3 Water Table Depth.xlsx') 
+# Help >>> WILKIN3 -----------------------------------------------------------------
+ReadExcelSheets('Input_Data/WATER/WQ/WILKIN3 WQ.xlsx') %>%
+  map(.x = ., .f =  ~ .x %>% mutate_at(vars(contains("WAT")), as.character)) %>%
+  # NEED to handle 'BDL' and other comments like 'no water' 
+  bind_rows() -> wq_WILKIN3
 
 
 

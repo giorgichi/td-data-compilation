@@ -15,6 +15,14 @@ for (i in sheets) {
 }
 
 
+transform_df <- function(df) {
+  df %>%
+    gather(key, value, contains('WAT')) %>%
+    separate(key, into = c('plotid', 'var'), extra = 'merge', sep = ' ') %>%
+    filter(!is.na(value))
+}
+
+
 
 # READ ....................................................................
 # Read each site-data separately
@@ -23,13 +31,15 @@ for (i in sheets) {
 # ACRE --------------------------------------------------------------------
 ReadExcelSheets('Input_Data/WATER/WQ/ACRE WQ.xlsx') %>%
   map(.x = ., .f =  ~ .x %>% mutate_at(vars(contains("WAT")), as.character)) %>%
-  bind_rows()  -> wq_ACRE
+  bind_rows() %>%
+  transform_df() -> wq_ACRE
 
 
 # AUGLA -------------------------------------------------------------------
 ReadExcelSheets('Input_Data/WATER/WQ/AUGLA WQ.xlsx') %>%
   map(.x = ., .f =  ~ .x %>% mutate_at(vars(contains("WAT")), as.character)) %>%
-  bind_rows() -> wq_AUGLA
+  bind_rows() %>%
+  transform_df() -> wq_AUGLA
 
 
 # BATH_A ------------------------------------------------------------------
@@ -39,50 +49,58 @@ ReadExcelSheets('Input_Data/WATER/WQ/BATH_A WQ.xlsx')
 # BEAR --------------------------------------------------------------------
 ReadExcelSheets('Input_Data/WATER/WQ/BEAR WQ.xlsx') %>%
   map(.x = ., .f =  ~ .x %>% mutate_at(vars(contains("WAT")), as.character)) %>%
-  bind_rows() -> wq_BEAR
+  bind_rows()  %>%
+  transform_df() -> wq_BEAR
 
 
 # BEAR2 -------------------------------------------------------------------
 ReadExcelSheets('Input_Data/WATER/WQ/BEAR2 WQ.xlsx') %>%
   map(.x = ., .f =  ~ .x %>% mutate_at(vars(contains("WAT")), as.character)) %>%
-  bind_rows() -> wq_BEAR2
+  bind_rows() %>%
+  transform_df() -> wq_BEAR2
 
 
 # BENTON ------------------------------------------------------------------
 ReadExcelSheets('Input_Data/WATER/WQ/BENTON WQ.xlsx') %>%
   map(.x = ., .f =  ~ .x %>% mutate_at(vars(contains("WAT")), as.character)) %>%
-  bind_rows() -> wq_BENTON
+  bind_rows() %>%
+  transform_df() -> wq_BENTON
 
 
 # CLAY_C ------------------------------------------------------------------
 ReadExcelSheets('Input_Data/WATER/WQ/CLAY_C WQ.xlsx') %>%
   map(.x = ., .f =  ~ .x %>% mutate_at(vars(contains("WAT")), as.character)) %>%
   bind_rows() %>%
-  filter(!is.na(Date)) -> wq_CLAY_C
+  filter(!is.na(Date)) %>%
+  transform_df() -> wq_CLAY_C
 
 
 # CLAY_R ------------------------------------------------------------------
 ReadExcelSheets('Input_Data/WATER/WQ/CLAY_R WQ.xlsx') %>%
   map(.x = ., .f =  ~ .x %>% mutate_at(vars(contains("WAT")), as.character)) %>%
-  bind_rows() -> wq_CLAY_R
+  bind_rows() %>%
+  transform_df() -> wq_CLAY_R
 
 
 # CRAWF -------------------------------------------------------------------
 ReadExcelSheets('Input_Data/WATER/WQ/CRAWF WQ.xlsx') %>%
   map(.x = ., .f =  ~ .x %>% mutate_at(vars(contains("WAT")), as.character)) %>%
-  bind_rows() -> wq_CRAWF
+  bind_rows() %>%
+  transform_df() -> wq_CRAWF
 
 
 # DPAC --------------------------------------------------------------------
 ReadExcelSheets('Input_Data/WATER/WQ/DPAC WQ.xlsx') %>%
   map(.x = ., .f =  ~ .x %>% mutate_at(vars(contains("WAT")), as.character)) %>%
-  bind_rows() -> wq_DPAC
+  bind_rows() %>%
+  transform_df() -> wq_DPAC
 
 
 # DEFI_M ------------------------------------------------------------------
 ReadExcelSheets('Input_Data/WATER/WQ/DEFI_M WQ.xlsx') %>%
   map(.x = ., .f =  ~ .x %>% mutate_at(vars(contains("WAT")), as.character)) %>%
-  bind_rows() -> wq_DEFI_M
+  bind_rows() %>%
+  transform_df() -> wq_DEFI_M
 
 
 # Help >>> DEFI_R ------------------------------------------------------------------
@@ -98,13 +116,15 @@ ReadExcelSheets('Input_Data/WATER/WQ/DEFI_R WQ 2000-2007 Lysimeter.xlsx') %>%
 # DIKE --------------------------------------------------------------------
 ReadExcelSheets('Input_Data/WATER/WQ/DIKE WQ.xlsx') %>%
   map(.x = ., .f =  ~ .x %>% mutate_at(vars(contains("WAT")), as.character)) %>%
-  bind_rows() -> wq_DIKE
+  bind_rows() %>%
+  transform_df() -> wq_DIKE
 
 
 # FAIRM ------------------------------------------------------------------
 ReadExcelSheets('Input_Data/WATER/WQ/FAIRM WQ.xlsx') %>%
   map(.x = ., .f =  ~ .x %>% mutate_at(vars(contains("WAT")), as.character)) %>%
-  bind_rows() -> wq_FAIRM
+  bind_rows() %>%
+  transform_df() -> wq_FAIRM
 
 
 # Help >>> FULTON ------------------------------------------------------------------
@@ -116,7 +136,8 @@ ReadExcelSheets('Input_Data/WATER/WQ/FULTON WQ 2000-2009.xlsx') %>%
 # HARDIN ------------------------------------------------------------------
 ReadExcelSheets('Input_Data/WATER/WQ/HARDIN WQ.xlsx') %>%
   map(.x = ., .f =  ~ .x %>% mutate_at(vars(contains("WAT")), as.character)) %>%
-  bind_rows() -> wq_HARDIN
+  bind_rows() %>%
+  transform_df() -> wq_HARDIN
 
 
 # HARDIIN_NW --------------------------------------------------------------
@@ -132,19 +153,28 @@ ReadExcelSheets('Input_Data/WATER/WQ/HICKS_B WQ.xlsx') %>%
   map(.x = ., .f =  ~ .x %>% mutate_at(vars(contains("WAT")), as.character)) %>%
   # NEED some modification and UPDATED data
   bind_rows() %>%
-  filter(!is.na(Date)) -> wq_HICKS_B
+  filter(!is.na(Date)) %>%
+  gather(key, value, -Date, -sheet) %>%
+  # There are some duplicated measurements that need to be averaged
+  group_by(Date, sheet, key)
+
+  # separate(key, into = c('plotid', 'var'), extra = 'merge', sep = ' ') %>%
+  # spread(var, value)
+  # -> wq_HICKS_B
 
 
 # HICKORY -----------------------------------------------------------------
 ReadExcelSheets('Input_Data/WATER/WQ/HICKORY WQ.xlsx') %>%
   map(.x = ., .f =  ~ .x %>% mutate_at(vars(contains("WAT")), as.character)) %>%
-  bind_rows() -> wq_HICKORY
+  bind_rows() %>%
+  transform_df() -> wq_HICKORY
 
 
 # MAASS -------------------------------------------------------------------
 ReadExcelSheets('Input_Data/WATER/WQ/MAASS WQ.xlsx') %>%
   map(.x = ., .f =  ~ .x %>% mutate_at(vars(contains("WAT")), as.character)) %>%
-  bind_rows() -> wq_MAASS
+  bind_rows() %>%
+  transform_df() -> wq_MAASS
 
 
 # MUDS2 -------------------------------------------------------------------
@@ -158,7 +188,8 @@ ReadExcelSheets('Input_Data/WATER/WQ/MUDS3_NEW WQ.xlsx')
 # MUDS3_OLD ---------------------------------------------------------------
 ReadExcelSheets('Input_Data/WATER/WQ/MUDS3_OLD WQ.xlsx') %>%
   map(.x = ., .f =  ~ .x %>% mutate_at(vars(contains("WAT")), as.character)) %>%
-  bind_rows() -> wq_MUDS3_OLD
+  bind_rows() %>%
+  transform_df() -> wq_MUDS3_OLD
 
 
 # MUDS4 -------------------------------------------------------------------
@@ -168,56 +199,70 @@ ReadExcelSheets('Input_Data/WATER/WQ/MUDS4 WQ.xlsx')
 # SERF_IA -----------------------------------------------------------------
 ReadExcelSheets('Input_Data/WATER/WQ/SERF_IA WQ.xlsx') %>%
   map(.x = ., .f =  ~ .x %>% mutate_at(vars(contains("WAT")), as.character)) %>%
-  bind_rows() -> wq_SERF_IA
+  bind_rows() %>%
+  transform_df() -> wq_SERF_IA
 
 
 # SERF_SD -----------------------------------------------------------------
 ReadExcelSheets('Input_Data/WATER/WQ/SERF_SD WQ.xlsx') %>%
   map(.x = ., .f =  ~ .x %>% mutate_at(vars(contains("WAT")), as.character)) %>%
-  bind_rows() -> wq_SERF_SD
+  bind_rows() %>%
+  transform_df() -> wq_SERF_SD
 
 
 # SHEARER -----------------------------------------------------------------
 ReadExcelSheets('Input_Data/WATER/WQ/SHEARER WQ.xlsx') %>%
   map(.x = ., .f =  ~ .x %>% mutate_at(vars(contains("WAT")), as.character)) %>%
-  bind_rows() -> wq_SHEARER
+  bind_rows() %>%
+  transform_df() -> wq_SHEARER
 
 
-# Help >>> STJOHNS -----------------------------------------------------------------
+# STJOHNS -----------------------------------------------------------------
 ReadExcelSheets('Input_Data/WATER/WQ/STJOHNS WQ.xlsx') %>%
   map(.x = ., .f =  ~ .x %>% mutate_at(vars(contains("WAT")), as.character)) %>%
-  # NEED to handle sample types, Maybe
-  bind_rows() -> wq_STJOHNS
+  bind_rows() %>%
+  transform_df() %>%
+  # handle sample types
+  mutate(sample_type = ifelse(plotid == 'WS', `WS Sample Type`, `WN Sample Type`)) %>%
+  select(Date, sheet, plotid, sample_type, var, value) -> wq_STJOHNS
 
 
-# Help >>> STORY -------------------------------------------------------------------
+# STORY -------------------------------------------------------------------
 ReadExcelSheets('Input_Data/WATER/WQ/STORY WQ.xlsx') %>%
   map(.x = ., .f =  ~ .x %>% mutate_at(vars(contains("WAT")), as.character)) %>%
-  # NEED to remove plots that are not part of the TD Project
-  bind_rows() -> wq_STORY
+  bind_rows() %>%
+  # select plots that are part of TD Project (2, 3, 5, 8, 9, 11)
+  select(Date, 
+         matches('(^2 WAT.*)|(^3 WAT.*)|(^5 WAT.*)|(^8 WAT.*)|(^9 WAT.*)|(^11 WAT.*)'), 
+         sheet) %>%
+  transform_df() -> wq_STORY
 
 
-# Help >>> SWROC -------------------------------------------------------------------
+# SWROC -------------------------------------------------------------------
 ReadExcelSheets('Input_Data/WATER/WQ/SWROC WQ.xlsx') %>%
   # remove sheet with metadata
-  .[-1] %>% 
-  # NEED TO CHECK METADATA PAGE
+  .[-1] %>%
   map(.x = ., .f =  ~ .x %>% mutate_at(vars(contains("WAT")), as.character)) %>%
-  bind_rows() -> wq_SWROC
+  bind_rows() %>%
+  transform_df() -> wq_SWROC
 
 
-# Help >>> TIDE --------------------------------------------------------------------
+# TIDE --------------------------------------------------------------------
 ReadExcelSheets('Input_Data/WATER/WQ/TIDE WQ.xlsx') %>%
   map(.x = ., .f =  ~ .x %>% mutate_at(vars(contains("WAT")), as.character)) %>%
-  # NEED to remove variables that are not reported for any year
-  bind_rows() -> wq_TIDE
+  bind_rows() %>%
+  # remove variables that are not reported for any year
+  select(-contains('WAT21')) %>%
+  transform_df() %>%
+  # remove '-WQ' from the end of plotid
+  mutate(plotid = str_remove_all(plotid, '-WQ')) -> wq_TIDE
 
 
-# Help >>> UBWC --------------------------------------------------------------------
+# UBWC --------------------------------------------------------------------
 ReadExcelSheets('Input_Data/WATER/WQ/UBWC WQ.xlsx') %>%
   map(.x = ., .f =  ~ .x %>% mutate_at(vars(contains("WAT")), as.character)) %>%
-  # NEED to handle timestamp, otherwise it's ok
-  bind_rows() -> wq_UBWC
+  bind_rows() %>%
+  transform_df() -> wq_UBWC
 
 
 # Help >>> VANWERT -----------------------------------------------------------------
@@ -230,23 +275,26 @@ ReadExcelSheets('Input_Data/WATER/WQ/VANWERT WQ 2001-2009.xlsx') %>%
 ReadExcelSheets('Input_Data/WATER/WQ/WILKIN1 WQ.xlsx') %>%
   map(.x = ., .f =  ~ .x %>% mutate_at(vars(contains("WAT")), as.character)) %>%
   # NEED to handle 'BDL' values
-  # Has timestamp as a separate option 
-  bind_rows() -> wq_WILKIN1
+  bind_rows() %>%
+  gather(var, value, contains('WAT')) %>%
+  select(Date, sheet, plotid = PlotID, var, value) -> wq_WILKIN1
 
 
 # Help >>> WILKIN2 -----------------------------------------------------------------
 ReadExcelSheets('Input_Data/WATER/WQ/WILKIN2 WQ.xlsx') %>%
   map(.x = ., .f =  ~ .x %>% mutate_at(vars(contains("WAT")), as.character)) %>%
   # NEED to handle 'BDL' values
-  # Has timestamp as a separate option 
-  bind_rows() -> wq_WILKIN2
+  bind_rows() %>%
+  gather(var, value, contains('WAT')) %>%
+  select(Date, sheet, plotid = PlotID, var, value) -> wq_WILKIN2
 
 
 # Help >>> WILKIN3 -----------------------------------------------------------------
 ReadExcelSheets('Input_Data/WATER/WQ/WILKIN3 WQ.xlsx') %>%
   map(.x = ., .f =  ~ .x %>% mutate_at(vars(contains("WAT")), as.character)) %>%
   # NEED to handle 'BDL' and other comments like 'no water' 
-  bind_rows() -> wq_WILKIN3
+  bind_rows() %>%
+  transform_df() -> wq_WILKIN3
 
 
 

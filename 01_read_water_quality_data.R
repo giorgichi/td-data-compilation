@@ -106,11 +106,18 @@ ReadExcelSheets('Input_Data/WATER/WQ/DEFI_M WQ.xlsx') %>%
 # Help >>> DEFI_R ------------------------------------------------------------------
 ReadExcelSheets('Input_Data/WATER/WQ/DEFI_R WQ 1999-2008.xlsx') %>%
   # NEED a lot to standardize
-  bind_rows() -> wq_DEFI_R
+  bind_rows() %>%
+  transform_df() %>%
+  select(Date = `Sampler DATE`, Time = `Sampler TIME`, 
+         sample_type = `Sampling METHOD`, location = `Sample LOCATION`,
+         bottle = `Bottle Number`, depth = `Sampling DEPTH`, 
+         sheet, plotid, var, value, Comments) #-> wq_DEFI_R
 
 ReadExcelSheets('Input_Data/WATER/WQ/DEFI_R WQ 2000-2007 Lysimeter.xlsx') %>%
-  # NEED This is unique data, maybe with soil data?
-  bind_rows() #-> wq_DEFI_R_lysimeter
+  # NEED to combin with corresponding plotids from KEY
+  bind_rows() %>%
+  transform_df() %>%
+  select(Date, sheet, location = plotid, everything()) -> wq_DEFI_R_lysimeter
 
 
 # DIKE --------------------------------------------------------------------

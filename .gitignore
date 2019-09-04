@@ -40,6 +40,7 @@ rsconnect/
 # PROJECT FOLDERS .........................................................
 Figs/*/
 Input_Data/*/*.xlsx
+Input_Data/WATER/*/*.xlsx
 Inter_Data/
 Output_Data/
 

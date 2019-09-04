@@ -106,7 +106,7 @@ ReadExcelSheets('Input_Data/WATER/WQ/DEFI_M WQ.xlsx') %>%
 # Help >>> DEFI_R ------------------------------------------------------------------
 ReadExcelSheets('Input_Data/WATER/WQ/DEFI_R WQ 1999-2008.xlsx') %>%
   # NEED a lot to standardize
-  bind_rows() #-> wq_DEFI_R
+  bind_rows() -> wq_DEFI_R
 
 ReadExcelSheets('Input_Data/WATER/WQ/DEFI_R WQ 2000-2007 Lysimeter.xlsx') %>%
   # NEED This is unique data, maybe with soil data?
@@ -130,7 +130,7 @@ ReadExcelSheets('Input_Data/WATER/WQ/FAIRM WQ.xlsx') %>%
 # Help >>> FULTON ------------------------------------------------------------------
 ReadExcelSheets('Input_Data/WATER/WQ/FULTON WQ 2000-2009.xlsx') %>%
   # NEED a lot of standardization
-  bind_rows() #-> wq_FULTON
+  bind_rows() -> wq_FULTON
 
 
 # HARDIN ------------------------------------------------------------------
@@ -268,7 +268,7 @@ ReadExcelSheets('Input_Data/WATER/WQ/UBWC WQ.xlsx') %>%
 # Help >>> VANWERT -----------------------------------------------------------------
 ReadExcelSheets('Input_Data/WATER/WQ/VANWERT WQ 2001-2009.xlsx') %>%
   # NEED a lot of standardization
-  bind_rows() #-> wq_VANWERT
+  bind_rows() -> wq_VANWERT
 
 
 # Help >>> WILKIN1 -----------------------------------------------------------------

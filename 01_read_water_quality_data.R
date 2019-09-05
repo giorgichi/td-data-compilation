@@ -34,6 +34,21 @@ ReadExcelSheets('Input_Data/WATER/WQ/ACRE WQ.xlsx') %>%
   bind_rows() %>%
   transform_df() -> wq_ACRE
 
+# assign NEW var codes
+wq_ACRE %>%
+  mutate(date = as.Date(Date),
+         time = NA_character_,
+         location = plotid, 
+         var_OLD = word(var),
+         siteid = "ACRE",
+         plotid = NA_character_) %>%
+  select(siteid, plotid, location, date, time, var_OLD, var, value) %>%
+  mutate(var_NEW = case_when(var_OLD %in% c('WAT2', 'WAT21') ~ 'WAT30',
+                             var_OLD %in% c('WAT9', 'WAT23') ~ 'WAT40',
+                             var_OLD == 'WATXX' ~ 'WAT33',
+                             TRUE ~ 'TBD')) %>%
+  select(siteid, plotid, location, date, time, var_NEW, value) -> wq_ACRE_new
+
 
 # AUGLA -------------------------------------------------------------------
 ReadExcelSheets('Input_Data/WATER/WQ/AUGLA WQ.xlsx') %>%
@@ -41,9 +56,24 @@ ReadExcelSheets('Input_Data/WATER/WQ/AUGLA WQ.xlsx') %>%
   bind_rows() %>%
   transform_df() -> wq_AUGLA
 
+# assign NEW var codes
+wq_AUGLA %>%
+  mutate(date = as.Date(Date),
+         time = NA_character_,
+         location = NA_character_, 
+         var_OLD = word(var),
+         siteid = "AUGLA") %>%
+  select(siteid, plotid, location, date, time, var_OLD, var, value) %>%
+  mutate(var_NEW = case_when(var_OLD %in% c('WAT2', 'WAT21') ~ 'WAT30',
+                             var_OLD %in% c('WAT9', 'WAT23') ~ 'WAT40',
+                             TRUE ~ 'TBD')) %>%
+  select(siteid, plotid, location, date, time, var_NEW, value) -> wq_AUGLA_new
+
+
 
 # BATH_A ------------------------------------------------------------------
 ReadExcelSheets('Input_Data/WATER/WQ/BATH_A WQ.xlsx')
+
 
 
 # BEAR --------------------------------------------------------------------
@@ -52,6 +82,21 @@ ReadExcelSheets('Input_Data/WATER/WQ/BEAR WQ.xlsx') %>%
   bind_rows()  %>%
   transform_df() -> wq_BEAR
 
+# assign NEW var codes
+wq_BEAR %>%
+  mutate(date = as.Date(Date),
+         time = NA_character_,
+         location = ifelse(plotid != 'tile1', plotid, NA), 
+         var_OLD = word(var),
+         siteid = "BEAR",
+         plotid = ifelse(plotid == 'tile1', plotid, NA)) %>%
+  select(siteid, plotid, location, date, time, var_OLD, var, value) %>%
+  mutate(var_NEW = case_when(var_OLD %in% c('WAT2', 'WAT21') ~ 'WAT30',
+                             var_OLD %in% c('WAT9', 'WAT23') ~ 'WAT40',
+                             TRUE ~ 'TBD')) %>%
+  select(siteid, plotid, location, date, time, var_NEW, value) -> wq_BEAR_new
+
+
 
 # BEAR2 -------------------------------------------------------------------
 ReadExcelSheets('Input_Data/WATER/WQ/BEAR2 WQ.xlsx') %>%
@@ -59,12 +104,42 @@ ReadExcelSheets('Input_Data/WATER/WQ/BEAR2 WQ.xlsx') %>%
   bind_rows() %>%
   transform_df() -> wq_BEAR2
 
+# assign NEW var codes
+wq_BEAR2 %>%
+  mutate(date = as.Date(Date),
+         time = NA_character_,
+         location = ifelse(plotid != 'tile1', plotid, NA), 
+         var_OLD = word(var),
+         siteid = "BEAR2",
+         plotid = ifelse(plotid == 'tile1', plotid, NA)) %>%
+  select(siteid, plotid, location, date, time, var_OLD, var, value) %>%
+  mutate(var_NEW = case_when(var_OLD %in% c('WAT2', 'WAT21') ~ 'WAT30',
+                             var_OLD %in% c('WAT9', 'WAT23') ~ 'WAT40',
+                             TRUE ~ 'TBD')) %>%
+  select(siteid, plotid, location, date, time, var_NEW, value) -> wq_BEAR2_new
+
+
 
 # BENTON ------------------------------------------------------------------
 ReadExcelSheets('Input_Data/WATER/WQ/BENTON WQ.xlsx') %>%
   map(.x = ., .f =  ~ .x %>% mutate_at(vars(contains("WAT")), as.character)) %>%
   bind_rows() %>%
   transform_df() -> wq_BENTON
+
+# assign NEW var codes
+wq_BENTON %>%
+  mutate(date = as.Date(Date),
+         time = NA_character_,
+         location = ifelse(plotid != 'tile1', plotid, NA), 
+         var_OLD = word(var),
+         siteid = "BENTON",
+         plotid = ifelse(plotid == 'tile1', plotid, NA)) %>%
+  select(siteid, plotid, location, date, time, var_OLD, var, value) %>%
+  mutate(var_NEW = case_when(var_OLD %in% c('WAT2', 'WAT21') ~ 'WAT30',
+                             var_OLD %in% c('WAT9', 'WAT23') ~ 'WAT40',
+                             TRUE ~ 'TBD')) %>%
+  select(siteid, plotid, location, date, time, var_NEW, value) -> wq_BENTON_new
+
 
 
 # CLAY_C ------------------------------------------------------------------
@@ -74,12 +149,42 @@ ReadExcelSheets('Input_Data/WATER/WQ/CLAY_C WQ.xlsx') %>%
   filter(!is.na(Date)) %>%
   transform_df() -> wq_CLAY_C
 
+# assign NEW var codes
+wq_CLAY_C %>%
+  mutate(date = as.Date(Date),
+         time = NA_character_,
+         location = NA_character_, 
+         var_OLD = word(var),
+         siteid = "CLAY_C") %>%
+  select(siteid, plotid, location, date, time, var_OLD, var, value) %>%
+  mutate(var_NEW = case_when(var_OLD %in% c('WAT2', 'WAT21') ~ 'WAT30',
+                             var_OLD %in% c('WAT9', 'WAT23') ~ 'WAT40',
+                             var_OLD %in% c('WAT14') ~ 'WAT60',
+                             TRUE ~ 'TBD')) %>%
+  select(siteid, plotid, location, date, time, var_NEW, value) -> wq_CLAY_C_new
+
+
 
 # CLAY_R ------------------------------------------------------------------
 ReadExcelSheets('Input_Data/WATER/WQ/CLAY_R WQ.xlsx') %>%
   map(.x = ., .f =  ~ .x %>% mutate_at(vars(contains("WAT")), as.character)) %>%
   bind_rows() %>%
   transform_df() -> wq_CLAY_R
+
+# assign NEW var codes
+wq_CLAY_R %>%
+  mutate(date = as.Date(Date),
+         time = NA_character_,
+         location = NA_character_, 
+         var_OLD = word(var),
+         siteid = "CLAY_R") %>%
+  select(siteid, plotid, location, date, time, var_OLD, var, value) %>%
+  mutate(var_NEW = case_when(var_OLD %in% c('WAT2', 'WAT21') ~ 'WAT30',
+                             var_OLD %in% c('WAT9', 'WAT23') ~ 'WAT40',
+                             var_OLD %in% c('WAT14') ~ 'WAT60',
+                             TRUE ~ 'TBD')) %>%
+  select(siteid, plotid, location, date, time, var_NEW, value) -> wq_CLAY_R_new
+
 
 
 # CRAWF -------------------------------------------------------------------
@@ -88,12 +193,41 @@ ReadExcelSheets('Input_Data/WATER/WQ/CRAWF WQ.xlsx') %>%
   bind_rows() %>%
   transform_df() -> wq_CRAWF
 
+# assign NEW var codes
+wq_CRAWF %>%
+  mutate(date = as.Date(Date),
+         time = NA_character_,
+         location = NA_character_, 
+         var_OLD = word(var),
+         siteid = "CRAWF") %>%
+  select(siteid, plotid, location, date, time, var_OLD, var, value) %>%
+  mutate(var_NEW = case_when(var_OLD %in% c('WAT2', 'WAT21') ~ 'WAT30',
+                             var_OLD %in% c('WAT9', 'WAT23') ~ 'WAT40',
+                             TRUE ~ 'TBD')) %>%
+  select(siteid, plotid, location, date, time, var_NEW, value) -> wq_CRAWF_new
+
+
 
 # DPAC --------------------------------------------------------------------
 ReadExcelSheets('Input_Data/WATER/WQ/DPAC WQ.xlsx') %>%
   map(.x = ., .f =  ~ .x %>% mutate_at(vars(contains("WAT")), as.character)) %>%
   bind_rows() %>%
   transform_df() -> wq_DPAC
+
+# assign NEW var codes
+wq_DPAC %>%
+  mutate(date = as.Date(Date),
+         time = NA_character_,
+         location = NA_character_, 
+         var_OLD = word(var),
+         siteid = "DPAC") %>%
+  select(siteid, plotid, location, date, time, var_OLD, var, value) %>%
+  mutate(var_NEW = case_when(var_OLD %in% c('WAT2', 'WAT21') ~ 'WAT30',
+                             var_OLD %in% c('WAT9', 'WAT23') ~ 'WAT40',
+                             var_OLD %in% c('WAT8', 'WAT22') ~ 'WAT42',
+                             TRUE ~ 'TBD')) %>%
+  select(siteid, plotid, location, date, time, var_NEW, value) -> wq_DPAC_new
+
 
 
 # DEFI_M ------------------------------------------------------------------
@@ -102,22 +236,77 @@ ReadExcelSheets('Input_Data/WATER/WQ/DEFI_M WQ.xlsx') %>%
   bind_rows() %>%
   transform_df() -> wq_DEFI_M
 
+# assign NEW var codes
+wq_DEFI_M %>%
+  mutate(date = as.Date(Date),
+         time = NA_character_,
+         location = NA_character_, 
+         var_OLD = word(var),
+         siteid = "DEFI_M") %>%
+  select(siteid, plotid, location, date, time, var_OLD, var, value) %>%
+  mutate(var_NEW = case_when(var_OLD %in% c('WAT2', 'WAT21') ~ 'WAT30',
+                             var_OLD %in% c('WAT9', 'WAT23') ~ 'WAT40',
+                             TRUE ~ 'TBD')) %>%
+  select(siteid, plotid, location, date, time, var_NEW, value) -> wq_DEFI_M_new
 
-# Help >>> DEFI_R ------------------------------------------------------------------
+
+
+# DEFI_R ------------------------------------------------------------------
 ReadExcelSheets('Input_Data/WATER/WQ/DEFI_R WQ 1999-2008.xlsx') %>%
   # NEED a lot to standardize
   bind_rows() %>%
+  # add pick-up time to missing dates in comments
+  mutate(pickupdate = ifelse(is.na(`Pick Up DATE`), 
+                             paste(month.abb[MONTH], YEAR, sep = ', '),
+                             format(`Pick Up DATE`, '%b %d, %Y')),
+         comm = ifelse(is.na(Date), paste('Pick-up date:', pickupdate), NA),
+         Comments = ifelse(!is.na(comm) & !is.na(Comments), paste0(comm, '; ', Comments), Comments),
+         Comments = ifelse(!is.na(comm) & is.na(Comments), comm, Comments),
+         Comments = ifelse(str_detect(Comments, 'No sample'), NA, Comments)) %>%
+  select(-comm, - pickupdate) %>%
   transform_df() %>%
-  select(Date = `Sampler DATE`, Time = `Sampler TIME`, 
-         sample_type = `Sampling METHOD`, location = `Sample LOCATION`,
-         bottle = `Bottle Number`, depth = `Sampling DEPTH`, 
-         sheet, plotid, var, value, Comments) #-> wq_DEFI_R
+  select(Date, Time, sample_type = method, location, bottle = `Bottle Number`, depth,
+         sheet, plotid, var, value, Comments) -> wq_DEFI_R
 
+# assign NEW var codes
+wq_DEFI_R %>%
+  unite(var, plotid, var, sep = ' ') %>%
+  mutate(date = as.Date(Date),
+         time = format(Time, '%H:%M'), 
+         var_NEW = word(var),
+         siteid = "DEFI_R",
+         plotid = NA_character_) %>% 
+  mutate(sample_type = case_when(sample_type == 'I' ~ 'ISCO',
+                                 sample_type == 'G' ~ 'Grab',
+                                 sample_type == 'M' ~ 'Mast',
+                                 TRUE ~ 'TBD')) %>% 
+  select(siteid, plotid, location, date, time, sample_type, depth, var_NEW, value, 
+         comments = Comments) -> wq_DEFI_R_new
+
+
+# WQ from lysimeter 
 ReadExcelSheets('Input_Data/WATER/WQ/DEFI_R WQ 2000-2007 Lysimeter.xlsx') %>%
-  # NEED to combin with corresponding plotids from KEY
   bind_rows() %>%
   transform_df() %>%
   select(Date, sheet, location = plotid, everything()) -> wq_DEFI_R_lysimeter
+
+# assign NEW var codes
+wq_DEFI_R_lysimeter %>%
+  rename(var_NEW = var) %>%
+  mutate(date = as.Date(Date),
+         time = NA_character_,
+         siteid = "DEFI_R",
+         plotid = as.numeric(location),
+         location = paste('lysimeter', location)) %>% 
+  mutate(plotid = case_when(plotid %in% 1:4 ~ '8',
+                            plotid %in% 5:8 ~ '9',
+                            plotid %in% 9:12 ~ '6',
+                            plotid %in% 13:16 ~ '7',
+                            plotid %in% 17:24 ~ '11',
+                            plotid %in% 25:30 ~ '10',
+                            TRUE ~ 'TBD')) %>%
+  select(siteid, plotid, location, date, time, var_NEW, value) -> wq_DEFI_R_lysimeter_new
+
 
 
 # DIKE --------------------------------------------------------------------
@@ -126,6 +315,21 @@ ReadExcelSheets('Input_Data/WATER/WQ/DIKE WQ.xlsx') %>%
   bind_rows() %>%
   transform_df() -> wq_DIKE
 
+# assign NEW var codes
+wq_DIKE %>%
+  mutate(date = as.Date(Date),
+         time = NA_character_,
+         location = ifelse(plotid != 'tile1', plotid, NA), 
+         var_OLD = word(var),
+         siteid = "DIKE",
+         plotid = ifelse(plotid == 'tile1', plotid, NA)) %>%
+  select(siteid, plotid, location, date, time, var_OLD, var, value) %>% 
+  mutate(var_NEW = case_when(var_OLD %in% c('WAT2', 'WAT21') ~ 'WAT30',
+                             var_OLD %in% c('WAT9', 'WAT23') ~ 'WAT40',
+                             TRUE ~ 'TBD')) %>%
+  select(siteid, plotid, location, date, time, var_NEW, value) -> wq_DIKE_new
+
+
 
 # FAIRM ------------------------------------------------------------------
 ReadExcelSheets('Input_Data/WATER/WQ/FAIRM WQ.xlsx') %>%
@@ -133,11 +337,42 @@ ReadExcelSheets('Input_Data/WATER/WQ/FAIRM WQ.xlsx') %>%
   bind_rows() %>%
   transform_df() -> wq_FAIRM
 
+# assign NEW var codes
+wq_FAIRM %>%
+  mutate(date = as.Date(Date),
+         time = NA_character_,
+         location = NA_character_, 
+         var_OLD = word(var),
+         siteid = "FAIRM") %>%
+  select(siteid, plotid, location, date, time, var_OLD, var, value) %>%
+  mutate(var_NEW = case_when(var_OLD %in% c('WAT2', 'WAT21') ~ 'WAT30',
+                             var_OLD %in% c('WAT9', 'WAT23') ~ 'WAT40',
+                             TRUE ~ 'TBD')) %>%
+  select(siteid, plotid, location, date, time, var_NEW, value) -> wq_FAIRM_new
 
-# Help >>> FULTON ------------------------------------------------------------------
+
+# FULTON ------------------------------------------------------------------
 ReadExcelSheets('Input_Data/WATER/WQ/FULTON WQ 2000-2009.xlsx') %>%
-  # NEED a lot of standardization
-  bind_rows() -> wq_FULTON
+  bind_rows() %>%
+  transform_df() %>%
+  select(Date, Time, sample_type = method, location, bottle = `Bottle Number`,
+         sheet, plotid, var, value, Comments) -> wq_FULTON
+
+# assign NEW var codes
+wq_FULTON %>%
+  unite(var, plotid, var, sep = ' ') %>%
+  mutate(date = as.Date(Date),
+         time = format(Time, '%H:%M'), 
+         var_NEW = word(var),
+         siteid = "FULTON",
+         plotid = NA_character_) %>% 
+  mutate(sample_type = case_when(sample_type == 'I' ~ 'ISCO',
+                                 sample_type == 'G' ~ 'Grab',
+                                 sample_type == 'M' ~ 'Mast',
+                                 TRUE ~ 'TBD')) %>% 
+  select(siteid, plotid, location, date, time, sample_type, var_NEW, value, 
+         comments = Comments) -> wq_FULTON_new
+
 
 
 # HARDIN ------------------------------------------------------------------
@@ -145,6 +380,20 @@ ReadExcelSheets('Input_Data/WATER/WQ/HARDIN WQ.xlsx') %>%
   map(.x = ., .f =  ~ .x %>% mutate_at(vars(contains("WAT")), as.character)) %>%
   bind_rows() %>%
   transform_df() -> wq_HARDIN
+
+# assign NEW var codes
+wq_HARDIN %>%
+  mutate(date = as.Date(Date),
+         time = NA_character_,
+         location = NA_character_, 
+         var_OLD = word(var),
+         siteid = "HARDIN") %>%
+  select(siteid, plotid, location, date, time, var_OLD, var, value) %>% 
+  mutate(var_NEW = case_when(var_OLD %in% c('WAT2', 'WAT21') ~ 'WAT30',
+                             var_OLD %in% c('WAT9', 'WAT23') ~ 'WAT40',
+                             TRUE ~ 'TBD')) %>%
+  select(siteid, plotid, location, date, time, var_NEW, value) -> wq_HARDIN_new
+
 
 
 # HARDIIN_NW --------------------------------------------------------------
@@ -155,19 +404,32 @@ ReadExcelSheets('Input_Data/WATER/WQ/HARDIN_NW WQ.xlsx')
 ReadExcelSheets('Input_Data/WATER/WQ/HENRY WQ.xlsx')
 
 
-# Help >>> HICKS_B -----------------------------------------------------------------
+# HICKS_B -----------------------------------------------------------------
 ReadExcelSheets('Input_Data/WATER/WQ/HICKS_B WQ.xlsx') %>%
   map(.x = ., .f =  ~ .x %>% mutate_at(vars(contains("WAT")), as.character)) %>%
-  # NEED some modification and UPDATED data
+  # NEED UPDATED data
   bind_rows() %>%
-  filter(!is.na(Date)) %>%
-  gather(key, value, -Date, -sheet) %>%
-  # There are some duplicated measurements that need to be averaged
-  group_by(Date, sheet, key)
+  filter(!is.na(Date)) %>% 
+  transform_df() %>%
+  mutate(sample_type = ifelse(plotid == 'BE', `BE Sampling Method`, `BW Sampling Method`),
+         sample_type = case_when(sample_type == 'I' ~ 'ISCO',
+                                 sample_type == 'G' ~ 'Grab',
+                                 TRUE ~ 'TBD')) %>%
+  select(Date, sheet, plotid, sample_type, var, value) -> wq_HICKS_B
 
-  # separate(key, into = c('plotid', 'var'), extra = 'merge', sep = ' ') %>%
-  # spread(var, value)
-  # -> wq_HICKS_B
+# assign NEW var codes
+wq_HICKS_B %>%
+  mutate(date = as.Date(Date),
+         time = format(Date, '%H:%M'),
+         location = NA_character_, 
+         var_OLD = word(var),
+         siteid = "HICKS_B") %>%
+  select(siteid, plotid, location, date, time, sample_type, var_OLD, var, value) %>% 
+  mutate(var_NEW = case_when(var_OLD %in% c('WAT2', 'WAT21') ~ 'WAT30',
+                             var_OLD %in% c('WAT9', 'WAT23') ~ 'WAT40',
+                             TRUE ~ 'TBD')) %>%
+  select(siteid, plotid, location, date, time, sample_type, var_NEW, value) -> wq_HICKS_B_new
+
 
 
 # HICKORY -----------------------------------------------------------------
@@ -176,12 +438,42 @@ ReadExcelSheets('Input_Data/WATER/WQ/HICKORY WQ.xlsx') %>%
   bind_rows() %>%
   transform_df() -> wq_HICKORY
 
+# assign NEW var codes
+wq_HICKORY %>%
+  mutate(date = as.Date(Date),
+         time = NA_character_,
+         location = ifelse(plotid != 'tile1', plotid, NA), 
+         var_OLD = word(var),
+         siteid = "HICKORY",
+         plotid = ifelse(plotid == 'tile1', plotid, NA)) %>%
+  select(siteid, plotid, location, date, time, var_OLD, var, value) %>%
+  mutate(var_NEW = case_when(var_OLD %in% c('WAT2', 'WAT21') ~ 'WAT30',
+                             var_OLD %in% c('WAT9', 'WAT23') ~ 'WAT40',
+                             TRUE ~ 'TBD')) %>%
+  select(siteid, plotid, location, date, time, var_NEW, value) -> wq_HICKORY_new
+
+
 
 # MAASS -------------------------------------------------------------------
 ReadExcelSheets('Input_Data/WATER/WQ/MAASS WQ.xlsx') %>%
   map(.x = ., .f =  ~ .x %>% mutate_at(vars(contains("WAT")), as.character)) %>%
   bind_rows() %>%
   transform_df() -> wq_MAASS
+
+# assign NEW var codes
+wq_MAASS %>%
+  mutate(date = as.Date(Date),
+         time = NA_character_,
+         location = ifelse(plotid != 'tile1', plotid, NA), 
+         var_OLD = word(var),
+         siteid = "MAASS",
+         plotid = ifelse(plotid == 'tile1', plotid, NA)) %>%
+  select(siteid, plotid, location, date, time, var_OLD, var, value) %>%
+  mutate(var_NEW = case_when(var_OLD %in% c('WAT2', 'WAT21') ~ 'WAT30',
+                             var_OLD %in% c('WAT9', 'WAT23') ~ 'WAT40',
+                             TRUE ~ 'TBD')) %>%
+  select(siteid, plotid, location, date, time, var_NEW, value) -> wq_MAASS_new
+
 
 
 # MUDS2 -------------------------------------------------------------------
@@ -198,6 +490,20 @@ ReadExcelSheets('Input_Data/WATER/WQ/MUDS3_OLD WQ.xlsx') %>%
   bind_rows() %>%
   transform_df() -> wq_MUDS3_OLD
 
+# assign NEW var codes
+wq_MUDS3_OLD %>%
+  mutate(date = as.Date(Date),
+         time = NA_character_,
+         location = NA_character_, 
+         var_OLD = word(var),
+         siteid = "MUDS3_OLD") %>%
+  select(siteid, plotid, location, date, time, var_OLD, var, value) %>%
+  mutate(var_NEW = case_when(var_OLD %in% c('WAT2', 'WAT21') ~ 'WAT30',
+                             var_OLD %in% c('WAT9', 'WAT23') ~ 'WAT40',
+                             TRUE ~ 'TBD')) %>%
+  select(siteid, plotid, location, date, time, var_NEW, value) -> wq_MUDS3_OLD_new
+
+
 
 # MUDS4 -------------------------------------------------------------------
 ReadExcelSheets('Input_Data/WATER/WQ/MUDS4 WQ.xlsx')
@@ -209,6 +515,20 @@ ReadExcelSheets('Input_Data/WATER/WQ/SERF_IA WQ.xlsx') %>%
   bind_rows() %>%
   transform_df() -> wq_SERF_IA
 
+# assign NEW var codes
+wq_SERF_IA %>%
+  mutate(date = as.Date(Date),
+         time = NA_character_,
+         location = NA_character_, 
+         var_OLD = word(var),
+         siteid = "SERF_IA") %>%
+  select(siteid, plotid, location, date, time, var_OLD, var, value) %>%
+  mutate(var_NEW = case_when(var_OLD %in% c('WAT2', 'WAT21') ~ 'WAT30',
+                             var_OLD %in% c('WAT9', 'WAT23') ~ 'WAT40',
+                             TRUE ~ 'TBD')) %>%
+  select(siteid, plotid, location, date, time, var_NEW, value) -> wq_SERF_IA_new
+
+
 
 # SERF_SD -----------------------------------------------------------------
 ReadExcelSheets('Input_Data/WATER/WQ/SERF_SD WQ.xlsx') %>%
@@ -216,12 +536,42 @@ ReadExcelSheets('Input_Data/WATER/WQ/SERF_SD WQ.xlsx') %>%
   bind_rows() %>%
   transform_df() -> wq_SERF_SD
 
+# assign NEW var codes
+wq_SERF_SD %>%
+  mutate(date = as.Date(Date),
+         time = NA_character_,
+         location = ifelse(str_length(plotid) > 5, plotid, NA), 
+         var_OLD = word(var),
+         siteid = "SERF_SD",
+         plotid = str_sub(plotid, 1, 5)) %>%
+  select(siteid, plotid, location, date, time, var_OLD, var, value) %>% 
+  mutate(var_NEW = case_when(var_OLD %in% c('WAT2', 'WAT21') ~ 'WAT30',
+                             var_OLD %in% c('WAT9', 'WAT23') ~ 'WAT40',
+                             TRUE ~ 'TBD')) %>%
+  select(siteid, plotid, location, date, time, var_NEW, value) -> wq_SERF_SD_new
+
+
 
 # SHEARER -----------------------------------------------------------------
 ReadExcelSheets('Input_Data/WATER/WQ/SHEARER WQ.xlsx') %>%
   map(.x = ., .f =  ~ .x %>% mutate_at(vars(contains("WAT")), as.character)) %>%
   bind_rows() %>%
   transform_df() -> wq_SHEARER
+
+# assign NEW var codes
+wq_SHEARER %>%
+  mutate(date = as.Date(Date),
+         time = NA_character_,
+         location = ifelse(plotid != 'tile1', plotid, NA), 
+         var_OLD = word(var),
+         siteid = "SHEARER",
+         plotid = ifelse(plotid == 'tile1', plotid, NA)) %>%
+  select(siteid, plotid, location, date, time, var_OLD, var, value) %>%
+  mutate(var_NEW = case_when(var_OLD %in% c('WAT2', 'WAT21') ~ 'WAT30',
+                             var_OLD %in% c('WAT9', 'WAT23') ~ 'WAT40',
+                             TRUE ~ 'TBD')) %>%
+  select(siteid, plotid, location, date, time, var_NEW, value) -> wq_SHEARER_new
+
 
 
 # STJOHNS -----------------------------------------------------------------
@@ -232,6 +582,20 @@ ReadExcelSheets('Input_Data/WATER/WQ/STJOHNS WQ.xlsx') %>%
   # handle sample types
   mutate(sample_type = ifelse(plotid == 'WS', `WS Sample Type`, `WN Sample Type`)) %>%
   select(Date, sheet, plotid, sample_type, var, value) -> wq_STJOHNS
+
+# assign NEW var codes
+wq_STJOHNS %>%
+  mutate(date = as.Date(Date),
+         time = NA_character_,
+         location = NA_character_, 
+         var_OLD = word(var),
+         siteid = "STJOHNS") %>%
+  select(siteid, plotid, location, date, time, sample_type, var_OLD, var, value) %>% 
+  mutate(var_NEW = case_when(var_OLD %in% c('WAT2', 'WAT21') ~ 'WAT30',
+                             var_OLD %in% c('WAT9', 'WAT23') ~ 'WAT40',
+                             TRUE ~ 'TBD')) %>%
+  select(siteid, plotid, location, date, time, sample_type, var_NEW, value) -> wq_STJOHNS_new
+
 
 
 # STORY -------------------------------------------------------------------
@@ -244,6 +608,20 @@ ReadExcelSheets('Input_Data/WATER/WQ/STORY WQ.xlsx') %>%
          sheet) %>%
   transform_df() -> wq_STORY
 
+# assign NEW var codes
+wq_STORY %>%
+  mutate(date = as.Date(Date),
+         time = NA_character_,
+         location = NA_character_, 
+         var_OLD = word(var),
+         siteid = "STORY") %>%
+  select(siteid, plotid, location, date, time, var_OLD, var, value) %>%
+  mutate(var_NEW = case_when(var_OLD %in% c('WAT2', 'WAT21') ~ 'WAT30',
+                             var_OLD %in% c('WAT9', 'WAT23') ~ 'WAT40',
+                             TRUE ~ 'TBD')) %>%
+  select(siteid, plotid, location, date, time, var_NEW, value) -> wq_STORY_new
+
+
 
 # SWROC -------------------------------------------------------------------
 ReadExcelSheets('Input_Data/WATER/WQ/SWROC WQ.xlsx') %>%
@@ -252,6 +630,28 @@ ReadExcelSheets('Input_Data/WATER/WQ/SWROC WQ.xlsx') %>%
   map(.x = ., .f =  ~ .x %>% mutate_at(vars(contains("WAT")), as.character)) %>%
   bind_rows() %>%
   transform_df() -> wq_SWROC
+
+# read pond WQ data
+read_excel('Input_Data/WATER/WQ/SWROC WQ.xlsx', 
+           sheet = 1, skip = 8, col_names = c('plotid', 'Date', 'value')) %>%
+  add_column(var = 'WAT2 Tile Nitrate-N concentration') %>%
+  mutate(value = as.character(value)) ->
+  wq_SWROC_pond
+  
+# assign NEW var codes
+wq_SWROC_pond %>% 
+  bind_rows(wq_SWROC) %>%
+  mutate(date = as.Date(Date),
+         time = NA_character_,
+         location = ifelse(str_detect(plotid, 'NPM'), NA, plotid), 
+         var_OLD = word(var),
+         siteid = "SWROC",
+         plotid = ifelse(str_detect(plotid, 'NPM'), plotid, NA)) %>% 
+  select(siteid, plotid, location, date, time, var_OLD, var, value) %>% 
+  mutate(var_NEW = case_when(var_OLD %in% c('WAT2', 'WAT21') ~ 'WAT30',
+                             var_OLD %in% c('WAT9', 'WAT23') ~ 'WAT40',
+                             TRUE ~ 'TBD')) %>%
+  select(siteid, plotid, location, date, time, var_NEW, value) -> wq_SWROC_new
 
 
 # TIDE --------------------------------------------------------------------
@@ -264,6 +664,20 @@ ReadExcelSheets('Input_Data/WATER/WQ/TIDE WQ.xlsx') %>%
   # remove '-WQ' from the end of plotid
   mutate(plotid = str_remove_all(plotid, '-WQ')) -> wq_TIDE
 
+# assign NEW var codes
+wq_TIDE %>%
+  mutate(date = as.Date(Date),
+         time = NA_character_,
+         location = NA_character_, 
+         var_OLD = word(var),
+         siteid = "TIDE") %>%
+  select(siteid, plotid, location, date, time, var_OLD, var, value) %>%
+  mutate(var_NEW = case_when(var_OLD %in% c('WAT2', 'WAT21') ~ 'WAT30',
+                             var_OLD %in% c('WAT9', 'WAT23') ~ 'WAT40',
+                             TRUE ~ 'TBD')) %>%
+  select(siteid, plotid, location, date, time, var_NEW, value) -> wq_TIDE_new
+
+
 
 # UBWC --------------------------------------------------------------------
 ReadExcelSheets('Input_Data/WATER/WQ/UBWC WQ.xlsx') %>%
@@ -271,14 +685,53 @@ ReadExcelSheets('Input_Data/WATER/WQ/UBWC WQ.xlsx') %>%
   bind_rows() %>%
   transform_df() -> wq_UBWC
 
+# assign NEW var codes
+wq_UBWC %>%
+  mutate(date = as.Date(Date),
+         time = format(Date, '%H:%M'),
+         location = NA_character_, 
+         var_OLD = word(var),
+         siteid = "UBWC") %>%
+  select(siteid, plotid, location, date, time, var_OLD, var, value) %>% 
+  mutate(var_NEW = case_when(var_OLD %in% c('WAT2', 'WAT21') ~ 'WAT30',
+                             var_OLD %in% c('WAT9', 'WAT23') ~ 'WAT40',
+                             var_OLD %in% c('WAT8', 'WAT22') ~ 'WAT43',
+                             TRUE ~ 'TBD')) %>%
+  select(siteid, plotid, location, date, time, var_NEW, value) -> wq_UBWC_new
 
-# Help >>> VANWERT -----------------------------------------------------------------
+
+# VANWERT -----------------------------------------------------------------
 ReadExcelSheets('Input_Data/WATER/WQ/VANWERT WQ 2001-2009.xlsx') %>%
-  # NEED a lot of standardization
-  bind_rows() -> wq_VANWERT
+  bind_rows() %>%
+  # add pick-up time to missing dates in comments
+  mutate(comm = ifelse(is.na(Date), paste('Pick-up date:', as.Date(`Pick Up DATE`)), NA),
+         Comments = ifelse(!is.na(comm) & !is.na(Comments), paste0(comm, '; ', Comments), Comments),
+         Comments = ifelse(!is.na(comm) & is.na(Comments), comm, Comments),
+         Comments = ifelse(str_detect(Comments, 'No sample'), NA, Comments)) %>%
+  select(-comm) %>%
+  transform_df() %>%
+  select(Date, Time, sample_type = method, location, bottle = `Bottle Number`,
+         sheet, plotid, var, value, Comments) -> wq_VANWERT
+
+# assign NEW var codes
+wq_VANWERT %>%
+  unite(var, plotid, var, sep = ' ') %>%
+  # after observing data it seems that two unkown samples belong to OFFSITE
+  mutate(location = ifelse(location == 'unknown', 'OFFSITE', location)) %>%
+  mutate(date = as.Date(Date),
+         time = format(Time, '%H:%M'), 
+         var_NEW = word(var),
+         siteid = "VANWERT",
+         plotid = NA_character_) %>% 
+  mutate(sample_type = case_when(sample_type == 'I' ~ 'ISCO',
+                                 sample_type == 'G' ~ 'Grab',
+                                 sample_type == 'M' ~ 'Mast',
+                                 TRUE ~ 'TBD')) %>%
+  select(siteid, plotid, location, date, time, sample_type, var_NEW, value, 
+         comments = Comments) -> wq_VANWERT_new
 
 
-# Help >>> WILKIN1 -----------------------------------------------------------------
+# WILKIN1 -----------------------------------------------------------------
 ReadExcelSheets('Input_Data/WATER/WQ/WILKIN1 WQ.xlsx') %>%
   map(.x = ., .f =  ~ .x %>% mutate_at(vars(contains("WAT")), as.character)) %>%
   # NEED to handle 'BDL' values
@@ -286,8 +739,25 @@ ReadExcelSheets('Input_Data/WATER/WQ/WILKIN1 WQ.xlsx') %>%
   gather(var, value, contains('WAT')) %>%
   select(Date, sheet, plotid = PlotID, var, value) -> wq_WILKIN1
 
+# assign NEW var codes
+wq_WILKIN1 %>%
+  mutate(date = as.Date(Date),
+         time = format(Date, '%H:%M'),
+         location = NA_character_, 
+         var_OLD = word(var),
+         siteid = "WILKIN1") %>%
+  select(siteid, plotid, location, date, time, var_OLD, var, value) %>% 
+  mutate(var_NEW = case_when(var_OLD == 'WAT2' ~ 'WAT30',
+                             var_OLD == 'WAT9' ~ 'WAT40',
+                             var_OLD == 'WAT8' ~ 'WAT42', # unsure, maybe WAT43?
+                             var_OLD == 'WAT12' ~ 'WAT22',
+                             var_OLD == 'WATXX' ~ 'WAT36',
+                             TRUE ~ 'TBD')) %>%
+  select(siteid, plotid, location, date, time, var_NEW, value) -> wq_WILKIN1_new
 
-# Help >>> WILKIN2 -----------------------------------------------------------------
+
+
+# WILKIN2 -----------------------------------------------------------------
 ReadExcelSheets('Input_Data/WATER/WQ/WILKIN2 WQ.xlsx') %>%
   map(.x = ., .f =  ~ .x %>% mutate_at(vars(contains("WAT")), as.character)) %>%
   # NEED to handle 'BDL' values
@@ -295,13 +765,44 @@ ReadExcelSheets('Input_Data/WATER/WQ/WILKIN2 WQ.xlsx') %>%
   gather(var, value, contains('WAT')) %>%
   select(Date, sheet, plotid = PlotID, var, value) -> wq_WILKIN2
 
+# assign NEW var codes
+wq_WILKIN2 %>%
+  mutate(date = as.Date(Date),
+         time = format(Date, '%H:%M'),
+         location = NA_character_, 
+         var_OLD = word(var),
+         siteid = "WILKIN2") %>%
+  select(siteid, plotid, location, date, time, var_OLD, var, value) %>% 
+  mutate(var_NEW = case_when(var_OLD == 'WAT2' ~ 'WAT30',
+                             var_OLD == 'WAT9' ~ 'WAT40',
+                             var_OLD == 'WAT8' ~ 'WAT42', # unsure, maybe WAT43?
+                             var_OLD == 'WAT12' ~ 'WAT22',
+                             var_OLD == 'WATXX' ~ 'WAT36',
+                             TRUE ~ 'TBD')) %>%
+  select(siteid, plotid, location, date, time, var_NEW, value) -> wq_WILKIN2_new
 
-# Help >>> WILKIN3 -----------------------------------------------------------------
+
+
+# WILKIN3 -----------------------------------------------------------------
 ReadExcelSheets('Input_Data/WATER/WQ/WILKIN3 WQ.xlsx') %>%
   map(.x = ., .f =  ~ .x %>% mutate_at(vars(contains("WAT")), as.character)) %>%
   # NEED to handle 'BDL' and other comments like 'no water' 
   bind_rows() %>%
   transform_df() -> wq_WILKIN3
+
+# assign NEW var codes
+wq_WILKIN3 %>%
+  mutate(date = as.Date(Date),
+         time = NA_character_,
+         location = ifelse(plotid != 'CS03', plotid, NA), 
+         var_OLD = word(var),
+         siteid = "WILKIN3",
+         plotid = ifelse(plotid == 'CS03', plotid, NA)) %>%
+  select(siteid, plotid, location, date, time, var_OLD, var, value) %>% 
+  mutate(var_NEW = case_when(var_OLD == 'WAT2'  ~ 'WAT30',
+                             var_OLD == 'WAT21' ~ 'WAT30',
+                             TRUE ~ 'TBD')) %>%
+  select(siteid, plotid, location, date, time, var_NEW, value) -> wq_WILKIN3_new
 
 
 

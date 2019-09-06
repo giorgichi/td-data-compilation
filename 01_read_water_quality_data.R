@@ -845,8 +845,13 @@ mget(ls(pattern = 'wq_[[:graph:]]+_new')) %>%
                           !is.na(value_temp),
                         as.character(value_temp),
                         value)) %>%
-  ungroup() %>%
-  select(-value_temp) -> wq_ALL
+  # standartize BDLs
+  mutate(comments = ifelse(value == 'no water', value, comments),
+         value = ifelse(value == 'no water', NA_character_, value),    # at WILKIN3
+         value = ifelse(value == 'NV', NA_character_, value),          # at WRSIS
+         comments = str_replace_all(comments, 'changed to .* from', 'changed to NA from')) %>%
+  select(siteid, plotid, location, height, date, time, sample_type, var_NEW, value, comments) %>%   
+  ungroup() -> wq_ALL
 
 
 # Save for later analysis

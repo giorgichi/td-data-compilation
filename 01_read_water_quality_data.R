@@ -265,7 +265,7 @@ ReadExcelSheets('Input_Data/WATER/WQ/DEFI_R WQ 1999-2008.xlsx') %>%
          Comments = ifelse(str_detect(Comments, 'No sample'), NA, Comments)) %>%
   select(-comm, - pickupdate) %>%
   transform_df() %>%
-  select(Date, Time, sample_type = method, location, bottle = `Bottle Number`, depth,
+  select(Date, Time, sample_type = method, location, bottle = `Bottle Number`, height,
          sheet, plotid, var, value, Comments) -> wq_DEFI_R
 
 # assign NEW var codes
@@ -280,7 +280,7 @@ wq_DEFI_R %>%
                                  sample_type == 'G' ~ 'Grab',
                                  sample_type == 'M' ~ 'Mast',
                                  TRUE ~ 'TBD')) %>% 
-  select(siteid, plotid, location, date, time, sample_type, depth, var_NEW, value, 
+  select(siteid, plotid, location, date, time, sample_type, height, var_NEW, value, 
          comments = Comments) -> wq_DEFI_R_new
 
 
@@ -428,7 +428,10 @@ wq_HICKS_B %>%
   mutate(var_NEW = case_when(var_OLD %in% c('WAT2', 'WAT21') ~ 'WAT30',
                              var_OLD %in% c('WAT9', 'WAT23') ~ 'WAT40',
                              TRUE ~ 'TBD')) %>%
-  select(siteid, plotid, location, date, time, sample_type, var_NEW, value) -> wq_HICKS_B_new
+  select(siteid, plotid, location, date, time, sample_type, var_NEW, value) %>%
+  # handle replicated measurements
+  group_by(siteid, plotid, location, date, time, sample_type, var_NEW) %>%
+  summarise(value = as.character(mean(as.numeric(value)))) -> wq_HICKS_B_new
 
 
 
@@ -811,36 +814,43 @@ wq_WILKIN3 %>%
 
 
 # Combnine all hourly water table data
-rm(wq_ALL_hourly) 
-mget(ls(pattern = 'wq_[[:graph:]]+_hourly')) %>%
-  map(~ .x %>% gather(key, value, -tmsp)) %>%
-  bind_rows(.id = 'site') %>%
-  filter(site != 'wq_ALL_hourly') %>%
-  mutate(siteid = str_remove(site, 'wq_'),
-         siteid = str_remove(siteid, '_hourly')) %>%
-  separate(key, into = c('plotid', 'rest'), sep = ' ', extra = 'merge') %>%
-  select(siteid, plotid, tmsp, value) -> 
-  wq_ALL_hourly
-
-
-
-# Combnine all daily weather data
-rm(wq_ALL_daily)
-mget(ls(pattern = 'wq_[[:graph:]]+_daily')) %>%
-  map(~ .x %>% gather(key, value, -date)) %>%
-  bind_rows(.id = 'site') %>%
-  filter(site != 'weater_ALL_daily') %>%
-  mutate(siteid = str_remove(site, 'wq_'),
-         siteid = str_remove(siteid, '_daily')) %>%
-  separate(key, into = c('plotid', 'rest'), sep = ' ', extra = 'merge') %>%
-  select(siteid, plotid, date, value) ->
-  wq_ALL_daily
-
+mget(ls(pattern = 'wq_[[:graph:]]+_new')) %>%
+  bind_rows() %>%
+  # add sample type based on TD Sampling Method data
+  mutate(sample_type = case_when(siteid == 'ACRE' & date < ymd(20160301) ~ 'Grab',
+                                 siteid == 'ACRE' & date > ymd(20160229) ~ 'Time Proportional', # ISCO
+                                 siteid %in% c('BEAR', 'BEAR2', 'BENTON', 'DIKE', 
+                                               'HICKORY', 'MAASS', 'SHEARER') ~ 'Grab',
+                                 siteid == 'HICKS_B' & sample_type == 'ISCO' ~ 'Flow Proportional', # ISCO
+                                 siteid == 'STORY' ~ 'Flow Proportional',
+                                 siteid %in% c('MUDS2', 'MUDS4') ~ 'Time Proportional',         # ISCO
+                                 siteid %in% c('MUDS3_OLD', 'MUDS3_NEW') ~ 'Time Proportional', # Sigma
+                                 siteid == 'CLAY_C' ~ 'Grab',
+                                 siteid == 'CLAY_R' ~ 'Grab',
+                                 siteid == 'FAIRM'  ~ 'Grab',
+                                 siteid == 'SERF_IA' ~ 'Grab',
+                                 siteid == 'SERF_SD' ~ 'Grab',
+                                 siteid == 'SWROC' ~ 'Grab',
+                                 siteid == 'UBWC' & month(date) > 2 ~ 'Time Proportional',     # ISCO
+                                 siteid == 'UBWC' & month(date) < 3 ~ 'Grab',
+                                 siteid == 'UBWC' & month(date) == 12 & day(date) > 15 ~ 'Grab',
+                                 siteid == 'WILKIN3' ~ 'Grab',
+                                 TRUE ~ sample_type)) %>%
+  # correct measurement units
+  mutate(value_temp = as.numeric(value),
+         # this is to fix P concentration at WRSIS
+         value_temp = ifelse(str_detect(var_NEW, '^WAT4'), value_temp * 1000, value_temp),
+         value = ifelse(siteid %in% c('DEFI_R', 'FULTON', 'VANWERT') & 
+                          str_detect(var_NEW, '^WAT4') & 
+                          !is.na(value_temp),
+                        as.character(value_temp),
+                        value)) %>%
+  ungroup() %>%
+  select(-value_temp) -> wq_ALL
 
 
 # Save for later analysis
-write_rds(wq_ALL_hourly, 'Inter_Data/wq_ALL_hourly.rds')
-write_rds(wq_ALL_daily, 'Inter_Data/wq_ALL_daily.rds')
+write_rds(wq_ALL, 'Inter_Data/wq_ALL.rds')
 
 
 

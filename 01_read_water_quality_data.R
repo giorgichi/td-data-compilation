@@ -815,43 +815,7 @@ wq_WILKIN3 %>%
 
 # Combnine all hourly water table data
 mget(ls(pattern = 'wq_[[:graph:]]+_new')) %>%
-  bind_rows() %>%
-  # add sample type based on TD Sampling Method data
-  mutate(sample_type = case_when(siteid == 'ACRE' & date < ymd(20160301) ~ 'Grab',
-                                 siteid == 'ACRE' & date > ymd(20160229) ~ 'Time Proportional', # ISCO
-                                 siteid %in% c('BEAR', 'BEAR2', 'BENTON', 'DIKE', 
-                                               'HICKORY', 'MAASS', 'SHEARER') ~ 'Grab',
-                                 siteid == 'HICKS_B' & sample_type == 'ISCO' ~ 'Flow Proportional', # ISCO
-                                 siteid == 'STORY' ~ 'Flow Proportional',
-                                 siteid %in% c('MUDS2', 'MUDS4') ~ 'Time Proportional',         # ISCO
-                                 siteid %in% c('MUDS3_OLD', 'MUDS3_NEW') ~ 'Time Proportional', # Sigma
-                                 siteid == 'CLAY_C' ~ 'Grab',
-                                 siteid == 'CLAY_R' ~ 'Grab',
-                                 siteid == 'FAIRM'  ~ 'Grab',
-                                 siteid == 'SERF_IA' ~ 'Grab',
-                                 siteid == 'SERF_SD' ~ 'Grab',
-                                 siteid == 'SWROC' ~ 'Grab',
-                                 siteid == 'UBWC' & month(date) > 2 ~ 'Time Proportional',     # ISCO
-                                 siteid == 'UBWC' & month(date) < 3 ~ 'Grab',
-                                 siteid == 'UBWC' & month(date) == 12 & day(date) > 15 ~ 'Grab',
-                                 siteid == 'WILKIN3' ~ 'Grab',
-                                 TRUE ~ sample_type)) %>%
-  # correct measurement units
-  mutate(value_temp = as.numeric(value),
-         # this is to fix P concentration at WRSIS
-         value_temp = ifelse(str_detect(var_NEW, '^WAT4'), value_temp * 1000, value_temp),
-         value = ifelse(siteid %in% c('DEFI_R', 'FULTON', 'VANWERT') & 
-                          str_detect(var_NEW, '^WAT4') & 
-                          !is.na(value_temp),
-                        as.character(value_temp),
-                        value)) %>%
-  # standartize BDLs
-  mutate(comments = ifelse(value == 'no water', value, comments),
-         value = ifelse(value == 'no water', NA_character_, value),    # at WILKIN3
-         value = ifelse(value == 'NV', NA_character_, value),          # at WRSIS
-         comments = str_replace_all(comments, 'changed to .* from', 'changed to NA from')) %>%
-  select(siteid, plotid, location, height, date, time, sample_type, var_NEW, value, comments) %>%   
-  ungroup() -> wq_ALL
+  bind_rows() -> wq_ALL
 
 
 # Save for later analysis

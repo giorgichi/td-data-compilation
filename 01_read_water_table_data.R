@@ -14,6 +14,11 @@ for (i in sheets) {
 }
 
 
+# Download piezometric data that are not in the standard sheets
+DownloadGoogleSheet('ACRE Piezometer', FOLDER = 'WATER/WATER_TABLE')
+DownloadGoogleSheet('WILKIN2 Piezometer', FOLDER = 'WATER/WATER_TABLE')
+
+
 
 # READ ....................................................................
 # Read each site-data separately
@@ -24,6 +29,11 @@ ReadExcelSheets('Input_Data/WATER/WATER_TABLE/ACRE Water Table Depth.xlsx') %>%
   bind_rows() %>%
   mutate(tmsp = Date) %>%
   select(tmsp, contains('WAT4 Water')) -> wt_ACRE_hourly
+
+ReadExcelSheets('Input_Data/WATER/WATER_TABLE/ACRE Piezometer.xlsx') %>%
+  bind_rows() %>%
+  mutate(date = as.Date(Date)) %>%
+  select(date, contains('WATXX')) -> pz_ACRE_daily
 
 
 # BATH_A ------------------------------------------------------------------
@@ -38,12 +48,10 @@ ReadExcelSheets('Input_Data/WATER/WATER_TABLE/BEAR Water Table Depth.xlsx') %>%
 
 
 # BEAR2 -------------------------------------------------------------------
-# Water table is reported from the ground surface -> Dan is going to update it
-# Also, there are 4 measurements per day with no clear timestamp - Need to ask Dan
 ReadExcelSheets('Input_Data/WATER/WATER_TABLE/BEAR2 Water Table Depth.xlsx') %>%
   bind_rows() %>%
-  mutate(date = as.Date(Date)) %>%
-  select(date, contains('WAT4 Water')) #-> wt_BEAR2_daily
+  mutate(tmsp = update(Date, hour = hour(Time), minute = minute(Time))) %>%
+  select(tmsp, contains('WAT4 Water')) -> wt_BEAR2_hourly
 
 
 # CLAY_C ------------------------------------------------------------------
@@ -153,6 +161,13 @@ ReadExcelSheets('Input_Data/WATER/WATER_TABLE/TIDE Water Table Depth.xlsx') %>%
 
 # WILKIN1 -----------------------------------------------------------------
 ReadExcelSheets('Input_Data/WATER/WATER_TABLE/WILKIN1 Water Table Depth.xlsx') 
+
+
+# WILKIN2 -----------------------------------------------------------------
+ReadExcelSheets('Input_Data/WATER/WATER_TABLE/WILKIN2 Piezometer.xlsx') #%>%
+  # bind_rows() %>%
+  # mutate(date = as.Date(Date)) %>%
+  # select(date, contains('WATXX')) -> pz_WILKIN2_daily
 
 
 # WILKIN3 -----------------------------------------------------------------

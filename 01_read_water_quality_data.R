@@ -4,7 +4,7 @@ source('00_project_settings.R')
 
 
 # DOWNLOAD ................................................................
-# Download all weather data
+# Download all water quality data
 
 gs_ls('WQ') %>%
   filter(!str_detect(sheet_title, 'WQFS')) %>%
@@ -13,6 +13,10 @@ gs_ls('WQ') %>%
 for (i in sheets) {
   DownloadGoogleSheet(TITLE = i, FOLDER = 'WATER/WQ')
 }
+
+
+# Download WQ data that are not in the standard sheets
+DownloadGoogleSheet('CLAY_R Turbidity', FOLDER = 'WATER/WQ')
 
 
 transform_df <- function(df) {
@@ -47,6 +51,8 @@ wq_ACRE %>%
                              var_OLD %in% c('WAT9', 'WAT23') ~ 'WAT40',
                              var_OLD == 'WATXX' ~ 'WAT33',
                              TRUE ~ 'TBD')) %>%
+  mutate(var_NEW = ifelse(var_NEW == 'WAT30' & date < ymd(20160301), 'WAT31', var_NEW),
+         var_NEW = ifelse(var_NEW == 'WAT40' & date < ymd(20160301), 'WAT41', var_NEW)) %>%
   select(siteid, plotid, location, date, time, var_NEW, value) -> wq_ACRE_new
 
 
@@ -166,6 +172,25 @@ wq_CLAY_C %>%
 
 
 # CLAY_R ------------------------------------------------------------------
+ReadExcelSheets('Input_Data/WATER/WQ/CLAY_R Turbidity.xlsx') %>%
+  bind_rows() %>%
+  mutate(date = as.Date(Date),
+         time = NA) %>%
+  gather(key, value, contains('Turbidity')) %>%
+  mutate(siteid = 'CLAY_R',
+         plotid = str_remove(key, ' WAT13 Turbidity'),
+         var_NEW = 'WAT20',
+         location = word(plotid),
+         value = as.character(value)) %>%
+  # get rid of the North field as it is not part of TD
+  filter(plotid != 'Control 3') %>%
+  select(siteid, plotid, location, date, time, var_NEW, value) %>%
+  mutate(location = ifelse(location == 'Control', NA, location),
+         plotid = case_when(plotid == 'Control 1' ~ 'SI',
+                            plotid == 'Control 2' ~ 'CD',
+                            TRUE ~ NA_character_)) -> turbidity_CLAY_R
+
+
 ReadExcelSheets('Input_Data/WATER/WQ/CLAY_R WQ.xlsx') %>%
   map(.x = ., .f =  ~ .x %>% mutate_at(vars(contains("WAT")), as.character)) %>%
   bind_rows() %>%
@@ -183,7 +208,8 @@ wq_CLAY_R %>%
                              var_OLD %in% c('WAT9', 'WAT23') ~ 'WAT40',
                              var_OLD %in% c('WAT14') ~ 'WAT60',
                              TRUE ~ 'TBD')) %>%
-  select(siteid, plotid, location, date, time, var_NEW, value) -> wq_CLAY_R_new
+  select(siteid, plotid, location, date, time, var_NEW, value) %>%
+  bind_rows(turbidity_CLAY_R) -> wq_CLAY_R_new
 
 
 
@@ -548,7 +574,7 @@ wq_SERF_SD %>%
          siteid = "SERF_SD",
          plotid = str_sub(plotid, 1, 5)) %>%
   select(siteid, plotid, location, date, time, var_OLD, var, value) %>% 
-  mutate(var_NEW = case_when(var_OLD %in% c('WAT2', 'WAT21') ~ 'WAT30',
+  mutate(var_NEW = case_when(var_OLD %in% c('WAT2', 'WAT21') ~ 'WAT31',
                              var_OLD %in% c('WAT9', 'WAT23') ~ 'WAT40',
                              TRUE ~ 'TBD')) %>%
   select(siteid, plotid, location, date, time, var_NEW, value) -> wq_SERF_SD_new

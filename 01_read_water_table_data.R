@@ -187,8 +187,8 @@ mget(ls(pattern = 'wt_[[:graph:]]+_hourly')) %>%
   filter(site != 'wt_ALL_hourly') %>%
   mutate(siteid = str_remove(site, 'wt_'),
          siteid = str_remove(siteid, '_hourly')) %>%
-  separate(key, into = c('plotid', 'rest'), sep = ' ', extra = 'merge') %>%
-  select(siteid, plotid, tmsp, value) -> 
+  separate(key, into = c('plotid', 'var', 'rest'), sep = ' ', extra = 'merge') %>%
+  select(siteid, plotid, var, tmsp, value) -> 
   wt_ALL_hourly
 
 write_csv(wt_ALL_hourly, 'Output_Data/water_table_hourly_all.csv')
@@ -196,14 +196,14 @@ write_csv(wt_ALL_hourly, 'Output_Data/water_table_hourly_all.csv')
 
 # Combnine all daily weather data
 rm(wt_ALL_daily)
-mget(ls(pattern = 'wt_[[:graph:]]+_daily')) %>%
+mget(ls(pattern = '(wt|pz)_[[:graph:]]+_daily')) %>%
   map(~ .x %>% gather(key, value, -date)) %>%
   bind_rows(.id = 'site') %>%
-  filter(site != 'weater_ALL_daily') %>%
-  mutate(siteid = str_remove(site, 'wt_'),
+  filter(site != 'wt_ALL_daily') %>%
+  mutate(siteid = str_remove(site, 'wt_|pz_'),
          siteid = str_remove(siteid, '_daily')) %>%
-  separate(key, into = c('plotid', 'rest'), sep = ' ', extra = 'merge') %>%
-  select(siteid, plotid, date, value) ->
+  separate(key, into = c('plotid', 'var', 'rest'), sep = ' ', extra = 'merge') %>%
+  select(siteid, plotid, var, date, value) ->
   wt_ALL_daily
 
 write_csv(wt_ALL_daily, 'Output_Data/water_table_daily_all.csv')

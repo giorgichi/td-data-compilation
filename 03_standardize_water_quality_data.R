@@ -3,12 +3,12 @@ source('00_project_settings.R')
 
 
 
-# Read All agr data
+# Read All water quality data
 wq_ALL <- read_rds('Inter_Data/wq_ALL.rds')
 
 
 
-# Standardize agronomic data
+# Standardize water quality data
 wq_ALL %>%
   # add sample type based on TD Sampling Method data
   mutate(sample_type = case_when(siteid == 'ACRE' & date < ymd(20160301) ~ 'Grab',
@@ -37,6 +37,11 @@ wq_ALL %>%
                                  siteid == 'WILKIN2' ~ 'Flow Proportional',
                                  siteid == 'WILKIN3' ~ 'Grab',
                                  TRUE ~ sample_type)) %>%
+  # correct plot IDs
+  mutate(plotid = case_when(siteid == 'FAIRM' & plotid == 'Sump1' ~ 'West',
+                            siteid == 'FAIRM' & plotid == 'Sump2' ~ 'East',
+                            siteid == 'ACRE' & str_detect(location, 'Inlet') ~ location,
+                            TRUE ~ plotid)) %>%
   # correct measurement units
   mutate(value_temp = as.numeric(value),
          # this is to fix P concentration at WRSIS
@@ -51,12 +56,24 @@ wq_ALL %>%
          value = ifelse(value == 'no water', NA_character_, value),    # at WILKIN3
          value = ifelse(value == 'NV', NA_character_, value),          # at WRSIS
          comments = str_replace_all(comments, 'changed to .* from', 'changed to NA from')) %>%
-  select(siteid, plotid, location, height, date, time, sample_type, var_NEW, value, comments) %>%   
+  select(siteid, plotid, location, height, date, time, sample_type, var_NEW, value, comments) %>%
+  # standardize timestamp
+  mutate(timestamp_type = ifelse(is.na(time), 'D', 'I')) %>%
+  mutate(tmsp = ifelse(timestamp_type == 'I', 
+                       update(date, 
+                              hour = as.numeric(str_sub(time, 1, 2)),
+                              minute = as.numeric(str_sub(time, -2, -1))),
+                       NA),
+         tmsp = as_datetime(tmsp),
+         UTC = case_when(siteid %in% c('DEFI_R', 'FULTON', 'UBWC', 'VANWERT') ~ tmsp + hours(5),
+                         siteid %in% c('HICKS_B', ' WILKIN1', ' WILKIN2') ~ tmsp + hours(6)),
+         UTC = format(UTC, '%Y-%m-%dT%H:%M:%S+00:00')) %>%
+  select(siteid, plotid, location, height, date, time, UTC, timestamp_type,
+         sample_type, var_NEW, value, comments) %>%
   ungroup() -> temp
 
 
 temp %>%
-  filter(is.na(date)) %>%
-  distinct(siteid)
+  filter(is.na(date)) %>% View() 
 
 

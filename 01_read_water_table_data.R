@@ -51,7 +51,7 @@ ReadExcelSheets('Input_Data/WATER/WATER_TABLE/BEAR Water Table Depth.xlsx') %>%
 ReadExcelSheets('Input_Data/WATER/WATER_TABLE/BEAR2 Water Table Depth.xlsx') %>%
   bind_rows() %>%
   mutate(tmsp = update(Date, hour = hour(Time), minute = minute(Time))) %>%
-  select(tmsp, contains('WAT4 Water')) -> wt_BEAR2_hourly
+  select(tmsp, contains('WAT')) -> wt_BEAR2_hourly
 
 
 # CLAY_C ------------------------------------------------------------------
@@ -149,7 +149,7 @@ ReadExcelSheets('Input_Data/WATER/WATER_TABLE/STJOHNS Water Table Depth.xlsx') %
   .[-1] %>%
   bind_rows() %>%
   mutate(tmsp = Date) %>%
-  select(tmsp, contains('WAT4 Water')) -> wt_STJOHNS_hourly
+  select(tmsp, contains('WAT')) -> wt_STJOHNS_hourly
 
 
 # TIDE --------------------------------------------------------------------

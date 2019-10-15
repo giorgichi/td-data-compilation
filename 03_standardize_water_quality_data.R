@@ -25,7 +25,7 @@ wq_ALL %>%
                                  siteid == 'DEFI_R' & str_detect(location, 'lysimeter') ~ 'Grab',
                                  siteid == 'CLAY_C' ~ 'Grab',
                                  siteid == 'CLAY_R' ~ 'Grab',
-                                 siteid == 'FAIRM'  ~ 'Grab',
+                                 siteid == 'FAIRM' & var_NEW != 'WAT15'  ~ 'Grab',
                                  siteid == 'SERF_IA' ~ 'Grab',
                                  siteid == 'SERF_SD' ~ 'Grab',
                                  siteid == 'SWROC' ~ 'Grab',

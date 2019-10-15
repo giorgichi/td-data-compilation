@@ -17,6 +17,8 @@ for (i in sheets) {
 
 # Download WQ data that are not in the standard sheets
 DownloadGoogleSheet('CLAY_R Turbidity', FOLDER = 'WATER/WQ')
+DownloadGoogleSheet('CLAY_R Tile Water EC', FOLDER = 'WATER/WQ')
+DownloadGoogleSheet('FAIRM Tile Water EC', FOLDER = 'WATER/WQ')
 
 
 transform_df <- function(df) {
@@ -191,6 +193,20 @@ ReadExcelSheets('Input_Data/WATER/WQ/CLAY_R Turbidity.xlsx') %>%
                             TRUE ~ NA_character_)) -> turbidity_CLAY_R
 
 
+ReadExcelSheets('Input_Data/WATER/WQ/CLAY_R Tile Water EC.xlsx') %>%
+  bind_rows() %>%
+  mutate(date = as.Date(Date),
+         time = NA) %>%
+  gather(key, value, contains('Water EC')) %>%
+  mutate(siteid = 'CLAY_R',
+         plotid = str_remove(key, ' WAT10 Tile Water EC'),
+         var_NEW = 'WAT15',
+         location = NA,
+         value = as.character(value)) %>%
+  filter(!is.na(value)) %>%
+  select(siteid, plotid, location, date, time, var_NEW, value) -> waterEC_CLAY_R
+
+
 ReadExcelSheets('Input_Data/WATER/WQ/CLAY_R WQ.xlsx') %>%
   map(.x = ., .f =  ~ .x %>% mutate_at(vars(contains("WAT")), as.character)) %>%
   bind_rows() %>%
@@ -209,7 +225,7 @@ wq_CLAY_R %>%
                              var_OLD %in% c('WAT14') ~ 'WAT60',
                              TRUE ~ 'TBD')) %>%
   select(siteid, plotid, location, date, time, var_NEW, value) %>%
-  bind_rows(turbidity_CLAY_R) -> wq_CLAY_R_new
+  bind_rows(turbidity_CLAY_R, waterEC_CLAY_R) -> wq_CLAY_R_new
 
 
 
@@ -358,6 +374,18 @@ wq_DIKE %>%
 
 
 # FAIRM ------------------------------------------------------------------
+ReadExcelSheets('Input_Data/WATER/WQ/FAIRM Tile Water EC.xlsx') %>%
+  bind_rows() %>%
+  gather(key, value, contains('Water EC')) %>%
+  mutate(date = as.Date(Date),
+         time = format(Time, '%H:%M'),
+         siteid = "FAIRM",
+         plotid = str_remove(key, ' WAT10 Tile Water EC'),
+         var_NEW = 'WAT15',
+         location = NA,
+         value = as.character(value)) %>%
+  select(siteid, plotid, location, date, time, var_NEW, value) -> waterEC_FAIRM
+
 ReadExcelSheets('Input_Data/WATER/WQ/FAIRM WQ.xlsx') %>%
   map(.x = ., .f =  ~ .x %>% mutate_at(vars(contains("WAT")), as.character)) %>%
   bind_rows() %>%
@@ -374,7 +402,8 @@ wq_FAIRM %>%
   mutate(var_NEW = case_when(var_OLD %in% c('WAT2', 'WAT21') ~ 'WAT30',
                              var_OLD %in% c('WAT9', 'WAT23') ~ 'WAT40',
                              TRUE ~ 'TBD')) %>%
-  select(siteid, plotid, location, date, time, var_NEW, value) -> wq_FAIRM_new
+  select(siteid, plotid, location, date, time, var_NEW, value) %>%
+  bind_rows(waterEC_FAIRM) -> wq_FAIRM_new
 
 
 # FULTON ------------------------------------------------------------------

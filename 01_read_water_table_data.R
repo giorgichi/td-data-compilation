@@ -4,9 +4,19 @@ source('00_project_settings.R')
 
 
 # DOWNLOAD ................................................................
-# Download all weather data
+# Download all water table data
 
 gs_ls('Water Table Depth') %>%
+  pull(sheet_title) -> sheets
+
+for (i in sheets) {
+  DownloadGoogleSheet(TITLE = i, FOLDER = 'WATER/WATER_TABLE')
+}
+
+
+# Download all water table data
+
+gs_ls('Stage') %>%
   pull(sheet_title) -> sheets
 
 for (i in sheets) {
@@ -104,11 +114,52 @@ ReadExcelSheets('Input_Data/WATER/WATER_TABLE/DEFI_R Water Table Depth 2003-2007
   select(tmsp, contains('WAT4')) -> wt_DEFI_R_hourly
 
 
+ReadExcelSheets('Input_Data/WATER/WATER_TABLE/DEFI_R Stage Wetland 2004-2009.xlsx') %>%
+  bind_rows() %>% 
+  mutate(siteid = 'DEFI_R',
+         plotid = NA_character_,
+         location = 'Wetland', 
+         reading_type = 'automated') %>%
+  select(siteid, plotid, location, tmsp = `DATE&TIME`, 
+         WAT04 = `E WAT15`, WAT14 = `Other WAT`, reading_type) %>%
+  gather(var_NEW, value, WAT04:WAT14) -> stage_DEFI_R_hourly
+
+ReadExcelSheets('Input_Data/WATER/WATER_TABLE/DEFI_R Stage Reservoir 2004-2009.xlsx') %>%
+  bind_rows() %>% 
+  mutate(`R WAT15__1` = as.numeric(`R WAT15__1`)) %>%
+  mutate(siteid = 'DEFI_R',
+         plotid = NA_character_,
+         location = 'Reservoir') %>%
+  select(siteid, plotid, location, tmsp = `DATE&TIME`, 
+         automated = `R WAT15`,  manual = `R WAT15__1`, WAT14 = `Other WAT`) %>%
+  mutate(temp = is.na(automated)) %>%
+  gather(type, WAT04, automated:manual) %>%
+  filter(!is.na(WAT04)) %>%
+  # water storage is based on automated data; when no automated available than it is based on manual
+  # hence storage should be aligned accordingly
+  filter(!(type == 'manual' & temp == 0)) %>%
+  select(siteid, plotid, location, tmsp, reading_type = type, WAT04, WAT14) %>%
+  gather(var_NEW, value, WAT04:WAT14) -> stage_res_DEFI_R_hourly
+
+
 # FAIRM ------------------------------------------------------------------
 ReadExcelSheets('Input_Data/WATER/WATER_TABLE/FAIRM Water Table Depth.xlsx') %>%
   bind_rows() %>%
   mutate(tmsp = Date) %>%
   select(tmsp, contains('WAT4 Water')) -> wt_FAIRM_hourly
+
+
+# FULTON ------------------------------------------------------------------
+ReadExcelSheets('Input_Data/WATER/WATER_TABLE/FULTON Wetland Stage 2008-2011.xlsx') %>%
+  bind_rows() %>% 
+  mutate(siteid = 'FULTON',
+         plotid = NA_character_,
+         location = 'Wetland', 
+         reading_type = 'automated',
+         var_NEW = 'WAT04') %>%
+  select(siteid, plotid, location, tmsp = `DATE&TIME`, 
+         reading_type, var_NEW, value = `E WAT15`) -> 
+  stage_FULTON_hourly
 
 
 # HICKS_B -----------------------------------------------------------------
@@ -159,6 +210,19 @@ ReadExcelSheets('Input_Data/WATER/WATER_TABLE/TIDE Water Table Depth.xlsx') %>%
   select(tmsp, contains('WAT4 Water')) -> wt_TIDE_hourly
 
 
+# VANWERT -----------------------------------------------------------------
+ReadExcelSheets('Input_Data/WATER/WATER_TABLE/VANWERT Wetland Stage 2008-2009.xlsx') %>%
+  bind_rows() %>% 
+  mutate(siteid = 'VANWERT',
+         plotid = NA_character_,
+         location = 'Wetland', 
+         reading_type = 'automated',
+         var_NEW = 'WAT04') %>%
+  select(siteid, plotid, location, tmsp = `DATE&TIME`,
+         reading_type, var_NEW, value = `E WAT15`) -> 
+  stage_VANWERT_hourly
+
+
 # WILKIN1 -----------------------------------------------------------------
 ReadExcelSheets('Input_Data/WATER/WATER_TABLE/WILKIN1 Water Table Depth.xlsx') 
 
@@ -194,7 +258,7 @@ mget(ls(pattern = 'wt_[[:graph:]]+_hourly')) %>%
 write_csv(wt_ALL_hourly, 'Output_Data/water_table_hourly_all.csv')
 
 
-# Combnine all daily weather data
+# Combnine all daily water table data
 rm(wt_ALL_daily)
 mget(ls(pattern = '(wt|pz)_[[:graph:]]+_daily')) %>%
   map(~ .x %>% gather(key, value, -date)) %>%
@@ -209,9 +273,19 @@ mget(ls(pattern = '(wt|pz)_[[:graph:]]+_daily')) %>%
 write_csv(wt_ALL_daily, 'Output_Data/water_table_daily_all.csv')
 
 
+# Combnine all hourly stage data
+rm(st_ALL_hourly)
+mget(ls(pattern = 'stage_[[:graph:]]+_hourly')) %>%
+  bind_rows() ->
+  st_ALL_hourly
+
+write_csv(st_ALL_hourly, 'Output_Data/stage_hourly_all.csv')
+
+
 # Save for later analysis
 write_rds(wt_ALL_hourly, 'Inter_Data/wt_ALL_hourly.rds')
 write_rds(wt_ALL_daily, 'Inter_Data/wt_ALL_daily.rds')
+write_rds(st_ALL_hourly, 'Inter_Data/st_ALL_hourly.rds')
 
 
 

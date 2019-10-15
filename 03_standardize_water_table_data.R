@@ -5,6 +5,7 @@ source('00_project_settings.R')
 # Read All agr data
 wt_ALL_hourly <- read_rds('Inter_Data/wt_ALL_hourly.rds')
 wt_ALL_daily <- read_rds('Inter_Data/wt_ALL_daily.rds')
+st_ALL_hourly <- read_rds('Inter_Data/st_ALL_hourly.rds')
 
 
 
@@ -46,10 +47,11 @@ wt_ALL_daily %>%
 
 # HOURLY WATER TABLE DATA -------------------------------------------------
 
-# Standardize water table data
-wt_ALL_hourly %>%  # assign new var codes
+# Standardize stage and storage data
+st_ALL_hourly %>%  
+  # assign new var codes
   mutate(var_NEW = case_when(var == 'WAT4' ~ 'WAT01',
-                             var == 'WATXX' ~ 'WAT03',
+                             var == 'WATXX' ~ 'WAT02',   # BEAR2 and STJOHNS also have wt level
                              TRUE ~ NA_character_)) %>%
   # add locations and assign plots
   mutate(location = ifelse(siteid %in% c('ACRE', 'BEAR2', 'CLAY_C', 'CLAY_R', 'CLAY_U', 'DEFI_R'), 
@@ -75,33 +77,74 @@ wt_ALL_hourly %>%  # assign new var codes
   # add measurement type 
   mutate(reading_type = 'automated') %>%
   # remove questionable data
-  filter(!(siteid == 'CLAY_C' & year(tmsp) == 2018 & month(tmsp) > 4)) %>%
+  filter(!(siteid == 'CLAY_C' & year(tmsp) == 2018 & month(tmsp) > 4)) %>% 
+  mutate(value = ifelse(siteid == 'TIDE' & plotid == 'H4' & between(tmsp, ymd_h(2009090211), ymd_h(2009092810)), 
+                        NA_real_, value)) %>%
+  mutate(value = ifelse(siteid == 'SERF_IA' & plotid == 'S2' & between(tmsp, ymd_h(2011121919), ymd_h(2012022320)), 
+                        NA_real_, value),
+         value = ifelse(siteid == 'SERF_IA' & plotid == 'S1' & tmsp > ymd_h(2017040523), NA_real_, value)) %>%
   # correct measurement units (convert to meters)
-  mutate(value = case_when(siteid == 'BEAR2' ~ value * 0.3048,        # from ft NEED to confirm with Dan the units
-                           siteid == 'FAIRM' ~ value * 0.3048 * 0.01, # adjusted based on plots published by Rijal, 2012
+  mutate(value = case_when(siteid == 'FAIRM' ~ value * 0.3048 * 0.01, # adjusted based on plots published by Rijal, 2012
                            siteid %in% c('ACRE', 'CLAY_C', 'CLAY_R', 'CLAY_U', 'DEFI_R', 'TIDE',
-                                         'DPAC', 'HICKS_B', 'SERF_IA', 'SERF_SD', 'STJOHNS') ~ value * 0.01,  # from cm
+                                         'DPAC', 'HICKS_B', 'SERF_IA', 'SERF_SD') ~ value * 0.01,  # from cm
+                           siteid == 'STJOHNS' & var_NEW == 'WAT01' ~ value * 0.01,                # from cm
                            TRUE ~ value)) %>%
   # standardize timestamp
   mutate(date = as_date(tmsp),
          time = format(tmsp, '%H:%M'),
          UTC = case_when(siteid %in% c('ACRE', 'DPAC', 'DEFI_R', 'STJOHNS', 'TIDE') ~ tmsp + hours(5), 
                          siteid %in% c('BEAR2', 'CLAY_C', 'CLAY_R', 'CLAY_U', 'FAIRM', 
-                                       'HICKS_B', 'SERF_IA', 'SERF_SD') ~ tmsp + hours(6),
-                         TRUE ~ NA_character_),
+                                       'HICKS_B', 'SERF_IA', 'SERF_SD') ~ tmsp + hours(6)),
          UTC = format(UTC, '%Y-%m-%dT%H:%M:%S+00:00'),     # format according to ISO 8601 standard 
          timestamp_type = 'I') %>%
-  select(siteid, plotid, location, date, time, UTC, timestamp_type, 
+  select(siteid, plotid, location, tmsp, date, time, UTC, timestamp_type, 
          var_NEW, reading_type, value) -> wt_ALL_hourly_standard
 
 
 
+# HOURLY STAGE DATA -------------------------------------------------------
+
+# Standardize water table data
+st_ALL_hourly %>% 
+  # correct measurement units (convert to meters)
+  mutate(value = case_when(var_NEW == 'WAT04' ~ value * 0.01,                # from cm
+                           TRUE ~ value)) %>%
+  # standardize timestamp
+  mutate(date = as_date(tmsp),
+         time = format(tmsp, '%H:%M'),
+         UTC = case_when(siteid %in% c('ACRE', 'DEFI_R', 'FULTON', 'VANWERT') ~ tmsp + hours(5), 
+                         siteid %in% c('MUDS3_NEW', 'SWROC') ~ tmsp + hours(6)),
+         UTC = format(UTC, '%Y-%m-%dT%H:%M:%S+00:00'),     # format according to ISO 8601 standard 
+         timestamp_type = 'I') %>%
+  select(siteid, plotid, location, tmsp, date, time, UTC, timestamp_type, 
+         var_NEW, reading_type, value) -> st_ALL_hourly_standard
+
+
+
+
+# ---------------
+
+wt_ALL_hourly_standard %>%
+  spread(var_NEW, value)
+
+
+# I CAN SAVE STANDARDIZE WT DATA (DAILY & HOURLY) as separate files for Daryl
 
 # CHECKIN
 wt_ALL_hourly_standard %>%
-  filter(siteid == 'TIDE') %>%
-  # filter(year(tmsp) == 2018) %>%
+  filter(siteid == 'SERF_IA') %>%
+  mutate(value = ifelse(siteid == 'SERF_IA' & plotid == 'S2' & between(date, ymd(20111220), ymd(20120222)), 
+                        NA_real_, value),
+         value = ifelse(siteid == 'SERF_IA' & plotid == 'S1' & date > ymd(20170405), NA_real_, value)) %>%
+  # filter(plotid %in% c('S4', 'S5')) %>%
+  # filter(between(date, ymd(20120220), ymd(20120226))) %>%
+  # filter(between(date, ymd(20170322), ymd(20170415))) %>%
+  filter(year(date) %in% 2016) %>%
+  # filter(month(date) %in% 3:4) %>% #filter(day(date) %in% 3:6) %>%
   ggplot(aes(x=tmsp, y=value, group = plotid, col = plotid)) +
   geom_point() + geom_line() +
   scale_y_reverse() +
+  # facet_grid(plotid ~ .) +
   theme_light()
+
+

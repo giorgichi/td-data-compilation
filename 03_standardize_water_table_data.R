@@ -2,7 +2,7 @@
 source('00_project_settings.R')
 
 
-# Read All agr data
+# Read All water level data
 wt_ALL_hourly <- read_rds('Inter_Data/wt_ALL_hourly.rds')
 wt_ALL_daily <- read_rds('Inter_Data/wt_ALL_daily.rds')
 st_ALL_hourly <- read_rds('Inter_Data/st_ALL_hourly.rds')
@@ -48,7 +48,7 @@ wt_ALL_daily %>%
 # HOURLY WATER TABLE DATA -------------------------------------------------
 
 # Standardize stage and storage data
-st_ALL_hourly %>%  
+wt_ALL_hourly %>%  
   # assign new var codes
   mutate(var_NEW = case_when(var == 'WAT4' ~ 'WAT01',
                              var == 'WATXX' ~ 'WAT02',   # BEAR2 and STJOHNS also have wt level

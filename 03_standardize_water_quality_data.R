@@ -37,11 +37,28 @@ wq_ALL %>%
                                  siteid == 'WILKIN2' ~ 'Flow Proportional',
                                  siteid == 'WILKIN3' ~ 'Grab',
                                  TRUE ~ sample_type)) %>%
+  # get rid of plots/locations not being included in TD data
+  filter(!(siteid == 'FULTON' & location == 'C')) %>%
   # correct plot IDs
   mutate(plotid = case_when(siteid == 'FAIRM' & plotid == 'Sump1' ~ 'West',
                             siteid == 'FAIRM' & plotid == 'Sump2' ~ 'East',
                             siteid == 'ACRE' & str_detect(location, 'Inlet') ~ location,
                             TRUE ~ plotid)) %>%
+  # rename location names
+  mutate(location = case_when(siteid == 'DEFI_R' & location == 'L' ~ 'Offsite',
+                              siteid == 'DEFI_R' & location == 'O' ~ 'Wetland_Out',
+                              siteid == 'DEFI_R' & location == 'R' ~ 'Reservoir',
+                              siteid == 'DEFI_R' & location == 'RESOUT' ~ 'Reservoir_Out',
+                              siteid == 'DEFI_R' & location == 'W' ~ 'Wetland',
+                              siteid == 'DEFI_R' & location == 'WETIN' ~ 'Wetland_In',
+                              siteid == 'DEFI_R' & location == 'WETOUT' ~ 'Wetland_Out',
+                              siteid == 'FULTON' & location %in% c('A', 'WET IN') ~ 'Wetland_In',
+                              siteid == 'FULTON' & location %in% c('B', 'WET OUT') ~ 'Wetland_Out',
+                              siteid == 'VANWERT' & location == 'WET IN' ~ 'Wetland_In',
+                              siteid == 'VANWERT' & location == 'WET OUT' ~ 'Wetland_Out',
+                              siteid == 'VANWERT' & location == 'OFFSITE' ~ 'Offsite',
+                              siteid == 'VANWERT' & location == 'RES OUT' ~ 'Reservoir_Out',
+                              TRUE ~ location)) %>%
   # correct measurement units
   mutate(value_temp = as.numeric(value),
          # this is to fix P concentration at WRSIS

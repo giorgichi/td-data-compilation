@@ -306,6 +306,11 @@ ReadExcelSheets('Input_Data/WATER/WQ/DEFI_R WQ 1999-2008.xlsx') %>%
          Comments = ifelse(!is.na(comm) & is.na(Comments), comm, Comments),
          Comments = ifelse(str_detect(Comments, 'No sample'), NA, Comments)) %>%
   select(-comm, - pickupdate) %>%
+  # refine locations based on pH and TFS measurements 
+  mutate(location = ifelse(location == 'W' & method == 'G' & is.na(Time) & YEAR == 2003,
+                           c('WETIN', 'WETOUT'), location),
+         location = ifelse(location == 'RESIN', 'R', location)) %>%
+  arrange(location, method, YEAR, MONTH, Date, Time, `Bottle Number`) %>%
   transform_df() %>%
   select(Date, Time, sample_type = method, location, bottle = `Bottle Number`, height,
          sheet, plotid, var, value, Comments) -> wq_DEFI_R

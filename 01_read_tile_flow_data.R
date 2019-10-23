@@ -217,7 +217,6 @@ ReadExcelSheets('Input_Data/WATER/TILE_FLOW/FILLED - DEFI_M Tile Flow.xlsx')
 read_csv('Input_Data/WATER/TILE_FLOW/DEFI_R_flow_data_1999-2008_2018-10-01.csv') %>%
   select(tmsp = timestamp, siteid = site_ID, location, value = flow) %>%
   mutate(var = 'WAT16', plotid = NA) -> 
-  # !!! DO NOT COMPILE THIS DATA !!!
   tf_DEFI_R_houly
 
 tf_DEFI_R_houly %>%
@@ -225,9 +224,7 @@ tf_DEFI_R_houly %>%
   group_by(siteid, plotid, location, var, date) %>%
   summarise(value = mean(value, na.rm = TRUE)) %>%
   mutate(var_name = 'Discharge') %>%
-  ungroup() -> tf_DEFI_R_daily
-
-tf_DEFI_R_daily %>%
+  ungroup() %>%
   mutate(var_NEW = ifelse(var == 'WAT16', 'WAT05', 'HELP')) %>%
   select(siteid, plotid, location, date, var_NEW, value) -> tf_DEFI_R_daily_GOOD
 
@@ -296,7 +293,6 @@ tf_FAIRM_daily %>%
 read_csv('Input_Data/WATER/TILE_FLOW/FULTON_flow_data_2000-2011_2018-10-01.csv') %>%
   select(tmsp = timestamp, siteid = site_ID, location, value = flow) %>%
   mutate(var = 'WAT16', plotid = NA) -> 
-  # !!! DO NOT COMPILE THIS DATA !!!
   tf_FULTON_houly
 
 tf_FULTON_houly %>%
@@ -306,9 +302,7 @@ tf_FULTON_houly %>%
   group_by(siteid, plotid, location, var, date) %>%
   summarise(value = mean(value, na.rm = TRUE)) %>%
   mutate(var_name = 'Discharge') %>%
-  ungroup() -> tf_FULTON_daily
-
-tf_FULTON_daily %>%
+  ungroup() %>%
   mutate(var_NEW = ifelse(var == 'WAT16', 'WAT05', 'HELP')) %>%
   select(siteid, plotid, location, date, var_NEW, value) -> tf_FULTON_daily_GOOD
 
@@ -321,8 +315,12 @@ ReadExcelSheets('Input_Data/WATER/TILE_FLOW/HARDIN Tile Flow.xlsx') %>%
   select(date, tmsp, contains('WAT')) %>%
   gather(key, value, contains('WAT')) %>%
   separate(key, into = c('plotid', 'var', 'var_name'), sep = ' ', extra = 'merge') %>%
+  # remove erroneous (constant) readings
+  mutate(value = ifelse(plotid == 'North' & 
+                          between(date, ymd(20090522), ymd(20090528)) & 
+                          value == 0.036,
+                        NA_real_, value)) %>%
   mutate(siteid = 'HARDIN') -> 
-  # !!! DO NOT COMPILE THIS DATA !!!
   tf_HARDIN_hourly
 
 ReadExcelSheets('Input_Data/WATER/TILE_FLOW/DAILY CLEAN - HARDIN Tile Flow.xlsx') %>%
@@ -487,8 +485,7 @@ ReadExcelSheets('Input_Data/WATER/TILE_FLOW/SERF_IA Tile Flow.xlsx') %>%
   select(tmsp = Date, contains('WAT')) %>%
   gather(key, value, contains('WAT')) %>%
   separate(key, into = c('plotid', 'var', 'var_name'), sep = ' ', extra = 'merge') %>%
-  mutate(siteid = 'SERF_IA') -> 
-  # !!! DO NOT COMPILE THIS DATA !!!
+  mutate(siteid = 'SERF_IA') ->
   tf_SERF_IA_hourly
 
 ReadExcelSheets('Input_Data/WATER/TILE_FLOW/DAILY CLEAN - SERF_IA Tile Flow.xlsx') %>%
@@ -517,8 +514,9 @@ ReadExcelSheets('Input_Data/WATER/TILE_FLOW/SERF_SD Tile Flow.xlsx') %>%
   select(tmsp = Date, contains('WAT')) %>%
   gather(key, value, contains('WAT')) %>%
   separate(key, into = c('plotid', 'var', 'var_name'), sep = ' ', extra = 'merge') %>%
+  # drop tile water temp and use only flow data
+  filter(var == 'WAT1') %>%
   mutate(siteid = 'SERF_SD') -> 
-  # !!! DO NOT COMPILE THIS DATA !!!
   tf_SERF_SD_hourly
 
 # get the dates when data was actually collected
@@ -575,9 +573,12 @@ ReadExcelSheets('Input_Data/WATER/TILE_FLOW/STJOHNS Tile Flow.xlsx') %>%
   select(tmsp, contains('WAT')) %>%
   gather(key, value, contains('WAT')) %>%
   separate(key, into = c('plotid', 'var', 'var_name'), sep = ' ', extra = 'merge') %>%
-  filter(!is.na(value)) %>%
+  mutate(mins = minute(tmsp)) %>%
+  filter(!(plotid == 'WS' & 
+             between(tmsp, ymd_h(2011091317), ymd_h(2012011914)) &
+             mins %in% c(15, 45))) %>%
+  select(-mins) %>%
   mutate(siteid = 'STJOHNS') -> 
-  # !!! DO NOT COMPILE THIS DATA !!!
   tf_STJOHNS_hourly
 
 ReadExcelSheets('Input_Data/WATER/TILE_FLOW/GV - STJOHNS Tile Flow.xlsx') %>%
@@ -667,7 +668,6 @@ tf_UBWC_daily %>%
 read_csv('Input_Data/WATER/TILE_FLOW/VANWERT_flow_data_2001-2009.csv') %>%
   select(tmsp = timestamp, siteid = site_ID, location, value = flow) %>%
   mutate(var = 'WAT16', plotid = NA) -> 
-  # !!! DO NOT COMPILE THIS DATA !!!
   tf_VANWERT_houly
 
 tf_VANWERT_houly %>%
@@ -675,9 +675,7 @@ tf_VANWERT_houly %>%
   group_by(siteid, plotid, location, var, date) %>%
   summarise(value = mean(value, na.rm = TRUE)) %>%
   mutate(var_name = 'Discharge') %>%
-  ungroup() -> tf_VANWERT_daily
-
-tf_VANWERT_daily %>%
+  ungroup() %>%
   mutate(var_NEW = ifelse(var == 'WAT16', 'WAT05', 'HELP')) %>%
   select(siteid, plotid, location, date, var_NEW, value) -> tf_VANWERT_daily_GOOD
 

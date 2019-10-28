@@ -78,6 +78,15 @@ SoilMoistureDataReader <-
   }
 
 
+# Transform Water Data into a long table
+transform_WAT_df <- function(df) {
+  df %>%
+    gather(key, value, contains('WAT')) %>%
+    separate(key, into = c('plotid', 'var'), extra = 'merge', sep = ' ') %>%
+    filter(!is.na(value))
+}
+
+
 # Set up a theme for plotting
 theme_gio <-
   theme_light() +

@@ -34,13 +34,7 @@ soil_ACRE %>%
          location = plotid, 
          var_OLD = word(var),
          siteid = "ACRE") %>%
-  select(siteid, plotid, location, date, var_OLD, var, value) %>%
-  mutate(var_NEW = case_when(var_OLD %in% c('WAT2')  ~ 'WAT30',
-                             var_OLD %in% c('WAT20') ~ 'WAT70',
-                             TRUE ~ 'TBD')) %>%
-  mutate(var_NEW = ifelse(var_NEW == 'WAT30' & date < ymd(20160301), 'WAT31', var_NEW),
-         var_NEW = ifelse(var_NEW == 'WAT70' & date < ymd(20160301), 'WAT71', var_NEW)) %>%
-  select(siteid, plotid, location, date, var_NEW, value) -> soil_ACRE_new
+  select(siteid, plotid, location, date, var_NEW, value) -> soil_ACRE_properties
 
 
 # AUGLA -------------------------------------------------------------------
@@ -71,7 +65,7 @@ soil_BEAR %>%
          subsample = ifelse(year == 2013, 1:2, NA)) %>%
   select(siteid, location, subsample, depth, year, date, 
          everything(), -uniqueid, -sheet) -> 
-  soil_BEAR_new
+  soil_BEAR_properties
 
 
 
@@ -89,7 +83,7 @@ soil_BEAR2 %>%
          year = year(date)) %>%
   select(siteid, location, subsample, depth, year, date, 
          everything(), -uniqueid, -sheet) -> 
-  soil_BEAR2_new
+  soil_BEAR2_properties
 
 
 
@@ -112,65 +106,64 @@ soil_BENTON %>%
          depth = ifelse(is.na(d2), d1, paste0(d1, '-', d2))) %>%
   select(siteid, location, subsample, depth, year, date, 
          everything(), -uniqueid, -sheet) -> 
-  soil_BENTON_new
+  soil_BENTON_properties
 
 
 
 # CLAY_C ------------------------------------------------------------------
 ReadExcelSheets('Input_Data/SOIL/CLAY_C Soil Data.xlsx') %>%
-  bind_rows() %>%
-  filter(!is.na(Date)) %>%
-  transform_WAT_df() -> soil_CLAY_C
+  pluck(1) -> soil_CLAY_C
 
 # format tables
 soil_CLAY_C %>%
-  mutate(date = as.Date(Date),
-         location = NA_character_, 
-         var_OLD = word(var),
-         siteid = "CLAY_C") %>%
-  select(siteid, plotid, location, date, var_OLD, var, value) %>% 
-  mutate(var_NEW = case_when(var_OLD %in% c('WAT2')  ~ 'WAT30',
-                             var_OLD %in% c('WAT20') ~ 'WAT70',
-                             TRUE ~ 'TBD')) %>%
-  select(siteid, plotid, location, date, var_NEW, value) -> soil_CLAY_C_new
+  remove_empty('cols') %>%
+  mutate(siteid = "CLAY_C",
+         location = subsample,
+         subsample = NA_character_,
+         year = date,
+         date = NA) %>%
+  select(siteid, plotid = plotID, location, subsample, depth, year, date, 
+         everything(), -sheet) -> 
+  soil_CLAY_C_properties
 
 
 
 # CLAY_R ------------------------------------------------------------------
 ReadExcelSheets('Input_Data/SOIL/CLAY_R Soil Data.xlsx') %>%
-  bind_rows() %>%
-  transform_WAT_df() -> soil_CLAY_R
+  pluck(1) ->  soil_CLAY_R
 
 # format tables
 soil_CLAY_R %>%
-  mutate(date = as.Date(Date),
-         location = NA_character_, 
-         var_OLD = word(var),
-         siteid = "CLAY_R") %>%
-  select(siteid, plotid, location, date, var_OLD, var, value) %>%
-  mutate(var_NEW = case_when(var_OLD %in% c('WAT2')  ~ 'WAT30',
-                             var_OLD %in% c('WAT20') ~ 'WAT70',
-                             TRUE ~ 'TBD')) %>%
-  select(siteid, plotid, location, date, var_NEW, value) -> soil_CLAY_R_new
+  remove_empty('cols') %>%
+  mutate(siteid = "CLAY_R",
+         location = subsample,
+         subsample = NA_character_,
+         year = ifelse(date < 2020, date, year(as.Date(date, origin = "1899-12-30"))),
+         date = ifelse(date < 2020, NA, as.Date(date, origin = "1899-12-30")),
+         date = as.Date(date, origin = origin)) %>%
+  # correct location names at 0-5 depth in 2017
+  mutate(location = ifelse(year == 2017 & depth == '0 - 5', paste0(location, '-2'), location)) %>%
+  select(siteid, plotid = plotID, location, subsample, depth, year, date, 
+         everything(), -sheet) -> 
+  soil_CLAY_R_properties
 
 
 
 # CLAY_U ------------------------------------------------------------------
 ReadExcelSheets('Input_Data/SOIL/CLAY_U Soil Data.xlsx') %>%
-  bind_rows() %>%
-  transform_WAT_df() -> soil_CLAY_U
+  pluck(1) ->  soil_CLAY_U
 
 # format tables
 soil_CLAY_U %>%
-  mutate(date = as.Date(Date),
-         location = NA_character_, 
-         var_OLD = word(var),
-         siteid = "CLAY_U") %>%
-  select(siteid, plotid, location, date, var_OLD, var, value) %>%
-  mutate(var_NEW = case_when(var_OLD %in% c('WAT2')  ~ 'WAT30',
-                             var_OLD %in% c('WAT20') ~ 'WAT70',
-                             TRUE ~ 'TBD')) %>%
-  select(siteid, plotid, location, date, var_NEW, value) -> soil_CLAY_U_new
+  remove_empty('cols') %>%
+  mutate(siteid = "CLAY_U",
+         location = subsample,
+         subsample = NA_character_,
+         year = date,
+         date = NA) %>%
+  select(siteid, plotid = plotID, location, subsample, depth, year, date, 
+         everything(), -sheet) -> 
+  soil_CLAY_U_properties
 
 
 
@@ -212,7 +205,7 @@ soil_DIKE %>%
   filter(!(location == 'middle' & SOIL26 > 80)) %>%
   select(siteid, location, subsample, depth, year, date, 
          everything(), -uniqueid, -sheet) ->
-  soil_DIKE_new
+  soil_DIKE_properties
 
 
 
@@ -227,35 +220,30 @@ soil_DPAC %>%
          location = NA_character_,
          var_OLD = word(var),
          siteid = "DPAC") %>%
-  select(siteid, plotid, location, date, var_OLD, var, value) %>%
-  mutate(var_NEW = case_when(var_OLD == 'WAT2'  ~ 'WAT30',
-                             var_OLD == 'WAT20' ~ 'WAT70',
-                             var_OLD == 'WAT9'  ~ 'WAT40',
-                             var_OLD == 'WAT26' ~ 'WAT80',
-                             TRUE ~ 'TBD')) %>%
-  select(siteid, plotid, location, date, var_NEW, value) -> soil_DPAC_new
+  select(siteid, plotid, location, date, var_NEW, value) -> soil_DPAC_properties
 
 
 
 # FAIRM ------------------------------------------------------------------
 ReadExcelSheets('Input_Data/SOIL/FAIRM Soil Data.xlsx') %>%
-  map(.x = ., .f =  ~ .x %>% mutate_at(vars(contains("WAT")), as.character)) %>%
-  bind_rows() %>%
-  transform_WAT_df() %>%
-  mutate(value = str_remove(value, '<')) %>%
-  mutate(value = as.numeric(value)) -> soil_FAIRM
+  pluck(1) -> soil_FAIRM
 
 # format tables
 soil_FAIRM %>%
-  mutate(date = as.Date(Date),
-         location = NA_character_, 
-         var_OLD = word(var),
-         siteid = "FAIRM") %>%
-  select(siteid, plotid, location, date, var_OLD, var, value) %>% 
-  mutate(var_NEW = case_when(var_OLD %in% c('WAT2')  ~ 'WAT30',
-                             var_OLD %in% c('WAT20') ~ 'WAT70',
-                             TRUE ~ 'TBD')) %>%
-  select(siteid, plotid, location, date, var_NEW, value) -> soil_FAIRM_new
+  remove_empty('cols') %>%
+  mutate(siteid = "FAIRM",
+         location = subsample,
+         subsample = NA_character_,
+         year = ifelse(date < 2020, date, year(as.Date(date, origin = "1899-12-30"))),
+         date = ifelse(date < 2020, NA, as.Date(date, origin = "1899-12-30")),
+         date = as.Date(date, origin = origin)) %>%
+  # correct location names at 0-5 depth in 2017
+  mutate(location = case_when(year == 2017 & location == 'A2' ~ paste0(location, '-2'), 
+                              year == 2017 & location %in% c('B1', 'C2') ~ paste0(location, '-1'), 
+                              TRUE ~ location)) %>%
+  select(siteid, plotid = plotID, location, subsample, depth, year, date, 
+         everything(), -sheet) -> 
+  soil_FAIRM_properties
 
 
 
@@ -298,7 +286,7 @@ soil_HICKORY %>%
   mutate(depth = paste0(round(d1*2.54), '-', round(d2*2.54))) %>%
   select(siteid, location, subsample, depth, year, date, 
          everything(), -uniqueid, -sheet) ->
-  soil_HICKORY_new
+  soil_HICKORY_properties
 
 
 
@@ -315,11 +303,7 @@ soil_HICKS_B %>%
          location = NA_character_, 
          var_OLD = word(var),
          siteid = "HICKS_B") %>%
-  select(siteid, plotid, location, date, var_OLD, var, value) %>%
-  mutate(var_NEW = case_when(var_OLD %in% c('WAT2')  ~ 'WAT30',
-                             var_OLD %in% c('WAT20') ~ 'WAT70',
-                             TRUE ~ 'TBD')) %>%
-  select(siteid, plotid, location, date, var_NEW, value) -> soil_HICKS_B_new
+  select(siteid, plotid, location, date, var_NEW, value) -> soil_HICKS_B_properties
 
 
 
@@ -351,7 +335,7 @@ soil_MAASS %>%
                               TRUE ~ NA_character_)) %>% 
   select(siteid, location, subsample, depth, year, date, 
          everything(), -uniqueid, -sheet) ->
-  soil_MAASS_new
+  soil_MAASS_properties
 
 
 
@@ -374,11 +358,7 @@ soil_MUDS2 %>%
          location = NA_character_, 
          var_OLD = word(var),
          siteid = "MUDS2") %>%
-  select(siteid, plotid, location, date, var_OLD, var, value) %>%
-  mutate(var_NEW = case_when(var_OLD %in% c('WAT2')  ~ 'WAT30',
-                             var_OLD %in% c('WAT20') ~ 'WAT70',
-                             TRUE ~ 'TBD')) %>%
-  select(siteid, plotid, location, date, var_NEW, value) -> soil_MUDS2_new
+  select(siteid, plotid, location, date, var_NEW, value) -> soil_MUDS2_properties
 
 
 # MUDS3_NEW ---------------------------------------------------------------
@@ -398,11 +378,7 @@ soil_MUDS3_OLD %>%
          location = NA_character_, 
          var_OLD = word(var),
          siteid = "MUDS3_OLD") %>%
-  select(siteid, plotid, location, date, var_OLD, var, value) %>%
-  mutate(var_NEW = case_when(var_OLD %in% c('WAT2')  ~ 'WAT30',
-                             var_OLD %in% c('WAT20') ~ 'WAT70',
-                             TRUE ~ 'TBD')) %>%
-  select(siteid, plotid, location, date, var_NEW, value) -> soil_MUDS3_OLD_new
+  select(siteid, plotid, location, date, var_NEW, value) -> soil_MUDS3_OLD_properties
 
 
 # MUDS4 -------------------------------------------------------------------
@@ -416,11 +392,7 @@ soil_MUDS4 %>%
          location = NA_character_, 
          var_OLD = word(var),
          siteid = "MUDS4") %>%
-  select(siteid, plotid, location, date, var_OLD, var, value) %>% 
-  mutate(var_NEW = case_when(var_OLD %in% c('WAT2')  ~ 'WAT30',
-                             var_OLD %in% c('WAT20') ~ 'WAT70',
-                             TRUE ~ 'TBD')) %>%
-  select(siteid, plotid, location, date, var_NEW, value) -> soil_MUDS4_new
+  select(siteid, plotid, location, date, var_NEW, value) -> soil_MUDS4_properties
 
 
 
@@ -435,13 +407,7 @@ soil_SERF_IA %>%
          location = NA_character_, 
          var_OLD = word(var),
          siteid = "SERF_IA") %>%
-  select(siteid, plotid, location, date, var_OLD, var, value) %>%
-  mutate(var_NEW = case_when(var_OLD == 'WAT2'  ~ 'WAT30',
-                             var_OLD == 'WAT20' ~ 'WAT70',
-                             var_OLD == 'WAT9'  ~ 'WAT40',
-                             var_OLD == 'WAT26' ~ 'WAT80',
-                             TRUE ~ 'TBD')) %>%
-  select(siteid, plotid, location, date, var_NEW, value) -> soil_SERF_IA_new
+  select(siteid, plotid, location, date, var_NEW, value) -> soil_SERF_IA_properties
 
 
 
@@ -456,13 +422,7 @@ soil_SERF_SD %>%
          location = ifelse(str_length(plotid) > 5, plotid, NA), 
          var_OLD = word(var),
          siteid = "SERF_SD") %>%
-  select(siteid, plotid, location, date, var_OLD, var, value) %>%
-  mutate(var_NEW = case_when(var_OLD == 'WAT02' ~ 'WAT31',
-                             var_OLD == 'WAT20' ~ 'WAT71',
-                             var_OLD == 'WAT09' ~ 'WAT40',
-                             var_OLD == 'WAT26' ~ 'WAT80',
-                             TRUE ~ 'TBD')) %>%
-  select(siteid, plotid, location, date, var_NEW, value) -> soil_SERF_SD_new
+  select(siteid, plotid, location, date, var_NEW, value) -> soil_SERF_SD_properties
 
 
 
@@ -480,7 +440,7 @@ soil_SHEARER %>%
          year = year(date)) %>%
   select(siteid, location, subsample, depth, year, date, 
          everything(), -uniqueid, -sheet) ->
-  soil_SHEARER_new
+  soil_SHEARER_properties
 
 
 
@@ -495,13 +455,7 @@ soil_STJOHNS %>%
          location = NA_character_,
          var_OLD = word(var),
          siteid = "STJOHNS") %>%
-  select(siteid, plotid, location, date, var_OLD, var, value) %>%
-  mutate(var_NEW = case_when(var_OLD == 'WAT2'  ~ 'WAT30',
-                             var_OLD == 'WAT20' ~ 'WAT70',
-                             var_OLD == 'WAT9'  ~ 'WAT40',
-                             var_OLD == 'WAT26' ~ 'WAT80',
-                             TRUE ~ 'TBD')) %>%
-  select(siteid, plotid, location, date, var_NEW, value) -> soil_STJOHNS_new
+  select(siteid, plotid, location, date, var_NEW, value) -> soil_STJOHNS_properties
 
 
 # STORY -------------------------------------------------------------------
@@ -519,32 +473,22 @@ soil_STORY %>%
          location = NA_character_, 
          var_OLD = word(var),
          siteid = "STORY") %>%
-  select(siteid, plotid, location, date, var_OLD, var, value) %>%
-  mutate(var_NEW = case_when(var_OLD %in% c('WAT2')  ~ 'WAT30',
-                             var_OLD %in% c('WAT20') ~ 'WAT70',
-                             TRUE ~ 'TBD')) %>%
-  select(siteid, plotid, location, date, var_NEW, value) -> soil_STORY_new
+  select(siteid, plotid, location, date, var_NEW, value) -> soil_STORY_properties
 
 
 
 # SWROC -------------------------------------------------------------------
 ReadExcelSheets('Input_Data/SOIL/SWROC Soil Data.xlsx') %>%
-  bind_rows() #%>%
-# transform_WAT_df() -> soil_SWROC
+  bind_rows() %>%
+transform_WAT_df() -> soil_SWROC
 
-# # format tables
-# soil_SWROC %>%
-#   mutate(date = as.Date(Date),
-#          location = NA_character_,
-#          var_OLD = word(var),
-#          siteid = "SWROC") %>%
-#   select(siteid, plotid, location, date, var_OLD, var, value) %>%
-#   mutate(var_NEW = case_when(var_OLD == 'WAT2'  ~ 'WAT30',
-#                              var_OLD == 'WAT20' ~ 'WAT70',
-#                              var_OLD == 'WAT9'  ~ 'WAT40',
-#                              var_OLD == 'WAT26' ~ 'WAT80',
-#                              TRUE ~ 'TBD')) %>%
-#   select(siteid, plotid, location, date, var_NEW, value) -> soil_SWROC_new
+# format tables
+soil_SWROC %>%
+  mutate(date = as.Date(Date),
+         location = NA_character_,
+         var_OLD = word(var),
+         siteid = "SWROC") %>%
+  select(siteid, plotid, location, date, var_NEW, value) -> soil_SWROC_properties
 
 
 # TIDE --------------------------------------------------------------------
@@ -560,13 +504,7 @@ soil_TIDE %>%
          location = NA_character_, 
          var_OLD = word(var),
          siteid = "TIDE") %>%
-  select(siteid, plotid, location, date, var_OLD, var, value) %>%
-  mutate(var_NEW = case_when(var_OLD == 'WAT2'  ~ 'WAT30',
-                             var_OLD == 'WAT20' ~ 'WAT70',
-                             var_OLD == 'WAT9'  ~ 'WAT40',
-                             var_OLD == 'WAT26' ~ 'WAT80',
-                             TRUE ~ 'TBD')) %>%
-  select(siteid, plotid, location, date, var_NEW, value) -> soil_TIDE_new
+  select(siteid, plotid, location, date, var_NEW, value) -> soil_TIDE_properties
 
 
 
@@ -581,11 +519,7 @@ soil_UBWC %>%
          location = NA_character_, 
          var_OLD = word(var),
          siteid = "UBWC") %>%
-  select(siteid, plotid, location, date, var_OLD, var, value) %>%
-  mutate(var_NEW = case_when(var_OLD %in% c('WAT2')  ~ 'WAT30',
-                             var_OLD %in% c('WAT20') ~ 'WAT70',
-                             TRUE ~ 'TBD')) %>%
-  select(siteid, plotid, location, date, var_NEW, value) -> soil_UBWC_new
+  select(siteid, plotid, location, date, var_NEW, value) -> soil_UBWC_properties
 
 
 
@@ -604,27 +538,10 @@ ReadExcelSheets('Input_Data/SOIL/WILKIN1 Soil Data.xlsx') %>%
 
 # format tables
 soil_WILKIN1 %>%
-  group_by(date = as.Date(Date), plotid, var) %>%
-  summarise(SUMs = sum(value, na.rm = TRUE),
-            MEANs = mean(value, na.rm = TRUE)) %>%
-  ungroup() %>%
-  mutate(value = case_when(str_detect(var, 'WAT20|WAT26|WATXX') ~ SUMs,
-                           str_detect(var, 'WAT2 |WAT9 |WAT8 ') ~ MEANs,
-                           TRUE ~ NA_real_)) %>%
-  # convert units from g to kg
-  mutate(value = ifelse(str_detect(var, 'WAT26|WATXX'), value / 1000, value)) %>%
   mutate(location = NA_character_, 
          var_OLD = word(var),
          siteid = "WILKIN1") %>%
-  select(siteid, plotid, location, date, var_OLD, var, value) %>%
-  mutate(var_NEW = case_when(var_OLD == 'WAT2'  ~ 'WAT30',
-                             var_OLD == 'WAT20' ~ 'WAT70',
-                             var_OLD == 'WAT9'  ~ 'WAT40',
-                             var_OLD == 'WAT26' ~ 'WAT80',
-                             var_OLD == 'WAT8'  ~ 'WAT42',  # unsure, maybe WAT43?
-                             var_OLD == 'WATXX' ~ 'WAT82',  # unsure, maybe WAT83?
-                             TRUE ~ 'TBD')) %>%
-  select(siteid, plotid, location, date, var_NEW, value) -> soil_WILKIN1_new
+  select(siteid, plotid, location, date, var_NEW, value) -> soil_WILKIN1_properties
 
 
 
@@ -635,27 +552,10 @@ ReadExcelSheets('Input_Data/SOIL/WILKIN2 Soil Data.xlsx') %>%
 
 # format tables
 soil_WILKIN2 %>%
-  group_by(date = as.Date(Date), plotid, var) %>%
-  summarise(SUMs = sum(value, na.rm = TRUE),
-            MEANs = mean(value, na.rm = TRUE)) %>%
-  ungroup() %>%
-  mutate(value = case_when(str_detect(var, 'WAT20|WAT26|WATXX') ~ SUMs,
-                           str_detect(var, 'WAT2 |WAT9 |WAT8 ') ~ MEANs,
-                           TRUE ~ NA_real_)) %>%
-  # convert units from g to kg
-  mutate(value = ifelse(str_detect(var, 'WAT26|WATXX'), value / 1000, value)) %>%
   mutate(location = NA_character_, 
          var_OLD = word(var),
          siteid = "WILKIN2") %>%
-  select(siteid, plotid, location, date, var_OLD, var, value) %>%
-  mutate(var_NEW = case_when(var_OLD == 'WAT2'  ~ 'WAT30',
-                             var_OLD == 'WAT20' ~ 'WAT70',
-                             var_OLD == 'WAT9'  ~ 'WAT40',
-                             var_OLD == 'WAT26' ~ 'WAT80',
-                             var_OLD == 'WAT8'  ~ 'WAT42',  # unsure, maybe WAT43?
-                             var_OLD == 'WATXX' ~ 'WAT82',  # unsure, maybe WAT83?
-                             TRUE ~ 'TBD')) %>%
-  select(siteid, plotid, location, date, var_NEW, value) -> soil_WILKIN2_new
+  select(siteid, plotid, location, date, var_NEW, value) -> soil_WILKIN2_properties
 
 
 # WILKIN3 -----------------------------------------------------------------
@@ -665,13 +565,6 @@ ReadExcelSheets('Input_Data/SOIL/WILKIN3 Soil Data.xlsx') %>%
 
 # format tables
 soil_WILKIN3 %>%
-  group_by(date = as.Date(Date), plotid, var) %>%
-  summarise(SUMs = sum(value, na.rm = TRUE),
-            MEANs = mean(value, na.rm = TRUE)) %>%
-  ungroup() %>%
-  mutate(value = case_when(str_detect(var, 'WAT20 Tile') ~ SUMs,
-                           str_detect(var, 'WAT2 Tile ') ~ MEANs,
-                           TRUE ~ NA_real_)) %>%
   mutate(siteid = "WILKIN3",
          plotid = case_when(plotid %in% c('CS03', 'From_Field') ~ 'Field',
                             plotid %in% 'To_Buffer' ~ 'Buffer',
@@ -679,17 +572,7 @@ soil_WILKIN3 %>%
                             TRUE ~ 'HELP'),
          location = NA_character_, 
          var_OLD = word(var)) %>%
-  # convert N loads from kg/ha to mass based kg
-  mutate(value = case_when(var_OLD == 'WAT20' ~ value * 4,
-                           TRUE ~ value)) %>%
-  # format tables
-  mutate(var_NEW = case_when(plotid == 'Field' & var_OLD == 'WAT2'  ~ 'WAT30',
-                             plotid == 'Field' & var_OLD == 'WAT20' ~ 'WAT90',
-                             plotid == 'Buffer' & var_OLD == 'WAT20' ~ 'WAT90',
-                             plotid == 'Stream' & var_OLD == 'WAT20' ~ 'WAT90',
-                             str_detect(var, 'removed') ~ 'WAT91', 
-                             TRUE ~ 'TBD')) %>%
-  select(siteid, plotid, location, date, var_NEW, value) -> soil_WILKIN3_new
+  select(siteid, plotid, location, date, var_NEW, value) -> soil_WILKIN3_properties
 
 
 
@@ -699,7 +582,7 @@ soil_WILKIN3 %>%
 
 
 # Combnine all hourly water table data
-mget(ls(pattern = 'soil_[[:graph:]]+_new')) %>%
+mget(ls(pattern = 'soil_[[:graph:]]+_properties')) %>%
   bind_rows() -> soil_ALL
 
 

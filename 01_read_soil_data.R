@@ -27,13 +27,17 @@ for (i in sheet_names) {
 ReadExcelSheets('Input_Data/SOIL/ACRE Soil Data.xlsx') %>%
   pluck(1) -> soil_ACRE
 
-# format tables
+# format Soil Properties tables
 soil_ACRE %>%
-  mutate(date = as.Date(Date),
-         location = plotid, 
-         var_OLD = word(var),
-         siteid = "ACRE") %>%
-  select(siteid, plotid, location, date, var_NEW, value) -> soil_ACRE_properties
+  remove_empty('cols') %>%
+  mutate(siteid = "ACRE",
+         location = plotID,
+         plotID = NA_character_,
+         year = year(date),
+         date = as.Date(date)) %>%
+  select(siteid, plotid = plotID, location, subsample, depth, year, date, 
+         everything(), -sheet) -> 
+  soil_ACRE_properties
 
 
 # AUGLA -------------------------------------------------------------------
@@ -149,7 +153,7 @@ ReadExcelSheets('Input_Data/SOIL/CLAY_C Soil Data.xlsx') %>%
          year = date,
          date = NA) %>%
   select(siteid, plotid = plotID, location, subsample, depth, year, date, 
-         WAT_potential = ...5, WAT_rretention = ...6) -> 
+         SW_potential = ...5, SW_retention = ...6) -> 
   soil_CLAY_C_wr
 
 
@@ -197,7 +201,7 @@ ReadExcelSheets('Input_Data/SOIL/CLAY_R Soil Data.xlsx') %>%
          year = date,
          date = NA) %>%
   select(siteid, plotid = plotID, location, subsample, depth, year, date, 
-         WAT_potential = ...5, WAT_rretention = ...6) -> 
+         SW_potential = ...5, SW_retention = ...6) -> 
   soil_CLAY_R_wr
 
 
@@ -241,7 +245,7 @@ ReadExcelSheets('Input_Data/SOIL/CLAY_U Soil Data.xlsx') %>%
          year = date,
          date = NA) %>%
   select(siteid, plotid = plotID, location, subsample, depth, year, date, 
-         WAT_potential = ...5, WAT_rretention = ...6) -> 
+         SW_potential = ...5, SW_retention = ...6) -> 
   soil_CLAY_U_wr
 
 
@@ -304,13 +308,38 @@ soil_DIKE %>%
 ReadExcelSheets('Input_Data/SOIL/DPAC Soil Data.xlsx') %>%
   pluck(1) -> soil_DPAC
 
-# format tables
+# format Soil Properties tables
 soil_DPAC %>%
-  mutate(date = as.Date(Date),
-         location = NA_character_,
-         var_OLD = word(var),
-         siteid = "DPAC") %>%
-  select(siteid, plotid, location, date, var_NEW, value) -> soil_DPAC_properties
+  remove_empty('cols') %>%
+  mutate(siteid = "DPAC",
+         year = date,
+         date = NA) %>%
+  select(siteid, plotid = plotID, location, subsample, depth, year, date, 
+         everything(), -sheet) -> 
+  soil_DPAC_properties
+
+# format Soil Nitrate tables
+ReadExcelSheets('Input_Data/SOIL/DPAC Soil Data.xlsx') %>%
+  pluck(4) %>%
+  remove_empty('cols') %>%
+  mutate(siteid = "DPAC",
+         subsample = NA_character_,
+         year = year(date),
+         date = as.Date(date)) %>%
+  select(siteid, plotid = plotID, location, subsample, depth, year, date, 
+         everything(), -sheet) -> 
+  soil_DPAC_nitrate
+
+# format Soil Water Retention tables
+ReadExcelSheets('Input_Data/SOIL/DPAC Soil Data.xlsx') %>%
+  pluck(2) %>%
+  remove_empty('cols') %>%
+  mutate(siteid = "DPAC",
+         year = date,
+         date = NA) %>%
+  select(siteid, plotid = plotID, location, subsample, depth, year, date, 
+         SW_potential = ...6, SW_retention = ...7) -> 
+  soil_DPAC_wr
 
 
 
@@ -403,27 +432,85 @@ soil_HICKORY %>%
 
 # HICKS_B -----------------------------------------------------------------
 ReadExcelSheets('Input_Data/SOIL/HICKS_B Soil Data.xlsx') %>%
-  # NEED UPDATED data
-  bind_rows() %>%
-  filter(!is.na(Date)) %>% 
-  transform_WAT_df() -> soil_HICKS_B
+  pluck(1) -> soil_HICKS_B
 
-# format tables
+# format Soil Properties tables
 soil_HICKS_B %>%
-  mutate(date = as.Date(Date),
-         location = NA_character_, 
-         var_OLD = word(var),
-         siteid = "HICKS_B") %>%
-  select(siteid, plotid, location, date, var_NEW, value) -> soil_HICKS_B_properties
+  remove_empty('cols') %>%
+  mutate(siteid = "HICKS_B",
+         year = date,
+         date = NA) %>%
+  select(siteid, plotid = plotID, location, subsample, depth, year, date, 
+         everything(), -sheet) -> 
+  soil_HICKS_B_properties
+
+# format Soil Nitrate tables
+ReadExcelSheets('Input_Data/SOIL/HICKS_B Soil Data.xlsx') %>%
+  pluck(4) %>%
+  remove_empty('cols') %>%
+  mutate(siteid = "HICKS_B",
+         subsample = NA_character_,
+         year = year(date),
+         date = as.Date(date)) %>%
+  select(siteid, plotid = plotID, location, subsample, depth, year, date, 
+         everything(), -sheet) -> 
+  soil_HICKS_B_nitrate
+
+# format Soil Water Retention tables
+ReadExcelSheets('Input_Data/SOIL/HICKS_B Soil Data.xlsx') %>%
+  pluck(2) %>%
+  remove_empty('cols') %>%
+  mutate(siteid = "HICKS_B",
+         year = date,
+         date = NA) %>%
+  select(siteid, plotid = plotID, location, subsample, depth, year, date, 
+         SW_potential = ...6, SW_retention = ...7) -> 
+  soil_HICKS_B_wr
 
 
 
 # HICKS_P -----------------------------------------------------------------
 ReadExcelSheets('Input_Data/SOIL/HICKS_P Soil Data.xlsx') %>%
-  # NEED UPDATED data
-  bind_rows() %>%
-  filter(!is.na(Date)) %>% 
-  transform_WAT_df() -> soil_HICKS_P
+  pluck(1) -> soil_HICKS_P
+
+# format Soil Properties tables
+soil_HICKS_P %>%
+  remove_empty('cols') %>%
+  mutate(siteid = "HICKS_P",
+         location = plotID,
+         plotID = NA_character_,
+         year = date,
+         date = NA) %>%
+  select(siteid, plotid = plotID, location, subsample, depth, year, date, 
+         everything(), -sheet) -> 
+  soil_HICKS_P_properties
+
+# format Soil Nitrate tables
+ReadExcelSheets('Input_Data/SOIL/HICKS_P Soil Data.xlsx') %>%
+  pluck(4) %>%
+  remove_empty('cols') %>%
+  mutate(siteid = "HICKS_P",
+         location = plotID,
+         plotID = NA_character_,
+         subsample = NA_character_,
+         year = year(date),
+         date = as.Date(date)) %>%
+  select(siteid, plotid = plotID, location, subsample, depth, year, date, 
+         everything(), -sheet) -> 
+  soil_HICKS_P_nitrate
+
+# format Soil Water Retention tables
+ReadExcelSheets('Input_Data/SOIL/HICKS_P Soil Data.xlsx') %>%
+  pluck(2) %>%
+  remove_empty('cols') %>%
+  mutate(siteid = "HICKS_P",
+         location = plotID,
+         plotID = NA_character_,
+         year = date,
+         date = NA) %>%
+  select(siteid, plotid = plotID, location, subsample, depth, year, date, 
+         SW_potential = ...5, SW_retention = ...6) -> 
+  soil_HICKS_P_wr
 
 
 
@@ -603,13 +690,37 @@ ReadExcelSheets('Input_Data/SOIL/MUDS4 Soil Data.xlsx') %>%
 ReadExcelSheets('Input_Data/SOIL/SERF_IA Soil Data.xlsx') %>%
   pluck(1) -> soil_SERF_IA
 
-# format tables
+# format Soil Properties tables
 soil_SERF_IA %>%
-  mutate(date = as.Date(Date),
-         location = NA_character_, 
-         var_OLD = word(var),
-         siteid = "SERF_IA") %>%
-  select(siteid, plotid, location, date, var_NEW, value) -> soil_SERF_IA_properties
+  remove_empty('cols') %>%
+  mutate(siteid = "SERF_IA",
+         year = date,
+         date = NA) %>%
+  select(siteid, plotid = plotID, location, subsample, depth, year, date, 
+         everything(), -sheet) -> 
+  soil_SERF_IA_properties
+
+# format Soil Nitrate tables
+ReadExcelSheets('Input_Data/SOIL/SERF_IA Soil Data.xlsx') %>%
+  pluck(4) %>%
+  remove_empty('cols') %>%
+  mutate(siteid = "SERF_IA",
+         subsample = NA_character_,
+         date = as.Date(date)) %>%
+  select(siteid, plotid = plotID, location, subsample, depth, year, date, 
+         everything(), -sheet) -> 
+  soil_SERF_IA_nitrate
+
+# format Soil Water Retention tables
+ReadExcelSheets('Input_Data/SOIL/SERF_IA Soil Data.xlsx') %>%
+  pluck(2) %>%
+  remove_empty('cols') %>%
+  mutate(siteid = "SERF_IA",
+         year = date,
+         date = NA) %>%
+  select(siteid, plotid = plotID, location, subsample, depth, year, date, 
+         SW_potential = ...6, SW_retention = ...7) -> 
+  soil_SERF_IA_wr
 
 
 
@@ -617,13 +728,42 @@ soil_SERF_IA %>%
 ReadExcelSheets('Input_Data/SOIL/SERF_SD Soil Data.xlsx') %>%
   pluck(1) -> soil_SERF_SD
 
-# format tables
+# format Soil Properties tables
 soil_SERF_SD %>%
-  mutate(date = as.Date(Date),
-         location = ifelse(str_length(plotid) > 5, plotid, NA), 
-         var_OLD = word(var),
-         siteid = "SERF_SD") %>%
-  select(siteid, plotid, location, date, var_NEW, value) -> soil_SERF_SD_properties
+  remove_empty('cols') %>%
+  mutate(siteid = "SERF_SD",
+         location = ifelse(year == 2017, plotID, NA_character_),
+         plotID = ifelse(year == 2017, NA_character_, plotID),
+         date = as.Date(date)) %>%
+  select(siteid, plotid = plotID, location, subsample, depth, year, date, 
+         everything(), -sheet) -> 
+  soil_SERF_SD_properties
+
+# format Soil Nitrate tables
+ReadExcelSheets('Input_Data/SOIL/SERF_SD Soil Data.xlsx') %>%
+  pluck(4) %>%
+  remove_empty('cols') %>%
+  mutate(siteid = "SERF_SD",
+         location = NA_character_,
+         subsample = NA_character_,
+         year = year(date),
+         date = as.Date(date)) %>%
+  select(siteid, plotid = plotID, location, subsample, depth, year, date, 
+         everything(), -sheet) -> 
+  soil_SERF_SD_nitrate
+
+# format Soil Penetration Resistance tables
+ReadExcelSheets('Input_Data/SOIL/SERF_SD Soil Data.xlsx') %>%
+  pluck(5) %>%
+  remove_empty('cols') %>%
+  mutate(siteid = "SERF_SD",
+         location = NA_character_,
+         subsample = NA_character_,
+         year = date,
+         date = NA) %>%
+  select(siteid, plotid = plotID, location, subsample, depth, year, date, 
+         everything(), -sheet) -> 
+  soil_SERF_SD_pr
 
 
 
@@ -649,14 +789,37 @@ soil_SHEARER %>%
 ReadExcelSheets('Input_Data/SOIL/STJOHNS Soil Data.xlsx') %>%
   pluck(1) -> soil_STJOHNS
 
-# format tables
+# format Soil Properties tables
 soil_STJOHNS %>%
-  mutate(date = as.Date(Date),
-         location = NA_character_,
-         var_OLD = word(var),
-         siteid = "STJOHNS") %>%
-  select(siteid, plotid, location, date, var_NEW, value) -> soil_STJOHNS_properties
+  remove_empty('cols') %>%
+  mutate(siteid = "STJOHNS",
+         year = date,
+         date = NA) %>%
+  select(siteid, plotid = plotID, location, subsample, depth, year, date, 
+         everything(), -sheet) -> 
+  soil_STJOHNS_properties
 
+# format Soil Nitrate tables
+ReadExcelSheets('Input_Data/SOIL/STJOHNS Soil Data.xlsx') %>%
+  pluck(4) %>%
+  remove_empty('cols') %>%
+  mutate(siteid = "STJOHNS",
+         subsample = NA_character_,
+         date = as.Date(date)) %>%
+  select(siteid, plotid = plotID, location, subsample, depth, year, date, 
+         everything(), -sheet) -> 
+  soil_STJOHNS_nitrate
+
+# format Soil Water Retention tables
+ReadExcelSheets('Input_Data/SOIL/STJOHNS Soil Data.xlsx') %>%
+  pluck(2) %>%
+  remove_empty('cols') %>%
+  mutate(siteid = "STJOHNS",
+         year = date,
+         date = NA) %>%
+  select(siteid, plotid = plotID, location, subsample, depth, year, date, 
+         SW_potential = ...6, SW_retention = ...7) -> 
+  soil_STJOHNS_wr
 
 # STORY -------------------------------------------------------------------
 ReadExcelSheets('Input_Data/SOIL/STORY Soil Data.xlsx') %>%
@@ -705,7 +868,20 @@ ReadExcelSheets('Input_Data/SOIL/SWROC Soil Data.xlsx') %>%
 
 
 # TIDE --------------------------------------------------------------------
-ReadExcelSheets('Input_Data/SOIL/TIDE Soil Data.xlsx')
+ReadExcelSheets('Input_Data/SOIL/TIDE Soil Data.xlsx') %>%
+  pluck(1) -> soil_TIDE
+
+# format Soil Properties tables
+soil_TIDE %>%
+  remove_empty('cols') %>%
+  mutate(siteid = "TIDE",
+         location = NA_character_,
+         subsample = NA_character_,
+         year = NA,
+         date = NA) %>%
+  select(siteid, plotid = plotID, location, subsample, depth, year, date, 
+         everything(), -sheet, -COMMENTS) -> 
+  soil_TIDE_properties
 
 
 

@@ -108,7 +108,7 @@ soil_BENTON %>%
          d2 = round(d2*2.54),
          depth = ifelse(is.na(d2), d1, paste0(d1, '-', d2))) %>%
   select(siteid, location, subsample, depth, year, date, 
-         everything(), -uniqueid, -sheet) -> 
+         everything(), -uniqueid, -sheet, -d1, -d2) -> 
   soil_BENTON_properties
 
 
@@ -153,7 +153,7 @@ ReadExcelSheets('Input_Data/SOIL/CLAY_C Soil Data.xlsx') %>%
          year = date,
          date = NA) %>%
   select(siteid, plotid = plotID, location, subsample, depth, year, date, 
-         SW_potential = ...5, SW_retention = ...6) -> 
+         everything(), -sheet) -> 
   soil_CLAY_C_wr
 
 
@@ -198,10 +198,11 @@ ReadExcelSheets('Input_Data/SOIL/CLAY_R Soil Data.xlsx') %>%
   mutate(siteid = "CLAY_R",
          location = subsample,
          subsample = NA_character_,
+         depth = as.character(depth),
          year = date,
          date = NA) %>%
   select(siteid, plotid = plotID, location, subsample, depth, year, date, 
-         SW_potential = ...5, SW_retention = ...6) -> 
+         everything(), -sheet) -> 
   soil_CLAY_R_wr
 
 
@@ -245,7 +246,7 @@ ReadExcelSheets('Input_Data/SOIL/CLAY_U Soil Data.xlsx') %>%
          year = date,
          date = NA) %>%
   select(siteid, plotid = plotID, location, subsample, depth, year, date, 
-         SW_potential = ...5, SW_retention = ...6) -> 
+         everything(), -sheet) -> 
   soil_CLAY_U_wr
 
 
@@ -297,9 +298,9 @@ soil_DIKE %>%
   mutate(depth = ifelse(is.na(d2), paste0(d1, '+'), paste0(d1, '-', d2))) %>%
   # there were two samples collected in middle at max depth, 
   # for simplicity of the database use only sand loam sample as it feets the crossectional trend
-  filter(!(location == 'middle' & SOIL26 > 80)) %>%
+  filter(!(location == 'middle' & SOIL02.01 > 80)) %>%
   select(siteid, location, subsample, depth, year, date, 
-         everything(), -uniqueid, -sheet) ->
+         everything(), -uniqueid, -sheet, -d1, -d2) ->
   soil_DIKE_properties
 
 
@@ -338,7 +339,7 @@ ReadExcelSheets('Input_Data/SOIL/DPAC Soil Data.xlsx') %>%
          year = date,
          date = NA) %>%
   select(siteid, plotid = plotID, location, subsample, depth, year, date, 
-         SW_potential = ...6, SW_retention = ...7) -> 
+         everything(), -sheet) -> 
   soil_DPAC_wr
 
 
@@ -425,7 +426,7 @@ soil_HICKORY %>%
   separate(depth, into = c('d1', 'd2'), sep = '-', convert = TRUE) %>%
   mutate(depth = paste0(round(d1*2.54), '-', round(d2*2.54))) %>%
   select(siteid, location, subsample, depth, year, date, 
-         everything(), -uniqueid, -sheet) ->
+         everything(), -uniqueid, -sheet, -d1, -d2) ->
   soil_HICKORY_properties
 
 
@@ -464,7 +465,7 @@ ReadExcelSheets('Input_Data/SOIL/HICKS_B Soil Data.xlsx') %>%
          year = date,
          date = NA) %>%
   select(siteid, plotid = plotID, location, subsample, depth, year, date, 
-         SW_potential = ...6, SW_retention = ...7) -> 
+         everything(), -sheet) -> 
   soil_HICKS_B_wr
 
 
@@ -509,7 +510,7 @@ ReadExcelSheets('Input_Data/SOIL/HICKS_P Soil Data.xlsx') %>%
          year = date,
          date = NA) %>%
   select(siteid, plotid = plotID, location, subsample, depth, year, date, 
-         SW_potential = ...5, SW_retention = ...6) -> 
+         everything(), -sheet) -> 
   soil_HICKS_P_wr
 
 
@@ -545,14 +546,15 @@ ReadExcelSheets('Input_Data/SOIL/MUDS1 Soil Data.xlsx') %>%
 soil_MUDS1 %>%
   remove_empty('cols') %>%
   mutate(siteid = "MUDS1",
+         plotid = as.character(plotID),
          location = subsample,
          subsample = NA_character_,
          date = as.Date(date)) %>%
   # SOC in 2017 is actually SOM > correct and convert accordingly
-  mutate(SOIL13_2 = ifelse(year == 2017, SOIL13 * 10, SOIL13_2),
-         SOIL13 = ifelse(year == 2017, NA_real_, SOIL13)) %>%
-  select(siteid, plotid = plotID, location, subsample, depth, year, date, 
-         everything(), -sheet, -COMMENTS) -> 
+  mutate(SOIL15 = ifelse(year == 2017, SOIL30.01 * 10, SOIL15),
+         SOIL30.01 = ifelse(year == 2017, NA_real_, SOIL30.01)) %>%
+  select(siteid, plotid, location, subsample, depth, year, date, 
+         everything(), -sheet, -plotID, -COMMENTS) -> 
   soil_MUDS1_properties
 
 # format Soil Nitrate tables
@@ -560,11 +562,12 @@ ReadExcelSheets('Input_Data/SOIL/MUDS1 Soil Data.xlsx') %>%
   pluck(2) %>%
   remove_empty('cols') %>%
   mutate(siteid = "MUDS1",
+         plotid = as.character(plotID),
          location = NA_character_,
          subsample = NA_character_,
          date = as.Date(date)) %>%
-  select(siteid, plotid = plotID, location, subsample, depth, year, date, 
-         everything(), -sheet) -> 
+  select(siteid, plotid, location, subsample, depth, year, date, 
+         everything(), -sheet, -plotID) -> 
   soil_MUDS1_nitrate
 
 
@@ -576,11 +579,12 @@ ReadExcelSheets('Input_Data/SOIL/MUDS2 Soil Data.xlsx') %>%
 soil_MUDS2 %>%
   remove_empty('cols') %>%
   mutate(siteid = "MUDS2",
+         plotid = as.character(plotID),
          location = subsample,
          subsample = NA_character_,
          date = as.Date(date)) %>%
-  select(siteid, plotid = plotID, location, subsample, depth, year, date, 
-         everything(), -sheet, -COMMENTS) -> 
+  select(siteid, plotid, location, subsample, depth, year, date, 
+         everything(), -sheet, -plotID, -COMMENTS) -> 
   soil_MUDS2_properties
 
 # format Soil Nitrate tables
@@ -588,11 +592,12 @@ ReadExcelSheets('Input_Data/SOIL/MUDS2 Soil Data.xlsx') %>%
   pluck(2) %>%
   remove_empty('cols') %>%
   mutate(siteid = "MUDS2",
+         plotid = as.character(plotID),
          location = subsample,
          subsample = NA_character_,
          date = as.Date(date)) %>%
-  select(siteid, plotid = plotID, location, subsample, depth, year, date, 
-         everything(), -sheet) -> 
+  select(siteid, plotid, location, subsample, depth, year, date, 
+         everything(), -sheet, -plotID) -> 
   soil_MUDS2_nitrate
 
 
@@ -604,11 +609,12 @@ ReadExcelSheets('Input_Data/SOIL/MUDS3_NEW Soil Data.xlsx') %>%
 soil_MUDS3_NEW %>%
   remove_empty('cols') %>%
   mutate(siteid = "MUDS3_NEW",
+         plotid = as.character(plotID),
          location = NA_character_,
          subsample = NA_character_,
          date = as.Date(date)) %>%
-  select(siteid, plotid = plotID, location, subsample, depth, year, date, 
-         everything(), -sheet) -> 
+  select(siteid, plotid, location, subsample, depth, year, date, 
+         everything(), -sheet, -plotID) -> 
   soil_MUDS3_NEW_properties
 
 # format Soil Nitrate tables
@@ -616,11 +622,12 @@ ReadExcelSheets('Input_Data/SOIL/MUDS3_NEW Soil Data.xlsx') %>%
   pluck(2) %>%
   remove_empty('cols') %>%
   mutate(siteid = "MUDS3_NEW",
+         plotid = as.character(plotID),
          location = NA_character_,
          subsample = NA_character_,
          date = as.Date(date)) %>%
-  select(siteid, plotid = plotID, location, subsample, depth, year, date, 
-         everything(), -sheet) -> 
+  select(siteid, plotid, location, subsample, depth, year, date, 
+         everything(), -sheet, -plotID) -> 
   soil_MUDS3_NEW_nitrate
 
 
@@ -719,7 +726,7 @@ ReadExcelSheets('Input_Data/SOIL/SERF_IA Soil Data.xlsx') %>%
          year = date,
          date = NA) %>%
   select(siteid, plotid = plotID, location, subsample, depth, year, date, 
-         SW_potential = ...6, SW_retention = ...7) -> 
+         everything(), -sheet) -> 
   soil_SERF_IA_wr
 
 
@@ -818,7 +825,7 @@ ReadExcelSheets('Input_Data/SOIL/STJOHNS Soil Data.xlsx') %>%
          year = date,
          date = NA) %>%
   select(siteid, plotid = plotID, location, subsample, depth, year, date, 
-         SW_potential = ...6, SW_retention = ...7) -> 
+         everything(), -sheet) -> 
   soil_STJOHNS_wr
 
 # STORY -------------------------------------------------------------------
@@ -845,26 +852,27 @@ ReadExcelSheets('Input_Data/SOIL/STORY Soil Data.xlsx') %>%
   # select only relevant plots
   filter(plotID %in% c(2, 3, 5, 8, 9, 11)) %>%
   mutate(siteid = "STORY",
+         plotid = as.character(plotID),
          location = NA_character_,
          year = year(date),
          date = as.Date(date)) %>%
-  select(siteid, plotid = plotID, location, subsample, depth, year, date, 
-         everything(), -sheet) -> 
+  select(siteid, plotid, location, subsample, depth, year, date, 
+         everything(), -sheet, -plotID) -> 
   soil_STORY_nitrate
 
 
 # SWROC -------------------------------------------------------------------
 # format Soil Moisture tables
-ReadExcelSheets('Input_Data/SOIL/SWROC Soil Data.xlsx') %>%
-  pluck(2) %>%
-  mutate(date = as.Date(date),
-         location = treatment,
-         subsample = NA_character_,
-         siteid = "SWROC") %>%
-  mutate(location = ifelse(is.na(location), NA, paste(location , 'N'))) %>%
-  select(siteid, plotid = plotID, location, subsample, depth, date, 
-         everything(), -sheet, -treatment) -> 
-  soil_SWROC_properties
+ReadExcelSheets('Input_Data/SOIL/SWROC Soil Data.xlsx') # %>%
+  # pluck(2) %>%
+  # mutate(date = as.Date(date),
+  #        location = treatment,
+  #        subsample = NA_character_,
+  #        siteid = "SWROC") %>%
+  # mutate(location = ifelse(is.na(location), NA, paste(location , 'N'))) %>%
+  # select(siteid, plotid = plotID, location, subsample, depth, date, 
+  #        everything(), -sheet, -treatment) -> 
+  # soil_SWROC_sm
 
 
 # TIDE --------------------------------------------------------------------
@@ -965,12 +973,42 @@ ReadExcelSheets('Input_Data/SOIL/WILKIN3 Soil Data.xlsx')
 
 
 
-# Combnine all hourly water table data
+# Combnine all soil properties
 mget(ls(pattern = 'soil_[[:graph:]]+_properties')) %>%
-  bind_rows() -> soil_ALL
+  map(~ .x %>% 
+        mutate(subsample = as.character(subsample),
+               location = as.character(location)) %>%
+        mutate_at(vars(starts_with('SOIL')), as.character)) %>%
+  bind_rows() -> soil_properties_ALL
+
+# Combnine all soil nitrates
+mget(ls(pattern = 'soil_[[:graph:]]+_nitrate')) %>%
+  map(~ .x %>%
+        mutate(subsample = as.character(subsample),
+               location = as.character(location))%>%
+        mutate_at(vars(starts_with('SOIL')), as.character)) %>%
+  bind_rows() -> soil_nitrate_ALL
+
+# Combnine all soil water retensions
+mget(ls(pattern = 'soil_[[:graph:]]+_wr')) %>%
+  map(~ .x %>%
+        mutate(subsample = as.character(subsample),
+               location = as.character(location))%>%
+        mutate_at(vars(starts_with('SOIL')), as.character)) %>%
+  bind_rows() -> soil_wr_ALL
+
+# Combnine all soil penetration resistance
+mget(ls(pattern = 'soil_[[:graph:]]+_pr$')) %>%
+  map(~ .x %>%
+        mutate(depth = as.character(depth))%>%
+        mutate_at(vars(starts_with('SOIL')), as.character)) %>%
+  bind_rows() -> soil_pr_ALL
 
 
 # Save for later analysis
-write_rds(soil_ALL, 'Inter_Data/soil_ALL.rds')
+write_rds(soil_properties_ALL, 'Inter_Data/soil_properties_ALL.rds')
+write_rds(soil_nitrate_ALL, 'Inter_Data/soil_nitrate_ALL.rds')
+write_rds(soil_wr_ALL, 'Inter_Data/soil_wr_ALL.rds')
+write_rds(soil_pr_ALL, 'Inter_Data/soil_pr_ALL.rds')
 
 

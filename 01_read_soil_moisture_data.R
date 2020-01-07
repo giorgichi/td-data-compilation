@@ -19,7 +19,10 @@ sm_ACRE %>%
          tmsp = date,
          date = as.Date(date)) %>%
   select(siteid, plotid, location, depth, date, tmsp,
-         soil_moisture = Soil_Moisture, soil_temp = Soil_Temp) -> 
+         soil_moisture = Soil_Moisture, soil_temp = Soil_Temp) %>%
+  # standardize depth 
+  mutate(depth = case_when(!str_detect(depth, ' cm') ~ str_replace(depth, 'cm', ' cm'),
+                           TRUE ~ depth)) -> 
   soil_ACRE_sm
 
 
@@ -131,19 +134,27 @@ sm_FAIRM %>%
 # HICKS_B -----------------------------------------------------------------
 read_rds('Input_Data/SOIL/SM/FROM_WEB/Output_Data/hicks_correct.rds') -> sm_HICKS_B
 
-# read daily Soil Moisture
-read_csv('Input_Data/SOIL/SM/HICKS_B_soil_moisture_DAILY_2014-2017.csv') -> sm_daily_HICKS_B
-
 # format table
 sm_HICKS_B %>%
   mutate(date = as.Date(st_tmsp)) %>%
   select(siteid, plotid, depth, date, tmsp = st_tmsp,
          soil_moisture = Moisture, soil_temp = Temp) %>%
-  full_join(sm_daily_HICKS_B, by = c('siteid', 'plotid' = 'plotID', 'depth', 'date')) %>%
-  filter(!is.na(tmsp)) %>% tail(10)
-  # soil_HICKS_B_sm
+  # full_join(sm_daily_HICKS_B, by = c('siteid', 'plotid' = 'plotID', 'depth', 'date')) %>%
+  ungroup() ->
+  soil_HICKS_B_sm
 
+
+# read daily Soil Moisture
+read_csv('Input_Data/SOIL/SM/HICKS_B_soil_moisture_DAILY_2014-2017.csv') -> sm_daily_HICKS_B
+
+# format table
+sm_daily_HICKS_B %>%
+  mutate(location = NA_character_) %>%
+  select(siteid, plotid = plotID, location, depth, date,
+         soil_moisture = sm) ->
+  soil_HICKS_B_daily_sm
  
+
 
 # HICKS_P -----------------------------------------------------------------
 read_csv('Input_Data/SOIL/SM/HICKS_P_soil_moisture.csv')-> sm_HICKS_P
@@ -155,7 +166,7 @@ sm_HICKS_P %>%
          date = as.Date(date)) %>%
   select(siteid, plotid, location, depth, date,
          soil_moisture = sm) -> 
-  soil_HICKS_P_sm
+  soil_HICKS_P_daily_sm
 
 
 
@@ -195,7 +206,7 @@ read_csv('Input_Data/SOIL/SM/SERF_SD_soil_moisture.csv') -> sm_SERF_SD
 sm_SERF_SD %>%
   select(siteid, plotid = plotID, location = subsample, depth, date,
          soil_moisture = sm) ->
-  soil_SERF_SD_sm
+  soil_SERF_SD_daily_sm
 
 
 
@@ -221,7 +232,7 @@ sm_SWROC %>%
     mutate(location = ifelse(is.na(treatment), treatment, paste(treatment, 'N'))) %>%
     select(siteid, plotid = plotID, location, depth, date,
            soil_moisture = sm) ->
-    soil_SWROC_sm
+    soil_SWROC_daily_sm
 
   
 
@@ -230,7 +241,7 @@ sm_SWROC %>%
 
 
 
-# Combnine all hourly water table data
+# Combnine all hourly soil moisture data
 mget(ls(pattern = 'soil_[[:graph:]]+_sm')) %>%
   bind_rows() -> sm_ALL
 

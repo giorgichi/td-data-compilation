@@ -90,6 +90,15 @@ soil_ALL_correct %>%
          depth = case_when(depth == '0 to 22.86 cm' ~ '0 to 23 cm',
                            depth == '22.86 to 55.88 cm' ~ '23 to 56 cm',
                            depth == '55.88 to 121.92 cm' ~ '56 to 122 cm',
+                           TRUE ~ depth),
+         depth = case_when(siteid == 'STORY' & !is.na(SOIL32.04) & depth == '0 to 6 cm' ~ '0 to 15 cm',
+                           siteid == 'STORY' & !is.na(SOIL32.04) & depth == '6 to 12 cm' ~ '15 to 30 cm',
+                           siteid == 'STORY' & !is.na(SOIL32.04) & depth == '12 to 18 cm' ~ '30 to 46 cm',
+                           siteid == 'STORY' & !is.na(SOIL32.04) & depth == '18 to 24 cm' ~ '46 to 61 cm',
+                           siteid == 'STORY' & !is.na(SOIL32.04) & depth == '24 to 30 cm' ~ '61 to 76 cm',
+                           siteid == 'STORY' & !is.na(SOIL32.04) & depth == '30 to 36 cm' ~ '76 to 91 cm',
+                           siteid == 'STORY' & !is.na(SOIL32.04) & depth == '36 to 42 cm' ~ '91 to 107 cm',
+                           siteid == 'STORY' & !is.na(SOIL32.04) & depth == '42 to 48 cm' ~ '107 to 122 cm',
                            TRUE ~ depth)) -> soil_ALL_standard
 
 # check/visualize data

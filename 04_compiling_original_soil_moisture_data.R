@@ -31,7 +31,7 @@ bind_rows(soil_ACRE_sm,
          soil_moisture, soil_temp, soil_ec, tmsp) -> HOURLY_sm
   
 
-# Combine all hourly soil sensor data -------------------------------------
+# Combine all daily soil sensor data --------------------------------------
 bind_rows(soil_HICKS_B_daily_sm,
           soil_HICKS_P_daily_sm,
           soil_SERF_SD_daily_sm,
@@ -47,8 +47,8 @@ bind_rows(soil_HICKS_B_daily_sm,
 
 # Combine daily and hourly data -------------------------------------------
 bind_rows(HOURLY_sm, DAILY_sm) %>%
+  select(siteid:timestamp_type, tmsp,
+         SOIL09 = soil_moisture, SOIL10 = soil_temp, SOIL12 = soil_ec) %>%
   write_rds('Inter_Data/sm_ALL_hourly_ORIGINAL.rds')
 
-# bind_rows(ALL_Discharge, HOURLY_Tile_Flow, DAILY_Tile_Flow) %>%
-#   select(-tmsp) %>%
-#   write.csv('Output_Data/tile_flow_and_discharge_all_ORIGINAL.csv')
+

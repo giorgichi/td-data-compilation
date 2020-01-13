@@ -46,5 +46,6 @@ Output_Data/
 
 # PROJECT FILES ...........................................................
 *.html
+~$temp*
 temp*
 02_review_*

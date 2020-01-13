@@ -101,6 +101,13 @@ soil_ALL_correct %>%
                            siteid == 'STORY' & !is.na(SOIL32.04) & depth == '42 to 48 cm' ~ '107 to 122 cm',
                            TRUE ~ depth)) -> soil_ALL_standard
 
+
+# Save standardized data --------------------------------------------------
+
+write_rds(soil_ALL_standard, 'Output_Data/soil_properties_ALL.rds')
+write_csv(soil_ALL_standard, 'Output_Data/soil_properties_ALL.csv', na = '')
+
+
 # check/visualize data
 soil_ALL_standard %>%
   select(siteid:date, starts_with('SOIL35')) %>%

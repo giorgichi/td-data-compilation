@@ -39,7 +39,7 @@ rsconnect/
 
 # PROJECT FOLDERS .........................................................
 Figs/*/
-Final_Database/*
+Final_Database/
 Input_Data/*/
 Inter_Data/
 Output_Data/
@@ -49,3 +49,4 @@ Output_Data/
 ~$temp*
 temp*
 02_review_*
+Final_Database\\TD_FINAL_Data.db

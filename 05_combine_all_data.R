@@ -83,6 +83,7 @@ sm_DB %>%
             SOIL12 = mean(SOIL12, na.rm = TRUE)) %>%
   arrange(siteid, plotid, location, depth, date) %>%
   ungroup() %>%
+  mutate(location = ifelse(str_detect(siteid, 'CLAY'), str_sub(location, 4, 5), location)) %>%
   select(-timestamp_type) ->
   sm_FINAL_DB
 
@@ -125,7 +126,9 @@ soil_properties %>%
   arrange(as.numeric(rowname)) %>%
   select(-rowname) %>%
   arrange(siteid, plotid, location, subsample, depth, year, date) %>%
-  ungroup() ->
+  ungroup() %>%
+  mutate(year = as.integer(year),
+         date = as.character(date)) ->
   soil_properties_DB
 
 dbWriteTable(conn_final, "soil_properties", soil_properties_DB, overwrite = TRUE)

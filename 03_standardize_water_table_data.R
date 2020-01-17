@@ -74,6 +74,9 @@ wt_ALL_hourly %>%
                             siteid == 'HICKS_B' & plotid == 'Beast' ~ 'BE',
                             siteid == 'TIDE' ~ str_sub(plotid, 1, 2),
                             TRUE ~ plotid)) %>%
+  mutate(location = case_when(siteid == 'ACRE' & location == 'Field63' ~ 'Field 63',
+                              str_detect(siteid, 'CLAY') ~ str_sub(location, 4, 5),
+                              TRUE ~ location)) %>%
   # add measurement type 
   mutate(reading_type = 'automated') %>%
   # remove questionable data
@@ -144,22 +147,23 @@ st_ALL_hourly %>%
 
 
 
-# ---------------
-wt_ALL_daily_standard
-wt_ALL_hourly_standard
-st_ALL_hourly_standard
+# Save standardized data --------------------------------------------------
 
 wt_ALL_daily_standard %>%
-  distinct(siteid, var_NEW)
+  spread(var_NEW, value) %>%
+  write_rds('Output_Data/water_table_daily_ALL.rds')
+
+wt_ALL_hourly_standard %>%
+  spread(var_NEW, value) %>%
+  write_rds('Output_Data/water_table_hourly_ALL.rds')
+
+st_ALL_hourly_standard %>%
+  spread(var_NEW, value) %>%
+  write_rds('Output_Data/stage_hourly_ALL.rds')
 
 
-wt_ALL_daily_standard %>%
-  spread(var_NEW, value)
 
-
-# I CAN SAVE STANDARDIZE WT DATA (DAILY & HOURLY) as separate files for Daryl
-
-# CHECKIN
+# check/visualize data
 wt_ALL_hourly_standard %>%
   filter(siteid == 'SERF_IA') %>%
   mutate(value = ifelse(siteid == 'SERF_IA' & plotid == 'S2' & between(date, ymd(20111220), ymd(20120222)), 

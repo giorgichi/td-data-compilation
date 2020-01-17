@@ -47,7 +47,7 @@ wt_ALL_daily %>%
 
 # HOURLY WATER TABLE DATA -------------------------------------------------
 
-# Standardize stage and storage data
+# Standardize water table data 
 wt_ALL_hourly %>%  
   # assign new var codes
   mutate(var_NEW = case_when(var == 'WAT4' ~ 'WAT01',
@@ -104,8 +104,30 @@ wt_ALL_hourly %>%
 
 # HOURLY STAGE DATA -------------------------------------------------------
 
-# Standardize water table data
+# Standardize stage and storage data
 st_ALL_hourly %>% 
+  # fix dates at DEFI_R
+  mutate(tmsp = case_when(siteid == 'DEFI_R' & location == 'Wetland' & var_NEW == 'WAT04' &
+                            tmsp == ymd_h(2008012400) & value == 74.4 ~ tmsp + days(1),
+                          siteid == 'DEFI_R' & location == 'Wetland' & var_NEW == 'WAT14' &
+                            tmsp == ymd_h(2008012400) & value < 340.0 ~ tmsp + days(1),
+                          siteid == 'DEFI_R' & location == 'Wetland' & 
+                            tmsp %in% seq(ymd_h(2008012500), ymd_h(2008013100), 'day') ~ tmsp + days(1), 
+                          siteid == 'DEFI_R' & location == 'Wetland' & var_NEW == 'WAT04' &
+                            tmsp == ymd_h(2008020414) & value == 75.2 ~ tmsp + days(1),
+                          siteid == 'DEFI_R' & location == 'Wetland' & var_NEW == 'WAT14' &
+                            tmsp == ymd_h(2008020414) & value < 330.0 ~ tmsp + days(1),
+                          siteid == 'DEFI_R' & location == 'Wetland' & var_NEW == 'WAT04' &
+                            tmsp == ymd_hm(200802061330) & value == 75.0 ~ tmsp + days(1),
+                          siteid == 'DEFI_R' & location == 'Wetland' & var_NEW == 'WAT14' &
+                            tmsp == ymd_hm(200802061330) & value < 330.0 ~ tmsp + days(1),
+                          siteid == 'DEFI_R' & location == 'Wetland' & var_NEW == 'WAT04' &
+                            tmsp == ymd_hm(200802111330) & value == 76.1 ~ tmsp + days(1),
+                          siteid == 'DEFI_R' & location == 'Wetland' & var_NEW == 'WAT14' &
+                            tmsp == ymd_hm(200802111330) & value < 340.0 ~ tmsp + days(1),
+                          TRUE ~ tmsp)) %>%
+  # remove duplicated datas
+  filter(!duplicated(.)) %>%
   # correct measurement units (convert to meters)
   mutate(value = case_when(var_NEW == 'WAT04' ~ value * 0.01,                # from cm
                            TRUE ~ value)) %>%
@@ -123,8 +145,15 @@ st_ALL_hourly %>%
 
 
 # ---------------
+wt_ALL_daily_standard
+wt_ALL_hourly_standard
+st_ALL_hourly_standard
 
-wt_ALL_hourly_standard %>%
+wt_ALL_daily_standard %>%
+  distinct(siteid, var_NEW)
+
+
+wt_ALL_daily_standard %>%
   spread(var_NEW, value)
 
 

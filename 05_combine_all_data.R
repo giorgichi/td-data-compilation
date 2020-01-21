@@ -100,10 +100,82 @@ tribble(
   'weather_hourly', 'CLIM08.03.02', 'Min Bare Soil Temperature (4" depth)',    'degree C',
   'weather_hourly', 'CLIM08.03.03', 'Max Bare Soil Temperature (4" depth)',    'degree C',
   'weather_hourly', 'CLIM08.04.02', 'Min Bare Soil Temperature (8" depth)',    'degree C',
-  'weather_hourly', 'CLIM08.04.03', 'Max Bare Soil Temperature (8" depth)',    'degree C'
+  'weather_hourly', 'CLIM08.04.03', 'Max Bare Soil Temperature (8" depth)',    'degree C',
+  
+  'water_table',    'WAT01', 'Water Table Depth',     'm',
+  'water_table',    'WAT02', 'Groundwater Level',     'm',
+  'water_table',    'WAT03', 'Piezometric Head',      'm',
+  
+  'water_stage',    'WAT04', 'Stage',                 'm',
+  'water_stage',    'WAT14', 'Water Storage',         'm3'
   
   )
 
+
+
+
+# Water Table and Stage Data ----------------------------------------------
+
+# Water table, water level and piezometric head data
+read_rds('Output_Data/water_table_daily_ALL.rds') -> wt_daily
+read_rds('Output_Data/water_table_hourly_ALL.rds') -> wt_hourly
+
+bind_rows(wt_daily, wt_hourly) %>%
+  select(siteid, plotid, location, reading_type, date, time, UTC, timestamp_type, tmsp,
+         WAT01, WAT02, WAT03) -> wt
+
+wt %>%
+  mutate(date = format(date, '%Y-%m-%d')) -> 
+  wt_DB
+
+dbWriteTable(conn, "water_table", wt_DB)
+
+
+# Save selected data (variables) for FINAL DB. > NOTE: only DAILY values goes to the FINAL DB
+wt_DB %>%
+  # calculate daily data
+  group_by(siteid, plotid, location, reading_type, date, timestamp_type) %>%
+  summarise(WAT01 = mean(WAT01, na.rm = TRUE)) %>%
+  arrange(siteid, plotid, location, reading_type, date) %>%
+  ungroup() %>%
+  select(-timestamp_type) %>%
+  # remove empty rows resulted from other (not WAT01) variables
+  group_by(siteid, plotid, location, reading_type) %>% 
+  mutate(CHECK = sum(!is.na(WAT01))) %>%
+  filter(CHECK != 0) %>%
+  ungroup() %>%
+  select(-CHECK) ->
+  wt_FINAL_DB
+
+dbWriteTable(conn_final, "water_table", wt_FINAL_DB)
+
+
+# Stage and water storage data
+read_rds('Output_Data/stage_hourly_ALL.rds') -> stage_hourly
+
+stage_hourly %>%
+  mutate(date = format(date, '%Y-%m-%d')) %>%
+  select(siteid, plotid, location, reading_type, date, time, UTC, timestamp_type, tmsp,
+         WAT04, WAT14) ->
+  stage_hourly_DB
+
+dbWriteTable(conn, "water_stage", stage_hourly_DB)
+
+
+# Save selected data (variables) for FINAL DB. > NOTE: only DAILY values goes to the FINAL DB
+stage_hourly_DB %>%
+  # calculate daily data
+  group_by(siteid, plotid, location, reading_type, date) %>%
+  summarise(WAT04 = mean(WAT04, na.rm = TRUE)) %>%
+  arrange(siteid, plotid, location, reading_type, date) %>%
+  ungroup() ->
+  stage_FINAL_DB
+
+dbWriteTable(conn_final, "water_stage", stage_FINAL_DB)
+
+
+rm(wt, wt_daily, wt_hourly, wt_DB, wt_FINAL_DB,
+   stage_hourly, stage_hourly_DB, stage_FINAL_DB)
 
 
 
@@ -129,8 +201,7 @@ weather_daily %>%
 dbWriteTable(conn, "weather_daily", weather_daily_DB)
 
 
-# Save selected data (variables) for FINAL DB 
-# only DAILY WEATHER goes to the FINAL DB
+# Save selected data (variables) for FINAL DB. > NOTE: only DAILY WEATHER goes to the FINAL DB
 weather_daily %>%
   select(siteid:date, CLIM01, CLIM03.01.01, CLIM03.01.02, CLIM03.01.03,
          CLIM04.01.01, CLIM05.02, CLIM06.01, CLIM06.02, starts_with('CLIM07.02')) %>%

@@ -288,6 +288,9 @@ soil_properties %>%
   select(-rowname) %>%
   arrange(siteid, plotid, location, subsample, depth, year, date) %>%
   ungroup() %>%
+  # remove plots that are outside of research boundaries or shared by drainage areas at ACRE 
+  filter(!(siteid == 'ACRE' & is.na(plotid))) %>%
+  filter(!(siteid == 'ACRE' & str_detect(location, '22-E'))) %>%
   mutate(year = as.integer(year),
          date = as.character(date)) ->
   soil_properties_FINAL_DB

@@ -71,9 +71,14 @@ soil_ALL_correct %>%
          location = ifelse(siteid == 'FAIRM', str_remove(location, '-18$'), location)) %>%
   # correct plotid and locations at ACRE
   mutate(plotid = ifelse(siteid == 'ACRE', location, plotid),
+         plotid = ifelse(siteid == 'ACRE' & str_detect(subsample, '10-'), NA_character_, plotid),
+         plotid = ifelse(siteid == 'ACRE' & subsample %in% c('21-B', '21-C'), NA_character_, plotid),
          location = ifelse(siteid == 'ACRE', NA_character_, location),
          location = ifelse(siteid == 'ACRE', subsample, location),
-         subsample = ifelse(siteid == 'ACRE', NA_character_, subsample)) %>%
+         subsample = ifelse(siteid == 'ACRE', NA_character_, subsample),
+         subsample = ifelse(siteid == 'ACRE', word(location, 2), subsample),
+         location = ifelse(siteid == 'ACRE', word(location, 1), location),
+         location = ifelse(siteid == 'ACRE', paste('Field', location), location)) %>%
   # standardize depth 
   mutate(depth = case_when(str_detect(depth, 'cm') ~ str_replace(depth, '-', ' to '),
                            !str_detect(depth, 'cm') & str_detect(depth, ' to ') & str_length(depth) < 20 ~ paste(depth, 'cm'), 

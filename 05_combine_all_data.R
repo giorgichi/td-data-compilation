@@ -102,15 +102,96 @@ tribble(
   'weather_hourly', 'CLIM08.04.02', 'Min Bare Soil Temperature (8" depth)',    'degree C',
   'weather_hourly', 'CLIM08.04.03', 'Max Bare Soil Temperature (8" depth)',    'degree C',
   
-  'water_table',    'WAT01', 'Water Table Depth',     'm',
-  'water_table',    'WAT02', 'Groundwater Level',     'm',
-  'water_table',    'WAT03', 'Piezometric Head',      'm',
+  'water_table',    'WAT01', 'Water Table Depth',          'm',
+  'water_table',    'WAT02', 'Groundwater Level',          'm',
+  'water_table',    'WAT03', 'Piezometric Head',           'm',
   
-  'water_stage',    'WAT04', 'Stage',                 'm',
-  'water_stage',    'WAT14', 'Water Storage',         'm3'
+  'water_stage',    'WAT04', 'Stage',                      'm',
+  'water_stage',    'WAT14', 'Water Storage',              'm3',
+  
+  
+  'water_quality',  'WAT15', 'Water Electrical Conductivity',                             'uS/cm',
+  'water_quality',  'WAT20', 'Turbidity',                                                 'NTU',
+  'water_quality',  'WAT22', 'Total Suspended Solids',                                    'mg/l',
+  'water_quality',  'WAT23', 'Total Filterable Solids',                                   'mg/l',
+  'water_quality',  'WAT30', 'Nitrate-Nitrite (NO3-N + NO2-N) Concentration',             'mg N/l',
+  'water_quality',  'WAT31', 'Nitrate (NO3-N) Concentration',                             'mg N/l',
+  'water_quality',  'WAT33', 'Ammonia (NH3-N) Concentration',                             'mg N/l',
+  'water_quality',  'WAT34', 'Total N Concentration (filtered)',                          'mg N/l',
+  'water_quality',  'WAT35', 'Total N Concentration (unfiltered)',                        'mg N/l',
+  'water_quality',  'WAT36', 'Total Kjeldhal N Concentration',                            'mg N/l',
+  'water_quality',  'WAT37', 'Organic N Concentration',                                   'mg N/l',
+  'water_quality',  'WAT38', 'Particulate N Concentration',                               'mg N/l',
+  'water_quality',  'WAT40', 'Dissolved Reactive P (ortho-P) Concentration (filtered)',   'ug P/l',
+  'water_quality',  'WAT41', 'Reactive P (ortho-P) Concentration (unfiltered)',           'ug P/l',
+  'water_quality',  'WAT42', 'Total Dissolved P Concentration (filtered)',                'ug P/l',
+  'water_quality',  'WAT43', 'Total P Concentration (unfiltered)',                        'ug P/l',
+  'water_quality',  'WAT44', 'Organic P Concentration',                                   'ug P/l',
+  'water_quality',  'WAT45', 'Particulate P Concentration',                               'ug P/l',
+  'water_quality',  'WAT50', 'Dissolved Organic Carbon (DOC) (filtered)',                 'mg C/l',
+  'water_quality',  'WAT51', 'Total Organic Carbon (TOC) (unfiltered)',                   'mg C/l',
+  'water_quality',  'WAT52', 'Inorganic Carbon (filtered)',                               'mg C/l',
+  'water_quality',  'WAT60', 'Water pH',                                                  ''
   
   )
 
+
+
+
+# Water Quality Data ------------------------------------------------------
+read_rds('Output_Data/wq_ALL.rds') -> wq_hourly
+
+wq_hourly %>%
+  spread(var_NEW, value) %>%
+  mutate(date = format(date, '%Y-%m-%d')) %>%
+  select(siteid, plotid, location, height, subsample, sample_type, tmsp, date, time, UTC, timestamp_type,
+         starts_with('WAT'), comments) -> wq_DB
+
+dbWriteTable(conn, "water_quality", wq_DB)
+
+
+
+# Save selected data (variables) for FINAL DB. > NOTE: only DAILY values goes to the FINAL DB
+wq_hourly %>%
+  # select variables of high value, quality and abundance 
+  filter(var_NEW %in% c('WAT15',
+                        'WAT30', 'WAT31', 'WAT33', 'WAT34', 'WAT35',
+                        'WAT40', 'WAT41', 'WAT42', 'WAT43',
+                        'WAT60')) %>%
+  select(-comments, -UTC, -tmsp) %>%
+  # calculate daily values
+  mutate(value_parse = parse_number(value)) %>%
+  # FIRST - average replicated measurements
+  mutate(subsample = ifelse(is.na(subsample), 1, subsample)) %>%
+  filter(!(subsample > 1 & value =='BDL')) %>%
+  group_by(siteid, plotid, location, height, date, time, timestamp_type, sample_type, var_NEW) %>%
+  summarise(value = first(value),
+            subsample = max(subsample),
+            value_parse = mean(value_parse, na.rm = TRUE)) %>%
+  mutate(value = ifelse(subsample > 1 & value != 'BDL', as.character(round(value_parse, 4)), value)) %>%
+  ungroup() %>%
+  select(-subsample) %>%
+  # SECOND - average over day
+  mutate(value_temp = as.numeric(value),
+         value_BDL = ifelse(value == 'BDL', 1, 0),
+         value_LES = ifelse(str_detect(value, '<'), 1, 0)) %>%
+  group_by(siteid, plotid, location, height, date, timestamp_type, sample_type, var_NEW) %>%
+  summarise(value = first(value),
+            value_parse = mean(value_parse, na.rm = TRUE),
+            value_temp = mean(value_temp),
+            value_BDL = max(value_BDL),
+            value_LES = max(value_LES)) %>% 
+  ungroup() %>%
+  # THIRD - substitude average of BDLs with BDL for HOURLY data
+  mutate(value_parse = ifelse(is.nan(value_parse), NA_real_, round(value_parse, 5)),
+         value = ifelse(timestamp_type == 'I', as.character(value_parse), value),
+         value = ifelse(timestamp_type == 'I' & value_BDL == 1 & is.na(value), 'BDL', value)) %>%
+  mutate(date = format(date, '%Y-%m-%d')) %>%
+  select(siteid, plotid, location, height, date, sample_type, var_NEW, value) %>%
+  spread(var_NEW, value) -> wq_FINAL_DB
+
+
+dbWriteTable(conn_final, "water_quality", wq_FINAL_DB)
 
 
 

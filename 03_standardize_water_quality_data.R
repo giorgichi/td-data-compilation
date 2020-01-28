@@ -8,7 +8,7 @@ wq_ALL <- read_rds('Inter_Data/wq_ALL.rds')
 
 
 
-# Standardize water quality data
+# Correct water quality data
 wq_ALL %>%
   # add sample type based on TD Sampling Method data
   mutate(sample_type = case_when(siteid == 'ACRE' & date < ymd(20160301) ~ 'Grab',
@@ -43,22 +43,25 @@ wq_ALL %>%
   mutate(plotid = case_when(siteid == 'FAIRM' & plotid == 'Sump1' ~ 'West',
                             siteid == 'FAIRM' & plotid == 'Sump2' ~ 'East',
                             siteid == 'ACRE' & str_detect(location, 'Inlet') ~ location,
-                            TRUE ~ plotid)) %>%
+                            TRUE ~ plotid),
+         location = case_when(siteid == 'ACRE' & str_detect(plotid, 'Inlet') ~ NA_character_,
+                              TRUE ~ location)) %>%
   # rename location names
   mutate(location = case_when(siteid == 'DEFI_R' & location == 'L' ~ 'Offsite',
-                              siteid == 'DEFI_R' & location == 'O' ~ 'Wetland_Out',
+                              siteid == 'DEFI_R' & location == 'O' ~ 'Wetland Out',
                               siteid == 'DEFI_R' & location == 'R' ~ 'Reservoir',
-                              siteid == 'DEFI_R' & location == 'RESOUT' ~ 'Reservoir_Out',
+                              siteid == 'DEFI_R' & location == 'RESOUT' ~ 'Reservoir Out',
                               siteid == 'DEFI_R' & location == 'W' ~ 'Wetland',
-                              siteid == 'DEFI_R' & location == 'WETIN' ~ 'Wetland_In',
-                              siteid == 'DEFI_R' & location == 'WETOUT' ~ 'Wetland_Out',
-                              siteid == 'FULTON' & location %in% c('A', 'WET IN') ~ 'Wetland_In',
-                              siteid == 'FULTON' & location %in% c('B', 'WET OUT') ~ 'Wetland_Out',
-                              siteid == 'VANWERT' & location == 'WET IN' ~ 'Wetland_In',
-                              siteid == 'VANWERT' & location == 'WET OUT' ~ 'Wetland_Out',
+                              siteid == 'DEFI_R' & location == 'WETIN' ~ 'Wetland In',
+                              siteid == 'DEFI_R' & location == 'WETOUT' ~ 'Wetland Out',
+                              siteid == 'FULTON' & location %in% c('A', 'WET IN') ~ 'Wetland In',
+                              siteid == 'FULTON' & location %in% c('B', 'WET OUT') ~ 'Wetland Out',
+                              siteid == 'VANWERT' & location == 'WET IN' ~ 'Wetland In',
+                              siteid == 'VANWERT' & location == 'WET OUT' ~ 'Wetland Out',
                               siteid == 'VANWERT' & location == 'OFFSITE' ~ 'Offsite',
-                              siteid == 'VANWERT' & location == 'RES OUT' ~ 'Reservoir_Out',
-                              TRUE ~ location)) %>%
+                              siteid == 'VANWERT' & location == 'RES OUT' ~ 'Reservoir Out',
+                              siteid == 'SERF_SD' & !is.na(location) ~ 'Middle Well',
+                              TRUE ~ location)) %>% 
   # correct measurement units
   mutate(value_temp = as.numeric(value),
          # this is to fix P concentration at WRSIS
@@ -67,12 +70,29 @@ wq_ALL %>%
                           str_detect(var_NEW, '^WAT4') & 
                           !is.na(value_temp),
                         as.character(value_temp),
+                        value),
+         # this is to fix EC  at WRSIS
+         value_temp = ifelse(var_NEW == 'WAT15', value_temp * 1000, value_temp),
+         value = ifelse(siteid %in% c('DEFI_R', 'FULTON', 'VANWERT') & 
+                          var_NEW == 'WAT15' & 
+                          !is.na(value_temp),
+                        as.character(value_temp),
                         value)) %>%
+  # remove erroneous readings
+  mutate(value = ifelse(var_NEW == 'WAT50' & value_temp > 50000, NA_character_, value),
+         value = ifelse(var_NEW == 'WAT51' & value_temp > 500, as.character(value_temp/10), value),
+         value = ifelse(var_NEW == 'WAT52' & value_temp > 200, as.character(value_temp/10), value)) %>%
+  select(-value_temp) -> wq_ALL_corrected
+
+
+# Standardize water quality data
+wq_ALL_corrected %>%
   # standartize BDLs
   mutate(comments = ifelse(value == 'no water', value, comments),
          value = ifelse(value == 'no water', NA_character_, value),    # at WILKIN3
          value = ifelse(value == 'NV', NA_character_, value),          # at WRSIS
-         comments = str_replace_all(comments, 'changed to .* from', 'changed to NA from')) %>%
+         comments = str_replace_all(comments, 'changed to .* from', 'changed to NA from'),
+         value = str_replace(value, '< ', '<')) %>%
   select(siteid, plotid, location, height, date, time, sample_type, var_NEW, value, comments) %>%
   # standardize timestamp
   mutate(timestamp_type = ifelse(is.na(time), 'D', 'I')) %>%
@@ -83,14 +103,23 @@ wq_ALL %>%
                        NA),
          tmsp = as_datetime(tmsp),
          UTC = case_when(siteid %in% c('DEFI_R', 'FULTON', 'UBWC', 'VANWERT') ~ tmsp + hours(5),
+                         siteid == 'FAIRM' & timestamp_type == 'I' ~ tmsp + hours(5),
                          siteid %in% c('HICKS_B', ' WILKIN1', ' WILKIN2') ~ tmsp + hours(6)),
          UTC = format(UTC, '%Y-%m-%dT%H:%M:%S+00:00')) %>%
-  select(siteid, plotid, location, height, date, time, UTC, timestamp_type,
+  ungroup() %>%
+  # handle replicated measurements
+  group_by(siteid, plotid, location, height, date, time, var_NEW) %>%
+  mutate(subsample = ifelse(siteid == 'CLAY_R',  1:n(), NA),
+         subsample = ifelse(siteid == 'STJOHNS', 1:n(), subsample),
+         subsample = ifelse(str_detect(siteid, 'WILKIN'), 1:n(), subsample),
+         subsample = ifelse(siteid == 'DEFI_R' & sample_type == 'Mast', 1:n(), subsample)) %>%
+  select(siteid, plotid, location, height, subsample, tmsp, date, time, UTC, timestamp_type,
          sample_type, var_NEW, value, comments) %>%
-  ungroup() -> temp
+  ungroup() -> wq_ALL_standard
 
 
-temp %>%
-  filter(is.na(date)) %>% View() 
 
+# Save standardized data --------------------------------------------------
+
+write_rds(wq_ALL_standard, 'Output_Data/wq_ALL.rds')
 

@@ -134,7 +134,19 @@ ReadExcelSheets('Input_Data/AGR/HICKS_B Crop Yield Data.xlsx') %>%
 
 
 # MUDS1 -------------------------------------------------------------------
-ReadExcelSheets('Input_Data/AGR/MUDS1 Crop Yield Data.xlsx') 
+ReadExcelSheets('Input_Data/AGR/MUDS1 Crop Yield Data.xlsx') %>%
+  bind_rows() %>%
+  rename(year = sheet, plotid = `Plot ID`) %>%
+  # remove redundant and non-standard variable
+  select(-`AGR25_X Corn grain total nitrogen at R6`, -`Subplot ID`) %>%
+  gather(key, value, starts_with('AGR')) %>%
+  filter(!is.na(value)) %>% 
+  mutate(crop = word(key, 2)) %>%
+  select(action, plotid, year, plantin_date = `Planting date`, crop, key, value, everything()) %>%
+  gather(trt, trt_value, 8:11) %>%
+  # remove treatment name if there was no treatment applied
+  mutate(trt = ifelse(is.na(trt_value), NA_character_, trt)) %>%
+  ungroup() -> agr_MUDS1
 
 
 # MUDS2 -------------------------------------------------------------------
@@ -252,7 +264,20 @@ ReadExcelSheets('Input_Data/AGR/UBWC Crop Yield Data.xlsx')
 
 
 # VANWERT -----------------------------------------------------------------
-ReadExcelSheets('Input_Data/AGR/VANWERT Crop Yield Data.xlsx')
+ReadExcelSheets('Input_Data/AGR/VANWERT Crop Yield Data.xlsx') %>%
+  bind_rows() %>%
+  rename(year = sheet, plotid = `Plot ID`) %>%
+  gather(key, value, starts_with('AGR')) %>%
+  mutate(crop = word(key, 2),
+         `Hybrid Corn` = ifelse(crop == 'Corn',  `Hybrid Corn`, NA_character_),
+         `Hybrid Popcorn` = ifelse(crop == 'Popcorn',  `Hybrid Popcorn`, NA_character_),
+         `Cultivar Soybean` = ifelse(crop == 'Soybean',  `Cultivar Soybean`, NA_character_))  %>%
+  filter(!is.na(value)) %>% 
+  gather(trt, trt_value, 3:7) %>%
+  # remove treatment name if there was no treatment applied
+  mutate(trt = ifelse(is.na(trt_value), NA_character_, trt)) %>%
+  select(plotid, year, crop, everything()) %>%
+  ungroup() -> agr_VANWERT
 
 
 # WILKIN1 -----------------------------------------------------------------

@@ -141,11 +141,19 @@ ReadExcelSheets('Input_Data/AGR/MUDS1 Crop Yield Data.xlsx') %>%
   select(-`AGR25_X Corn grain total nitrogen at R6`, -`Subplot ID`) %>%
   gather(key, value, starts_with('AGR')) %>%
   filter(!is.na(value)) %>% 
-  mutate(crop = word(key, 2)) %>%
-  select(action, plotid, year, plantin_date = `Planting date`, crop, key, value, everything()) %>%
+  mutate(crop = word(key, 2),
+         plotid = as.character(plotid)) %>%
+  select(action, plotid, year, planting_date = `Planting date`, crop, key, value, everything()) %>%
   gather(trt, trt_value, 8:11) %>%
+  arrange(plotid, year, key) %>%
   # remove treatment name if there was no treatment applied
   mutate(trt = ifelse(is.na(trt_value), NA_character_, trt)) %>%
+  distinct() %>%  
+  group_by(plotid, year, crop) %>%
+  # checking redundunt dups created as an artifact in year with treatments
+  mutate(CHECK = sum(!is.na(trt))) %>%
+  filter(!(CHECK > 0 & is.na(trt))) %>%
+  select(plotid, year, crop, everything(), -CHECK) %>% 
   ungroup() -> agr_MUDS1
 
 
@@ -274,9 +282,15 @@ ReadExcelSheets('Input_Data/AGR/VANWERT Crop Yield Data.xlsx') %>%
          `Cultivar Soybean` = ifelse(crop == 'Soybean',  `Cultivar Soybean`, NA_character_))  %>%
   filter(!is.na(value)) %>% 
   gather(trt, trt_value, 3:7) %>%
+  arrange(plotid, year, key) %>%
   # remove treatment name if there was no treatment applied
   mutate(trt = ifelse(is.na(trt_value), NA_character_, trt)) %>%
-  select(plotid, year, crop, everything()) %>%
+  distinct() %>%
+  group_by(plotid, year, crop) %>%
+  # checking redundunt dups created as an artifact in year with treatments
+  mutate(CHECK = sum(!is.na(trt))) %>%
+  filter(!(CHECK > 0 & is.na(trt))) %>%
+  select(plotid, year, crop, everything(), -CHECK) %>% 
   ungroup() -> agr_VANWERT
 
 
@@ -302,11 +316,13 @@ ReadExcelSheets('Input_Data/AGR/WILKIN3 Crop Yield Data.xlsx')
 # COMBINE .................................................................
 # Combnine all agronomic data
 mget(ls(pattern = 'agr_')) %>%
+  map(.x = ., .f = ~ .x %>% mutate(value = as.character(value))) %>%
   bind_rows(.id = 'site') %>%
   filter(site != 'agr_ALL') %>%
-  mutate(siteid = str_remove(site, 'agr_'),
-         site = NULL) %>%
-  select(siteid, plotid, year, key, value)-> agr_ALL
+  mutate(siteid = str_remove(site, 'agr_')) %>%
+  select(siteid, plotid, location,
+         action, harvested_area, planting_date, crop, trt, trt_value, 
+         year, date, key, value) -> agr_ALL
 
 # Save for farther analysis
 write_rds(agr_ALL, 'Inter_Data/agr_ALL.rds')

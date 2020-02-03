@@ -137,6 +137,42 @@ tribble(
 
 
 
+# Agronomic Data ----------------------------------------------------------
+
+read_rds('Output_Data/agro_ALL.rds') -> agr
+
+agr %>%
+  # standardize plot and locations names for FAIRM
+  mutate(location = ifelse(siteid == 'FAIRM' & plotid == 'CD/SI', 'East & West plots', location),
+         plotid = ifelse(siteid == 'FAIRM' & plotid == 'CD/SI', 'SI', plotid),
+         plotid = ifelse(siteid == 'FAIRM' & str_detect(plotid, 'CD'), word(plotid, 2), plotid)) %>%
+  mutate(year = as.integer(year),
+         date = as.character(date)) %>%
+  spread(var_NEW, value) -> agr_DB
+
+dbWriteTable(conn, "agronomic", agr_DB, overwrite = TRUE)
+  
+
+# Save selected data (variables) for FINAL DB.
+agr_DB %>%
+  # select plots and locations of interest
+  mutate(action = ifelse(is.na(action), 'keep', action)) %>%
+  filter(action != 'remove') %>%
+  # remove plots that are under more than one drainage system
+  filter(plotid != 'Inlet_A, Inlet_B') %>%
+  # select variables of high value, quality and abundance 
+  select(-action, -harvested_area, -AGR90.01.10) %>%
+  # aggregate Ease and West into SI at FAIRM
+  mutate(location = ifelse(siteid == 'FAIRM', NA_character_, location),
+         AGR20.01.60 = ifelse(siteid == 'FAIRM' & plotid == 'East', '9675.74', AGR20.01.60),
+         plotid = ifelse(siteid == 'FAIRM' & plotid == 'East', 'SI', plotid)) %>% 
+  filter(!(siteid == 'FAIRM' & plotid == 'West')) %>%
+  mutate(year = as.integer(year),
+         date = as.character(date)) -> agr_FINAL_DB
+
+dbWriteTable(conn_final, "agronomic", agr_FINAL_DB, overwrite = TRUE)
+
+
 
 # Water Quality Data ------------------------------------------------------
 read_rds('Output_Data/wq_ALL.rds') -> wq_hourly
@@ -334,6 +370,7 @@ rm(sm_DB, sm_FINAL_DB)
 read_rds('Output_Data/soil_properties_ALL.rds') -> soil_properties
 
 soil_properties %>%
+  mutate(plotid = ifelse(siteid == 'FAIRM' & plotid == 'CD/SI', 'SI', plotid)) %>%
   mutate(year = as.integer(year),
          date = as.character(date)) ->
   soil_properties_DB
@@ -342,6 +379,7 @@ dbWriteTable(conn, "soil_properties", soil_properties_DB, overwrite = TRUE)
 
 # Save selected data (variables) for FINAL DB
 soil_properties %>%
+  mutate(plotid = ifelse(siteid == 'FAIRM' & plotid == 'CD/SI', 'SI', plotid)) %>%
   rownames_to_column() %>%
   # remove variables that are measures < 3 sites
   select(-SOIL04, -SOIL07, 

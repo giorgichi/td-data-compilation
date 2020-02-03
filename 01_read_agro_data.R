@@ -24,9 +24,9 @@ ReadExcelSheets('Input_Data/AGR/ACRE Crop Yield Data.xlsx') %>%
   bind_rows() %>%
   rename(year = sheet, plotid = `Plot ID`) %>%
   mutate(location = ifelse(is.na(`Sub Field`), Field, paste(`Field`, `Sub Field`, sep = '-'))) %>%
-  select(plotid, location, harvested_area = `Harvested area`, starts_with('AGR')) %>%
+  select(plotid, location, harvested_area = `Harvested area`, year, starts_with('AGR')) %>%
   gather(key, value, starts_with('AGR')) %>%
-  filter(is.na(harvested_area)) -> agr_ACRE
+  filter(!is.na(harvested_area)) -> agr_ACRE
 
 
 # AUGLA -------------------------------------------------------------------

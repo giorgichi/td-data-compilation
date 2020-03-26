@@ -1,0 +1,40 @@
+TYPE,CROP,key,NEW_CODE,NEW_VAR_NAME
+AGR,Corn,AGR1 Corn final plant population,AGR10.01.10,Corn final plant population
+AGR,Popcorn,AGR1x Popcorn final plant population,AGR10.02.10,Popcorn final plant population
+AGR,Soybean,AGR2 Soybean final plant population,AGR10.21.10,Soybean final plant population
+AGR,Corn,AGR17 Corn grain yield at 15.5% MB,AGR20.01.60,Corn grain yield
+AGR,Corn,AGRXX Corn Yield at DWM Zone,AGR20.01.60,Corn grain yield
+AGR,Popcorn,AGR58 Popcorn grain yield at 13.5% MB,AGR20.02.60,Popcorn grain yield
+AGR,Wheat,AGR21 Wheat grain yield at 13.5% MB,AGR20.03.60,Wheat grain yield
+AGR,Soybean,AGR19 Soybean grain yield at 13.0% MB,AGR20.21.60,Soybean grain yield
+AGR,Soybean,AGRXX Soybean Yield at DWM Zone,AGR20.21.60,Soybean grain yield
+AGR,Sugarbeet,AGR60 Sugarbeet yield (root; freshweight),AGR20.55.10,Sugarbeet yield
+AGR,Corn,AGR18 Corn grain moisture,AGR30.01.60,Corn grain moisture
+AGR,Popcorn,AGR59 Popcorn grain moisture,AGR30.02.60,Popcorn grain moisture
+AGR,Wheat,AGR22 Wheat grain moisture,AGR30.03.60,Wheat grain moisture
+AGR,Soybean,AGR20 Soybean grain moisture,AGR30.21.60,Soybean grain moisture
+AGR,Forage,AGR53 Forage (cereal rye) Biomass,AGR40.43.10,Cereal rye (forage) biomass
+AGR,Forage,AGR62 Forage (sorghum-sudangrass) Biomass,AGR40.47.10,Sorghum-sudangrass (forage) biomass
+AGR,Corn,AGR4x Corn vegetative biomass at R6 (dry),AGR46.01.10,Corn whole plant biomass at R6
+AGR,Corn,AGR4 Corn vegetative biomass at R6 (dry),AGR46.01.20,Corn vegetative biomass at R6
+AGR,Corn,AGR33 Corn grain biomass at R6 (dry),AGR46.01.60,Corn grain biomass at R6
+AGR,Corn,AGR32 Corn cob biomass at R6 (dry),AGR46.01.70,Corn cob biomass at R6
+AGR,Soybean,AGR5x Soybean vegetative biomass at R6 (whole plant),AGR46.21.10,Soybean whole plant biomass at R6
+AGR,Soybean,"AGR5 Soybean vegetative biomass at R8 (stems, pods and leaves)",AGR48.21.20,Soybean vegetative biomass at R8
+AGR,Soybean,AGR5 Soybean vegetative biomass at R8 (stems and pods only; no leaves),AGR48.21.25,Soybean vegetative biomass at R8 (no leaves)
+AGR,Soybean,AGR34 Soybean grain biomass at R8 (dry),AGR48.21.60,Soybean grain biomass at R8
+AGR,Corn,AGR9 Corn vegetative biomass total carbon at R6,AGR56.01.20,Corn vegetative biomass total carbon at R6
+AGR,Corn,AGR23 Corn grain total carbon at R6,AGR56.01.60,Corn grain total carbon at R6
+AGR,Corn,AGR24 Corn cob total carbon at R6,AGR56.01.70,Corn cob total carbon at R6
+AGR,Soybean,AGR11 Soybean vegetative biomass total carbon at R8,AGR58.21.20,Soybean vegetative biomass total carbon at R8
+AGR,Soybean,AGR27 Soybean grain total carbon at R8,AGR58.21.60,Soybean grain total carbon at R8
+AGR,Corn,AGR10x Corn vegetative biomass total nitrogen at R6,AGR66.01.10,Corn whole plant total nitrogen at R6
+AGR,Corn,AGR10 Corn vegetative biomass total nitrogen at R6,AGR66.01.20,Corn vegetative biomass total nitrogen at R6
+AGR,Corn,AGR25 Corn grain total nitrogen at R6,AGR66.01.60,Corn grain total nitrogen at R6
+AGR,Corn,AGR26 Corn cob total nitrogen at R6,AGR66.01.70,Corn cob total nitrogen at R6
+AGR,Soybean,AGR12x Soybean vegetative biomass total nitrogen at R6,AGR66.21.10,Soybean whole plant total nitrogen at R6
+AGR,Soybean,AGR12 Soybean vegetative biomass total nitrogen at R8,AGR68.21.20,Soybean vegetative biomass total nitrogen at R8
+AGR,Soybean,AGR28 Soybean grain total nitrogen at R6,AGR68.21.60,Soybean grain total nitrogen at R6
+AGR,Soybean,AGR28 Soybean grain total nitrogen at R8,AGR68.21.60,Soybean grain total nitrogen at R8
+AGR,Any,AGR56 Leaf Area Index (LAI),AGR80.00.40,Leaf Area Index
+AGR,Corn,AGR55 Corn Developmental Stage,AGR90.01.10,Corn Developmental Stage

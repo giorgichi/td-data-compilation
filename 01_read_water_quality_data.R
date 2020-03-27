@@ -475,11 +475,7 @@ ReadExcelSheets('Input_Data/WATER/WQ/HICKS_B WQ.xlsx') %>%
   bind_rows() %>%
   filter(!is.na(Date)) %>% 
   transform_df() %>%
-  mutate(sample_type = ifelse(plotid == 'BE', `BE Sampling Method`, `BW Sampling Method`),
-         sample_type = case_when(sample_type == 'I' ~ 'ISCO',
-                                 sample_type == 'G' ~ 'Grab',
-                                 TRUE ~ 'TBD')) %>%
-  select(Date, sheet, plotid, sample_type, var, value) -> wq_HICKS_B
+  select(Date, sheet, plotid, var, value) -> wq_HICKS_B
 
 # assign NEW var codes
 wq_HICKS_B %>%
@@ -488,13 +484,13 @@ wq_HICKS_B %>%
          location = NA_character_, 
          var_OLD = word(var),
          siteid = "HICKS_B") %>%
-  select(siteid, plotid, location, date, time, sample_type, var_OLD, var, value) %>% 
+  select(siteid, plotid, location, date, time, var_OLD, var, value) %>% 
   mutate(var_NEW = case_when(var_OLD %in% c('WAT2', 'WAT21') ~ 'WAT30',
                              var_OLD %in% c('WAT9', 'WAT23') ~ 'WAT40',
                              TRUE ~ 'TBD')) %>%
-  select(siteid, plotid, location, date, time, sample_type, var_NEW, value) %>%
+  select(siteid, plotid, location, date, time, var_NEW, value) %>%
   # handle replicated measurements
-  group_by(siteid, plotid, location, date, time, sample_type, var_NEW) %>%
+  group_by(siteid, plotid, location, date, time, var_NEW) %>%
   summarise(value = as.character(mean(as.numeric(value)))) -> wq_HICKS_B_new
 
 
@@ -548,7 +544,25 @@ ReadExcelSheets('Input_Data/WATER/WQ/MUDS2 WQ.xlsx')
 
 
 # MUDS3_NEW ---------------------------------------------------------------
-ReadExcelSheets('Input_Data/WATER/WQ/MUDS3_NEW WQ.xlsx')
+ReadExcelSheets('Input_Data/WATER/WQ/MUDS3_NEW WQ.xlsx') %>%
+  map(.x = ., .f =  ~ .x %>% mutate_at(vars(contains("WAT")), as.character)) %>%
+  bind_rows() %>%
+  transform_df() -> wq_MUDS3_NEW
+
+# assign NEW var codes
+wq_MUDS3_NEW %>%
+  mutate(date = as.Date(Date),
+         time = NA_character_,
+         location = NA_character_, 
+         var_OLD = word(var),
+         siteid = "MUDS3_NEW") %>%
+  select(siteid, plotid, location, date, time, var_OLD, var, value) %>% 
+  mutate(var_NEW = case_when(var_OLD %in% c('WAT2', 'WAT21') ~ 'WAT30',
+                             var_OLD %in% c('WAT9', 'WAT23') ~ 'WAT40',
+                             var_OLD %in% c('WAT8', 'WAT22') ~ 'WAT42',
+                             var_OLD == 'WAT12' ~ 'WAT22',
+                             TRUE ~ 'TBD')) %>%
+  select(siteid, plotid, location, date, time, var_NEW, value) -> wq_MUDS3_NEW_new
 
 
 # MUDS3_OLD ---------------------------------------------------------------
@@ -843,7 +857,7 @@ wq_WILKIN2 %>%
          location = NA_character_, 
          var_OLD = word(var),
          siteid = "WILKIN2") %>%
-  select(siteid, plotid, location, date, time, var_OLD, var, value) %>% 
+  select(siteid, plotid, location, date, time, var_OLD, var, value) %>%
   mutate(var_NEW = case_when(var_OLD == 'WAT2' ~ 'WAT30',
                              var_OLD == 'WAT9' ~ 'WAT40',
                              var_OLD == 'WAT8' ~ 'WAT42', # unsure, maybe WAT43?
@@ -888,7 +902,6 @@ mget(ls(pattern = 'wq_[[:graph:]]+_new')) %>%
 
 # Save for later analysis
 write_rds(wq_ALL, 'Inter_Data/wq_ALL.rds')
-
 
 
 

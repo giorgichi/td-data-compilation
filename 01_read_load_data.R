@@ -1,6 +1,5 @@
 # Initialize functions 
 source('00_project_settings.R')
-library(googledrive)
 
 
 
@@ -413,7 +412,23 @@ nl_MUDS2 %>%
 
 
 # MUDS3_NEW ---------------------------------------------------------------
-ReadExcelSheets('Input_Data/WATER/LOAD/MUDS3_NEW Tile Nitrate-N Load.xlsx') 
+ReadExcelSheets('Input_Data/WATER/LOAD/MUDS3_NEW Tile Nitrate-N Load.xlsx')  %>%
+  bind_rows() %>%
+  transform_WAT_df() -> nl_MUDS3_NEW
+
+# assign NEW var codes
+nl_MUDS3_NEW %>%
+  mutate(date = as.Date(Date),
+         location = NA_character_, 
+         var_OLD = word(var),
+         siteid = "MUDS3_NEW") %>%
+  select(siteid, plotid, location, date, var_OLD, var, value) %>% 
+  mutate(var_NEW = case_when(var_OLD %in% c('WAT2')  ~ 'WAT30',
+                             var_OLD %in% c('WAT20') ~ 'WAT70',
+                             var_OLD == 'WAT8'  ~ 'WAT42',  # unsure, maybe WAT43?
+                             var_OLD == 'WATXX' ~ 'WAT82',  # unsure, maybe WAT83?
+                             TRUE ~ 'TBD')) %>%
+  select(siteid, plotid, location, date, var_NEW, value) -> nl_MUDS3_NEW_new
 
 
 # MUDS3_OLD ---------------------------------------------------------------
@@ -566,7 +581,7 @@ nl_STORY %>%
 # SWROC -------------------------------------------------------------------
 ReadExcelSheets('Input_Data/WATER/LOAD/SWROC Tile Nitrate-N Load.xlsx') %>%
   bind_rows() #%>%
-  # transform_WAT_df() -> nl_SWROC
+# transform_WAT_df() -> nl_SWROC
 
 # # assign NEW var codes
 # nl_SWROC %>%

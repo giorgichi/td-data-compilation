@@ -1,6 +1,12 @@
 # Initialize functions 
 source('00_project_settings.R')
 
+transform_df <- function(df) {
+  df %>%
+    gather(key, value, contains('WAT')) %>%
+    separate(key, into = c('plotid', 'var'), extra = 'merge', sep = ' ') %>%
+    filter(!is.na(value))
+}
 
 
 # DOWNLOAD ................................................................
@@ -19,14 +25,6 @@ for (i in sheets) {
 DownloadGoogleSheet('CLAY_R Turbidity', FOLDER = 'WATER/WQ')
 DownloadGoogleSheet('CLAY_R Tile Water EC', FOLDER = 'WATER/WQ')
 DownloadGoogleSheet('FAIRM Tile Water EC', FOLDER = 'WATER/WQ')
-
-
-transform_df <- function(df) {
-  df %>%
-    gather(key, value, contains('WAT')) %>%
-    separate(key, into = c('plotid', 'var'), extra = 'merge', sep = ' ') %>%
-    filter(!is.na(value))
-}
 
 
 
@@ -901,7 +899,7 @@ mget(ls(pattern = 'wq_[[:graph:]]+_new')) %>%
 
 
 # Save for later analysis
-write_rds(wq_ALL, 'Inter_Data/wq_ALL.rds')
+write_rds(wq_ALL, 'Inter_Data/wq_ALL.rds', compress = 'xz')
 
 
 

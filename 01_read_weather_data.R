@@ -336,7 +336,7 @@ ReadExcelSheets('Input_Data/WEATHER/WILKIN1 Weather.xlsx')
 
 
 # WILKIN3 -----------------------------------------------------------------
-# ReadExcelSheets('Input_Data/WEATHER/WILKIN3 Weather.xlsx') 
+ReadExcelSheets('Input_Data/WEATHER/WILKIN3 Weather.xlsx') 
 
 
 
@@ -373,7 +373,7 @@ mget(ls(pattern = 'weather_[[:graph:]]+_daily')) %>%
 
 
 # Save weather data for further analysis
-write_rds(weather_ALL_hourly, 'Inter_Data/weather_ALL_hourly.rds')
-write_rds(weather_ALL_daily, 'Inter_Data/weather_ALL_daily.rds')
+write_rds(weather_ALL_hourly, 'Inter_Data/weather_ALL_hourly.rds', compress = 'xz')
+write_rds(weather_ALL_daily, 'Inter_Data/weather_ALL_daily.rds', compress = 'xz')
 
   

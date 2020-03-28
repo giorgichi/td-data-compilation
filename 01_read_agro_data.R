@@ -325,5 +325,5 @@ mget(ls(pattern = 'agr_')) %>%
          year, date, key, value) -> agr_ALL
 
 # Save for farther analysis
-write_rds(agr_ALL, 'Inter_Data/agr_ALL.rds')
+write_rds(agr_ALL, 'Inter_Data/agr_ALL.rds', compress = 'xz')
 

@@ -10,7 +10,7 @@ library(janitor)
 
 
 # ACRE --------------------------------------------------------------------
-read_csv('Input_Data/SOIL/SM/ACRE_soil_moisture_and_temp.csv') %>%
+read_csv('Input_Data/SOIL/SM/ACRE_soil_moisture_and_temp_N.csv') %>%
   select(-X1) -> sm_ACRE
 
 # format table
@@ -153,7 +153,7 @@ sm_daily_HICKS_B %>%
   select(siteid, plotid = plotID, location, depth, date,
          soil_moisture = sm) ->
   soil_HICKS_B_daily_sm
- 
+
 
 
 # HICKS_P -----------------------------------------------------------------
@@ -229,12 +229,12 @@ read_csv('Input_Data/SOIL/SM/SWROC_soil_moisture.csv') -> sm_SWROC
 
 # format table
 sm_SWROC %>%
-    mutate(location = ifelse(is.na(treatment), treatment, paste(treatment, 'N'))) %>%
-    select(siteid, plotid = plotID, location, depth, date,
-           soil_moisture = sm) ->
-    soil_SWROC_daily_sm
+  mutate(location = ifelse(is.na(treatment), treatment, paste(treatment, 'N'))) %>%
+  select(siteid, plotid = plotID, location, depth, date,
+         soil_moisture = sm) ->
+  soil_SWROC_daily_sm
 
-  
+
 
 # ALL ---------------------------------------------------------------------
 # COMBINE .................................................................
@@ -247,6 +247,6 @@ mget(ls(pattern = 'soil_[[:graph:]]+_sm')) %>%
 
 
 # Save for later analysis
-write_rds(sm_ALL, 'Inter_Data/sm_ALL.rds')
+write_rds(sm_ALL, 'Inter_Data/sm_ALL.rds', compress = 'xz')
 
 

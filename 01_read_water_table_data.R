@@ -14,7 +14,7 @@ for (i in sheets) {
 }
 
 
-# Download all water table data
+# Download all stage (water level) data
 
 gs_ls('Stage') %>%
   pull(sheet_title) -> sheets
@@ -126,12 +126,12 @@ ReadExcelSheets('Input_Data/WATER/WATER_TABLE/DEFI_R Stage Wetland 2004-2009.xls
 
 ReadExcelSheets('Input_Data/WATER/WATER_TABLE/DEFI_R Stage Reservoir 2004-2009.xlsx') %>%
   bind_rows() %>% 
-  mutate(`R WAT15__1` = as.numeric(`R WAT15__1`)) %>%
+  mutate(`R WAT15...3` = as.numeric(`R WAT15...3`)) %>%
   mutate(siteid = 'DEFI_R',
          plotid = NA_character_,
          location = 'Reservoir') %>%
   select(siteid, plotid, location, tmsp = `DATE&TIME`, 
-         automated = `R WAT15`,  manual = `R WAT15__1`, WAT14 = `Other WAT`) %>%
+         automated = `R WAT15...2`,  manual = `R WAT15...3`, WAT14 = `Other WAT`) %>%
   mutate(temp = is.na(automated)) %>%
   gather(type, WAT04, automated:manual) %>%
   filter(!is.na(WAT04)) %>%
@@ -255,8 +255,6 @@ mget(ls(pattern = 'wt_[[:graph:]]+_hourly')) %>%
   select(siteid, plotid, var, tmsp, value) -> 
   wt_ALL_hourly
 
-write_csv(wt_ALL_hourly, 'Output_Data/water_table_hourly_all.csv')
-
 
 # Combnine all daily water table data
 rm(wt_ALL_daily)
@@ -270,8 +268,6 @@ mget(ls(pattern = '(wt|pz)_[[:graph:]]+_daily')) %>%
   select(siteid, plotid, var, date, value) ->
   wt_ALL_daily
 
-write_csv(wt_ALL_daily, 'Output_Data/water_table_daily_all.csv')
-
 
 # Combnine all hourly stage data
 rm(st_ALL_hourly)
@@ -279,15 +275,12 @@ mget(ls(pattern = 'stage_[[:graph:]]+_hourly')) %>%
   bind_rows() ->
   st_ALL_hourly
 
-write_csv(st_ALL_hourly, 'Output_Data/stage_hourly_all.csv')
 
 
 # Save for later analysis
-write_rds(wt_ALL_hourly, 'Inter_Data/wt_ALL_hourly.rds')
-write_rds(wt_ALL_daily, 'Inter_Data/wt_ALL_daily.rds')
-write_rds(st_ALL_hourly, 'Inter_Data/st_ALL_hourly.rds')
-
-
+write_rds(wt_ALL_hourly, 'Inter_Data/wt_ALL_hourly.rds', compress = 'xz')
+write_rds(wt_ALL_daily,  'Inter_Data/wt_ALL_daily.rds',  compress = 'xz')
+write_rds(st_ALL_hourly, 'Inter_Data/st_ALL_hourly.rds', compress = 'xz')
 
 
 

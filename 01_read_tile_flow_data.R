@@ -785,6 +785,7 @@ ReadExcelSheets('Input_Data/WATER/TILE_FLOW/SWROC Irrigation Water Depth.xlsx') 
   mutate(siteid = 'SWROC') -> irr_SWROC_daily_GOOD
 
 
+
 # ALL ---------------------------------------------------------------------
 # Combine IRRIGATION DATA .................................................
 mget(ls(pattern = 'irr_[[:graph:]]+_daily_GOOD')) %>%
@@ -795,7 +796,6 @@ mget(ls(pattern = 'irr_[[:graph:]]+_daily_GOOD')) %>%
   irr_ALL_daily
 
 
-
 # Combine TILE FLOW & DISCHARGE DATA ......................................
 mget(ls(pattern = 'tf_[[:graph:]]+_daily_GOOD')) %>%
   bind_rows() %>%
@@ -803,14 +803,7 @@ mget(ls(pattern = 'tf_[[:graph:]]+_daily_GOOD')) %>%
   tf_ALL_daily
 
 
-
 # Save for later analysis
-write_rds(irr_ALL_daily, 'Inter_Data/irr_ALL_daily.rds')
-write_rds(tf_ALL_daily, 'Inter_Data/tf_ALL_daily.rds')
-
-
-
-
-
-
+write_rds(irr_ALL_daily, 'Inter_Data/irr_ALL_daily.rds', compress = 'xz')
+write_rds(tf_ALL_daily, 'Inter_Data/tf_ALL_daily.rds', compress = 'xz')
 

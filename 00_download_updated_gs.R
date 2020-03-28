@@ -1,3 +1,7 @@
+# Initialize functions 
+source('00_project_settings.R')
+
+
 # identify subfolders within Google Folder for TD data
 # let googledrive know this is a file ID or URL, as opposed to file name
 as_id("0B6ZGw0coobCxfnphMzRKbEhadEVsSXVYSHIwX1AtZ0hJWVJGbjhmR2VTb2VJZzQybVZ1Mk0") %>%

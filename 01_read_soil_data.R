@@ -1,6 +1,5 @@
 # Initialize functions 
 source('00_project_settings.R')
-library(googledrive)
 library(janitor)
 
 
@@ -1006,9 +1005,9 @@ mget(ls(pattern = 'soil_[[:graph:]]+_pr$')) %>%
 
 
 # Save for later analysis
-write_rds(soil_properties_ALL, 'Inter_Data/soil_properties_ALL.rds')
-write_rds(soil_nitrate_ALL, 'Inter_Data/soil_nitrate_ALL.rds')
-write_rds(soil_wr_ALL, 'Inter_Data/soil_wr_ALL.rds')
-write_rds(soil_pr_ALL, 'Inter_Data/soil_pr_ALL.rds')
+write_rds(soil_properties_ALL, 'Inter_Data/soil_properties_ALL.rds', compress = 'xz')
+write_rds(soil_nitrate_ALL, 'Inter_Data/soil_nitrate_ALL.rds', compress = 'xz')
+write_rds(soil_wr_ALL, 'Inter_Data/soil_wr_ALL.rds', compress = 'xz')
+write_rds(soil_pr_ALL, 'Inter_Data/soil_pr_ALL.rds', compress = 'xz')
 
 

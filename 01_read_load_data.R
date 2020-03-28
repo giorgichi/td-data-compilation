@@ -746,5 +746,5 @@ mget(ls(pattern = 'nl_[[:graph:]]+_new')) %>%
 
 
 # Save for later analysis
-write_rds(nl_ALL, 'Inter_Data/nl_ALL.rds')
+write_rds(nl_ALL, 'Inter_Data/nl_ALL.rds', compress = 'xz')
 

@@ -80,6 +80,7 @@ HOURLY_Tile_Flow <-
             tf_CLAY_R_hourly,
             tf_DPAC_hourly,     # for 2012-2017 overlaps with daily data
             tf_HARDIN_hourly,   # NOTE this contains both DAILY and HOURLY data
+            tf_MUDS3_NEW_hourly,
             tf_SERF_IA_hourly,
             tf_SERF_SD_hourly,  # NEET TO look for final version in my laptop
             tf_STJOHNS_hourly,
@@ -95,7 +96,7 @@ HOURLY_Tile_Flow <-
          date = as_date(date),
          time = ifelse(timestamp_type == 'I', format(tmsp, '%H:%M'), NA_character_), 
          UTC = case_when(siteid %in% c('DPAC', 'HARDIN', 'STJOHNS') ~ tmsp + hours(5),
-                         siteid %in% c('CLAY_C', 'CLAY_R', 'SERF_IA', 'SERF_SD',
+                         siteid %in% c('CLAY_C', 'CLAY_R', 'SERF_IA', 'SERF_SD', 'MUDS3_NEW',
                                        'WILKIN1', 'WILKIN2') ~ tmsp + hours(6)),
          # format according to ISO 8601 standard
          UTC = format(UTC, '%Y-%m-%dT%H:%M:%S+00:00')) %>%
@@ -106,15 +107,7 @@ HOURLY_Tile_Flow <-
 
 # Combine tile flow and discharge data ------------------------------------
 bind_rows(ALL_Discharge, HOURLY_Tile_Flow, DAILY_Tile_Flow) %>%
-  write_rds('Inter_Data/tf_ALL_hourly_ORIGINAL.rds')
-  
-bind_rows(ALL_Discharge, HOURLY_Tile_Flow, DAILY_Tile_Flow) %>%
-  select(-tmsp) %>%
-  write.csv('Output_Data/tile_flow_and_discharge_all_ORIGINAL.csv')
-
-
-
-  
+  write_rds('Inter_Data/tf_ALL_hourly_ORIGINAL.rds', compress = 'xz')
   
 
 

@@ -629,6 +629,32 @@ wq_SERF_SD %>%
                              TRUE ~ 'TBD')) %>%
   select(siteid, plotid, location, date, time, var_NEW, value) -> wq_SERF_SD_new
 
+# read tile water temperature data
+ReadExcelSheets('Input_Data/WATER/TILE_FLOW/SERF_SD Tile Flow.xlsx') %>%
+  .[1:3] %>%
+  map(., ~ .x %>% mutate_at(vars(contains('WAT')), as.numeric)) %>%
+  bind_rows() %>%
+  select(Date, contains('WAT')) %>%
+  gather(key, value, contains('WAT')) %>%
+  separate(key, into = c('plotid', 'var', 'var_name'), sep = ' ', extra = 'merge') %>%
+  # select only tile water temp 
+  filter(var == 'WAT11') -> temp_SERF_SD
+
+# assign NEW var codes
+temp_SERF_SD %>%
+  filter(!is.na(value)) %>%
+  mutate(date = as.Date(Date),
+         time = format(Date, '%H:%M'),
+         location = NA_character_, 
+         var_OLD = var,
+         value = as.character(value),
+         siteid = "SERF_SD") %>%
+  select(siteid, plotid, location, date, time, var_OLD, var, value) %>% 
+  mutate(var_NEW = case_when(var_OLD == 'WAT11' ~ 'WAT16',
+                             TRUE ~ 'TBD')) %>%
+  select(siteid, plotid, location, date, time, var_NEW, value) -> temp_SERF_SD_new
+
+
 
 
 # SHEARER -----------------------------------------------------------------
@@ -895,13 +921,14 @@ wq_WILKIN3 %>%
 
 # Combnine all hourly water table data
 mget(ls(pattern = 'wq_[[:graph:]]+_new')) %>%
-  bind_rows() -> wq_ALL
+  bind_rows() %>%
+  bind_rows(temp_SERF_SD_new) %>% 
+  arrange(siteid, plotid, location, var_NEW, sample_type, height, date, time) ->
+  wq_ALL
 
 
 # Save for later analysis
 write_rds(wq_ALL, 'Inter_Data/wq_ALL.rds', compress = 'xz')
-
-
 
 
 

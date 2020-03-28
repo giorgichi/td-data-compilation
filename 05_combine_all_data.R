@@ -111,6 +111,7 @@ tribble(
   
   
   'water_quality',  'WAT15', 'Water Electrical Conductivity',                             'uS/cm',
+  'water_quality',  'WAT16', 'Water Temperature',                                         'degree C',
   'water_quality',  'WAT20', 'Turbidity',                                                 'NTU',
   'water_quality',  'WAT22', 'Total Suspended Solids',                                    'mg/l',
   'water_quality',  'WAT23', 'Total Filterable Solids',                                   'mg/l',

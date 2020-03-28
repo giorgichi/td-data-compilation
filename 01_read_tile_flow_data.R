@@ -446,7 +446,22 @@ tf_MUDS2_daily %>%
 
 
 # MUDS3_NEW ---------------------------------------------------------------
-ReadExcelSheets('Input_Data/WATER/TILE_FLOW/MUDS3_NEW Tile Flow.xlsx') 
+ReadExcelSheets('Input_Data/WATER/TILE_FLOW/MUDS3_NEW Tile Flow.xlsx') %>%
+  bind_rows() %>%
+  mutate(tmsp = update(Date, hour = hour(Time), minute = minute(Time))) %>%
+  select(tmsp, contains('WAT')) %>%
+  gather(key, value, contains('WAT')) %>%
+  separate(key, into = c('plotid', 'var', 'var_name'), sep = ' ', extra = 'merge') %>%
+  mutate(siteid = 'MUDS3_NEW') -> tf_MUDS3_NEW_hourly
+
+tf_MUDS3_NEW_hourly %>% 
+  group_by(date = as_date(tmsp), siteid, plotid, var) %>%
+  summarise(check = sum(!is.na(value)),
+            value = sum(value, na.rm = TRUE)) %>%
+  ungroup() %>%
+  mutate(value = ifelse(check == 0, NA_real_, value)) %>%
+  mutate(var_NEW = ifelse(var == 'WAT1', 'WAT06', 'HELP')) %>%
+  select(siteid, plotid, date, var_NEW, value) -> tf_MUDS3_NEW_daily_GOOD
 
 
 # MUDS3_OLD ---------------------------------------------------------------
@@ -779,7 +794,6 @@ mget(ls(pattern = 'irr_[[:graph:]]+_daily_GOOD')) %>%
   select(siteid, plotid, var_NEW, date, value) ->
   irr_ALL_daily
 
-write_csv(irr_ALL_daily, 'Output_Data/irrigation_daily_all.csv')
 
 
 # Combine TILE FLOW & DISCHARGE DATA ......................................
@@ -788,7 +802,6 @@ mget(ls(pattern = 'tf_[[:graph:]]+_daily_GOOD')) %>%
   select(siteid, plotid, location, var_NEW, date, value) ->
   tf_ALL_daily
 
-write_csv(tf_ALL_daily, 'Output_Data/tile_flow_daily_all.csv')
 
 
 # Save for later analysis

@@ -478,7 +478,7 @@ ReadExcelSheets('Input_Data/WATER/WQ/HICKS_B WQ.xlsx') %>%
 # assign NEW var codes
 wq_HICKS_B %>%
   mutate(date = as.Date(Date),
-         time = format(Date, '%H:%M'),
+         time = NA_character_,
          location = NA_character_, 
          var_OLD = word(var),
          siteid = "HICKS_B") %>%

@@ -107,7 +107,10 @@ HOURLY_Tile_Flow <-
 
 # Combine tile flow and discharge data ------------------------------------
 bind_rows(ALL_Discharge, HOURLY_Tile_Flow, DAILY_Tile_Flow) %>%
-  write_rds('Inter_Data/tf_ALL_hourly_ORIGINAL.rds', compress = 'xz')
-  
+  write_rds('Standard_Data/tf_ALL_hourly_ORIGINAL.rds', compress = 'xz')
+
+# after saving it was gzip-ed via shell command line  
+bind_rows(ALL_Discharge, HOURLY_Tile_Flow, DAILY_Tile_Flow) %>%
+  write_csv('Standard_Data/CSV/tile_flow_and_discharge_all_ORIGINAL.csv')
 
 

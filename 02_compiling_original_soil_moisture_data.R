@@ -49,6 +49,11 @@ bind_rows(soil_HICKS_B_daily_sm,
 bind_rows(HOURLY_sm, DAILY_sm) %>%
   select(siteid:timestamp_type, tmsp,
          SOIL09 = soil_moisture, SOIL10 = soil_temp, SOIL12 = soil_ec) %>%
-  write_rds('Inter_Data/sm_ALL_hourly_ORIGINAL.rds')
+  write_rds('Standard_Data/sm_ALL_hourly_ORIGINAL.rds', compress = 'xz')
 
+# after saving it was gzip-ed via shell command line  
+bind_rows(HOURLY_sm, DAILY_sm) %>%
+  select(siteid:timestamp_type, tmsp,
+         SOIL09 = soil_moisture, SOIL10 = soil_temp, SOIL12 = soil_ec) %>%
+  write_csv('Standard_Data/CSV/sm_ALL_hourly_ORIGINAL.csv')
 

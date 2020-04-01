@@ -62,10 +62,6 @@ tf_AUGLA_daily %>%
   mutate(var_NEW = ifelse(var == 'WAT1', 'WAT06', 'HELP')) %>%
   select(siteid, plotid, date, var_NEW, value) -> tf_AUGLA_daily_GOOD
 
-# NEED TO download once gap-filled data is entered in the Google Sheet
-DownloadGoogleSheet('FILLED - AUGLA Tile Flow', FOLDER = 'WATER/TILE_FLOW')
-ReadExcelSheets('Input_Data/WATER/TILE_FLOW/FILLED - AUGLA Tile Flow.xlsx') 
-
 
 # BATH_A ------------------------------------------------------------------
 ReadExcelSheets('Input_Data/WATER/TILE_FLOW/BATH_A Tile Flow.xlsx') 
@@ -190,10 +186,6 @@ tf_CRAWF_daily %>%
   mutate(var_NEW = ifelse(var == 'WAT1', 'WAT06', 'HELP')) %>%
   select(siteid, plotid, date, var_NEW, value) -> tf_CRAWF_daily_GOOD
 
-# NEED TO download once gap-filled data is entered in the Google Sheet
-DownloadGoogleSheet('FILLED - CRAWF Tile Flow', FOLDER = 'WATER/TILE_FLOW')
-ReadExcelSheets('Input_Data/WATER/TILE_FLOW/FILLED - CRAWF Tile Flow.xlsx') 
-
 
 # DEFI_M ------------------------------------------------------------------
 ReadExcelSheets('Input_Data/WATER/TILE_FLOW/GV - DEFI_M Tile Flow.xlsx') %>%
@@ -207,10 +199,6 @@ ReadExcelSheets('Input_Data/WATER/TILE_FLOW/GV - DEFI_M Tile Flow.xlsx') %>%
 tf_DEFI_M_daily %>% 
   mutate(var_NEW = ifelse(var == 'WAT1', 'WAT06', 'HELP')) %>%
   select(siteid, plotid, date, var_NEW, value) -> tf_DEFI_M_daily_GOOD
-
-# NEED TO download once gap-filled data is entered in the Google Sheet
-DownloadGoogleSheet('FILLED - DEFI_M Tile Flow', FOLDER = 'WATER/TILE_FLOW')
-ReadExcelSheets('Input_Data/WATER/TILE_FLOW/FILLED - DEFI_M Tile Flow.xlsx') 
 
 
 # DEFI_R ------------------------------------------------------------------
@@ -269,10 +257,6 @@ ReadExcelSheets('Input_Data/WATER/TILE_FLOW/DAILY CLEAN - DPAC Tile Flow.xlsx') 
 tf_DPAC_daily %>% 
   mutate(var_NEW = ifelse(var == 'WAT1', 'WAT06', 'HELP')) %>%
   select(siteid, plotid, date, var_NEW, value) -> tf_DPAC_daily_GOOD
-
-# NEED TO download once gap-filled data is entered in the Google Sheet
-DownloadGoogleSheet('FILLED - DPAC Tile Flow', FOLDER = 'WATER/TILE_FLOW')
-ReadExcelSheets('Input_Data/WATER/TILE_FLOW/FILLED - DPAC Tile Flow.xlsx') 
 
 
 # FAIRM -------------------------------------------------------------------
@@ -336,10 +320,6 @@ tf_HARDIN_daily %>%
   mutate(var_NEW = ifelse(var == 'WAT1', 'WAT06', 'HELP')) %>%
   select(siteid, plotid, date, var_NEW, value) -> tf_HARDIN_daily_GOOD
 
-# NEED TO download once gap-filled data is entered in the Google Sheet
-DownloadGoogleSheet('FILLED - HARDIN Tile Flow', FOLDER = 'WATER/TILE_FLOW')
-ReadExcelSheets('Input_Data/WATER/TILE_FLOW/FILLED - HARDIN Tile Flow.xlsx') 
-
 
 # HARDIN_NW ---------------------------------------------------------------
 ReadExcelSheets('Input_Data/WATER/TILE_FLOW/GV - HARDIN_NW Tile Flow.xlsx') %>%
@@ -353,10 +333,6 @@ ReadExcelSheets('Input_Data/WATER/TILE_FLOW/GV - HARDIN_NW Tile Flow.xlsx') %>%
 tf_HARDIN_NW_daily %>%
   mutate(var_NEW = ifelse(var == 'WAT1', 'WAT06', 'HELP')) %>%
   select(siteid, plotid, date, var_NEW, value) -> tf_HARDIN_NW_daily_GOOD
-
-# NEED TO download once gap-filled data is entered in the Google Sheet
-DownloadGoogleSheet('FILLED - HARDIN_NW Tile Flow', FOLDER = 'WATER/TILE_FLOW')
-ReadExcelSheets('Input_Data/WATER/TILE_FLOW/FILLED - HARDIN_NW Tile Flow.xlsx') 
 
 
 # HENRY -------------------------------------------------------------------
@@ -405,10 +381,6 @@ ReadExcelSheets('Input_Data/WATER/TILE_FLOW/HICKS_B Tile Flow.xlsx') %>%
 tf_HICKS_B_daily %>%
   mutate(var_NEW = ifelse(var == 'WAT1', 'WAT06', 'HELP')) %>%
   select(siteid, plotid, date, var_NEW, value) -> tf_HICKS_B_daily_GOOD
-
-# NEED TO download once gap-filled data is entered in the Google Sheet
-DownloadGoogleSheet('FILLED - HICKS_B Tile Flow', FOLDER = 'WATER/TILE_FLOW')
-ReadExcelSheets('Input_Data/WATER/TILE_FLOW/FILLED - HICKS_B Tile Flow.xlsx') 
 
 
 # MAASS -------------------------------------------------------------------
@@ -516,10 +488,6 @@ tf_SERF_IA_daily %>%
   mutate(var_NEW = ifelse(var == 'WAT1', 'WAT06', 'HELP')) %>%
   select(siteid, plotid, date, var_NEW, value) -> tf_SERF_IA_daily_GOOD
 
-# NEED TO download once gap-filled data is entered in the Google Sheet
-DownloadGoogleSheet('FILLED - SERF_IA Tile Flow', FOLDER = 'WATER/TILE_FLOW')
-ReadExcelSheets('Input_Data/WATER/TILE_FLOW/FILLED - SERF_IA Tile Flow.xlsx') 
-
 
 # SERF_SD -----------------------------------------------------------------
 ReadExcelSheets('Input_Data/WATER/TILE_FLOW/SERF_SD Tile Flow.xlsx') %>%
@@ -556,10 +524,6 @@ ReadExcelSheets('Input_Data/WATER/TILE_FLOW/DAILY CLEAN - SERF_SD Tile Flow.xlsx
 tf_SERF_SD_daily %>%
   mutate(var_NEW = ifelse(var == 'WAT1', 'WAT06', 'HELP')) %>%
   select(siteid, plotid, date, var_NEW, value) -> tf_SERF_SD_daily_GOOD
-
-# NEED TO download once gap-filled data is entered in the Google Sheet
-DownloadGoogleSheet('FILLED - SERF_SD Tile Flow', FOLDER = 'WATER/TILE_FLOW')
-ReadExcelSheets('Input_Data/WATER/TILE_FLOW/FILLED - SERF_SD Tile Flow.xlsx') 
 
 
 # SHEARER -----------------------------------------------------------------
@@ -608,10 +572,6 @@ ReadExcelSheets('Input_Data/WATER/TILE_FLOW/GV - STJOHNS Tile Flow.xlsx') %>%
 tf_STJOHNS_daily %>%
   mutate(var_NEW = ifelse(var == 'WAT1', 'WAT06', 'HELP')) %>%
   select(siteid, plotid, date, var_NEW, value) -> tf_STJOHNS_daily_GOOD
-
-# NEED TO download once gap-filled data is entered in the Google Sheet
-DownloadGoogleSheet('FILLED - STJOHNS Tile Flow', FOLDER = 'WATER/TILE_FLOW')
-ReadExcelSheets('Input_Data/WATER/TILE_FLOW/FILLED - STJOHNS Tile Flow.xlsx') 
 
 
 # STORY -------------------------------------------------------------------

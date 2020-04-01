@@ -49,21 +49,21 @@ agr_ALL_correct %>%
   mutate(crop = ifelse(crop == 'soy', 'soybean', crop)) %>%
   # update variable names
   left_join(codes, by = 'key') %>%
-  mutate(NEW_CODE = case_when(CROP == 'Any' & crop == 'corn' ~ str_replace(NEW_CODE, '80.00.', '80.01.'),
-                              CROP == 'Any' & crop == 'soybean' ~ str_replace(NEW_CODE, '80.00.', '80.21.'),
+  mutate(NEW_CODE = case_when(CROP == 'Any' & crop == 'corn' ~ 
+                                str_replace(NEW_CODE, '80.00.', '80.01.'),
+                              CROP == 'Any' & crop == 'soybean' ~ 
+                                str_replace(NEW_CODE, '80.00.', '80.21.'),
                               TRUE ~ NEW_CODE)) %>%
   # mark fileds with < 0.81 ha areas at ACRE for farther filter
   mutate(action = ifelse(siteid == 'ACRE' & harvested_area < 0.81, 'remove', action)) %>%
-  select(siteid, plotid, location, crop, trt, trt_value, year, date, var_NEW = NEW_CODE, value, action, harvested_area) %>%
+  select(siteid, plotid, location, crop, trt, trt_value, year, date, 
+         var_NEW = NEW_CODE, value, action, harvested_area) %>%
   filter(!is.na(value)) ->
   agr_ALL_standard
 
 
 # Save standardized data --------------------------------------------------
 
-write_rds(agr_ALL_standard, 'Output_Data/agro_ALL.rds')
-
-
-
+write_rds(agr_ALL_standard, 'Standard_Data/agro_ALL.rds', compress = 'xz')
 
 

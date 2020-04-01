@@ -138,18 +138,18 @@ weather_ALL_hourly_correct %>%
 # save hourly weather data
 weather_ALL_hourly_standard %>%
   arrange(siteid, station, tmsp) %>%
-  write_csv('Output_Data/weather_hourly_all_variable.csv')
+  write_csv('Standard_Data/CSV/weather_hourly_all_variable.csv')
 
 weather_ALL_hourly_standard %>%
   arrange(siteid, station, tmsp) %>%
-  write_rds('Output_Data/weather_hourly_all_variable.rds')
+  write_rds('Standard_Data/weather_hourly_all_variable.rds', compress = 'xz')
 
 
 
 # DAILY WEATHER DATA ------------------------------------------------------
 
 # there are some sites that has only hourly data
-weather_ALL_hourly_standard %>%
+weather_ALL_hourly %>%
   filter(!is.na(value)) %>%
   mutate(year = year(tmsp)) %>%
   distinct(siteid, station, key, year) %>%
@@ -385,11 +385,11 @@ weather_ALL_daily %>%
 # save daily weather data
 weather_ALL_daily_standard %>%
   arrange(siteid, station, date) %>%
-  write_csv('Output_Data/weather_daily_all_variable.csv')
+  write_csv('Standard_Data/CSV/weather_daily_all_variable.csv')
 
 weather_ALL_daily_standard %>%
   arrange(siteid, station, date) %>%
-  write_rds('Output_Data/weather_daily_all_variable.rds')
+  write_rds('Standard_Data/weather_daily_all_variable.rds', compress = 'xz')
 
 
 

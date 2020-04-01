@@ -27,7 +27,7 @@ wq_ALL %>%
                                  siteid == 'CLAY_R' ~ 'Grab',
                                  siteid == 'FAIRM' & var_NEW != 'WAT15'  ~ 'Grab',
                                  siteid == 'SERF_IA' ~ 'Grab',
-                                 siteid == 'SERF_SD' ~ 'Grab',
+                                 siteid == 'SERF_SD' & var_NEW != 'WAT16' ~ 'Grab',
                                  siteid == 'SWROC' ~ 'Grab',
                                  siteid == 'TIDE' ~ 'Flow Proportional',
                                  siteid == 'UBWC' & month(date) > 2 ~ 'Time Proportional',         # ISCO
@@ -121,5 +121,5 @@ wq_ALL_corrected %>%
 
 # Save standardized data --------------------------------------------------
 
-write_rds(wq_ALL_standard, 'Output_Data/wq_ALL.rds')
+write_rds(wq_ALL_standard, 'Standard_Data/wq_ALL.rds', compress = 'xz')
 

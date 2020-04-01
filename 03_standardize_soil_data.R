@@ -109,23 +109,8 @@ soil_ALL_correct %>%
 
 # Save standardized data --------------------------------------------------
 
-write_rds(soil_ALL_standard, 'Output_Data/soil_properties_ALL.rds')
-write_csv(soil_ALL_standard, 'Output_Data/soil_properties_ALL.csv', na = '')
+write_rds(soil_ALL_standard, 'Standard_Data/soil_properties_ALL.rds', compress = 'xz')
 
-
-# check/visualize data
-soil_ALL_standard %>%
-  select(siteid:date, starts_with('SOIL35')) %>%
-  mutate_at(vars(starts_with('SOIL')), as.numeric) %>%
-  # mutate(SOIL23.05 = ifelse(is.na(SOIL23.05), SOIL23.01 + SOIL23.02 + SOIL23.03, SOIL23.05)) %>%
-  gather(key, value, starts_with('SOIL')) %>%
-  filter(!is.na(value)) %>%
-  ggplot(aes(siteid, value)) +
-  geom_boxplot() +
-  facet_grid(key ~ ., scales = 'free') +
-  theme_gio
-  
-  
-
-
+# after saving it was gzip-ed via shell command line  
+write_csv(soil_ALL_standard, 'Standard_Data/CSV/soil_properties_ALL.csv', na = '')
 

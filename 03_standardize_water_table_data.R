@@ -151,33 +151,28 @@ st_ALL_hourly %>%
 
 wt_ALL_daily_standard %>%
   spread(var_NEW, value) %>%
-  write_rds('Output_Data/water_table_daily_ALL.rds')
+  write_rds('Standard_Data/water_table_daily_ALL.rds', compress = 'xz')
 
 wt_ALL_hourly_standard %>%
   spread(var_NEW, value) %>%
-  write_rds('Output_Data/water_table_hourly_ALL.rds')
+  write_rds('Standard_Data/water_table_hourly_ALL.rds', compress = 'xz')
 
 st_ALL_hourly_standard %>%
   spread(var_NEW, value) %>%
-  write_rds('Output_Data/stage_hourly_ALL.rds')
+  write_rds('Standard_Data/stage_hourly_ALL.rds', compress = 'xz')
 
 
+# after saving it was gzip-ed via shell command line  
+wt_ALL_daily_standard %>%
+  spread(var_NEW, value) %>%
+  write_csv('Standard_Data/CSV/water_table_daily_ALL.csv')
 
-# check/visualize data
 wt_ALL_hourly_standard %>%
-  filter(siteid == 'SERF_IA') %>%
-  mutate(value = ifelse(siteid == 'SERF_IA' & plotid == 'S2' & between(date, ymd(20111220), ymd(20120222)), 
-                        NA_real_, value),
-         value = ifelse(siteid == 'SERF_IA' & plotid == 'S1' & date > ymd(20170405), NA_real_, value)) %>%
-  # filter(plotid %in% c('S4', 'S5')) %>%
-  # filter(between(date, ymd(20120220), ymd(20120226))) %>%
-  # filter(between(date, ymd(20170322), ymd(20170415))) %>%
-  filter(year(date) %in% 2016) %>%
-  # filter(month(date) %in% 3:4) %>% #filter(day(date) %in% 3:6) %>%
-  ggplot(aes(x=tmsp, y=value, group = plotid, col = plotid)) +
-  geom_point() + geom_line() +
-  scale_y_reverse() +
-  # facet_grid(plotid ~ .) +
-  theme_light()
+  spread(var_NEW, value) %>%
+  write_csv('Standard_Data/CSV/water_table_hourly_ALL.csv')
+
+st_ALL_hourly_standard %>%
+  spread(var_NEW, value) %>%
+  write_csv('Standard_Data/CSV/stage_hourly_ALL.csv')
 
 

@@ -171,7 +171,7 @@ ReadExcelSheets('Input_Data/WATER/TILE_FLOW/CRAWF Tile Flow.xlsx') %>%
   gather(key, value, contains('WAT')) %>%
   separate(key, into = c('plotid', 'var', 'var_name'), sep = ' ', extra = 'merge') %>%
   mutate(siteid = 'CRAWF') -> 
-  # !!! DO NOT COMPILE THIS DATA !!!
+  # !!! DO NOT COMPILE THIS DATA !!!  USE GV VERSION
   tf_CRAWF_hourly
 
 ReadExcelSheets('Input_Data/WATER/TILE_FLOW/GV - CRAWF Tile Flow.xlsx') %>%

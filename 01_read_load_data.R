@@ -73,20 +73,22 @@ ReadExcelSheets('Input_Data/WATER/LOAD/BEAR Tile Nitrate-N Load.xlsx') %>%
 # assign NEW var codes
 nl_BEAR %>% 
   mutate(date = as.Date(Date),
-         plotid = ifelse(plotid == 'tile1', 'Field', 'Buffer'), 
+         location = case_when(plotid == 'tile1' ~ 'From Field',
+                              plotid == 'tile2' & str_detect(var, 'diverted') ~ 'To Buffer',
+                              plotid == 'tile2' & str_detect(var, 'removed') ~ 'By Buffer',
+                              TRUE ~ 'HELP'),
+         plotid = NA_character_,
          var_OLD = word(var),
-         siteid = "BEAR",
-         location = case_when(plotid %in% c('Field', 'Buffer') ~ NA_character_,
-                              TRUE ~ 'HELP')) %>%
+         siteid = "BEAR") %>% 
   # convert N loads from kg/ha to mass based kg
-  mutate(value = case_when(var_OLD == 'WAT20' & date < ymd(20131101) ~ value * 10.1,
-                           var_OLD == 'WAT20' & date > ymd(20131031) ~ value * 5.9,
-                           TRUE ~ value)) %>%
+  mutate(value = case_when(location == 'By Buffer' & date < ymd(20131101) ~ value * 10.1,
+                           location == 'By Buffer' & date > ymd(20131031) ~ value * 5.9,
+                           TRUE ~ value)) %>% 
   # assign NEW var codes
-  mutate(var_NEW = case_when(plotid == 'Field' & var_OLD == 'WAT2'  ~ 'WAT30',
-                             plotid == 'Field' & var_OLD == 'WAT20' ~ 'WAT90',
-                             str_detect(var, 'N diverted to SB') ~ 'WAT90', 
-                             str_detect(var, 'N removed') ~ 'WAT91', 
+  mutate(var_NEW = case_when(location == 'From Field' & var_OLD == 'WAT2'  ~ 'WAT30',
+                             location == 'From Field' & var_OLD == 'WAT20' ~ 'WAT70',
+                             location == 'To Buffer' ~ 'WAT70', 
+                             location == 'By Buffer' ~ 'WAT90', 
                              TRUE ~ 'TBD')) %>%
   select(siteid, plotid, location, date, var_NEW, value) -> nl_BEAR_new
 
@@ -100,19 +102,21 @@ ReadExcelSheets('Input_Data/WATER/LOAD/BEAR2 Tile Nitrate-N Load.xlsx') %>%
 # assign NEW var codes
 nl_BEAR2 %>%
   mutate(date = as.Date(Date),
-         plotid = ifelse(plotid == 'tile1', 'Field', 'Buffer'), 
+         location = case_when(plotid == 'tile1' ~ 'From Field',
+                              plotid == 'tile2' & str_detect(var, 'diverted') ~ 'To Buffer',
+                              plotid == 'tile2' & str_detect(var, 'removed') ~ 'By Buffer',
+                              TRUE ~ 'HELP'),
+         plotid = NA_character_,
          var_OLD = word(var),
-         siteid = "BEAR2",
-         location = case_when(plotid %in% c('Field', 'Buffer') ~ NA_character_,
-                              TRUE ~ 'HELP')) %>%
+         siteid = "BEAR2") %>%
   # convert N loads from kg/ha to mass based kg
-  mutate(value = case_when(var_OLD == 'WAT20' ~ value * 40.5,
+  mutate(value = case_when(location == 'By Buffer' ~ value * 40.5,
                            TRUE ~ value)) %>%
   # assign NEW var codes
-  mutate(var_NEW = case_when(plotid == 'Field' & var_OLD == 'WAT2'  ~ 'WAT30',
-                             plotid == 'Field' & var_OLD == 'WAT20' ~ 'WAT90',
-                             str_detect(var, 'N diverted to SB') ~ 'WAT90', 
-                             str_detect(var, 'N removed') ~ 'WAT91', 
+  mutate(var_NEW = case_when(location == 'From Field' & var_OLD == 'WAT2'  ~ 'WAT30',
+                             location == 'From Field' & var_OLD == 'WAT20' ~ 'WAT70',
+                             location == 'To Buffer' ~ 'WAT70', 
+                             location == 'By Buffer' ~ 'WAT90', 
                              TRUE ~ 'TBD')) %>%
   select(siteid, plotid, location, date, var_NEW, value) -> nl_BEAR2_new
 
@@ -126,19 +130,21 @@ ReadExcelSheets('Input_Data/WATER/LOAD/BENTON Tile Nitrate-N Load.xlsx') %>%
 # assign NEW var codes
 nl_BENTON %>%
   mutate(date = as.Date(Date),
-         plotid = ifelse(plotid == 'tile1', 'Field', 'Buffer'), 
+         location = case_when(plotid == 'tile1' ~ 'From Field',
+                              plotid == 'tile2' & str_detect(var, 'diverted') ~ 'To Buffer',
+                              plotid == 'tile2' & str_detect(var, 'removed') ~ 'By Buffer',
+                              TRUE ~ 'HELP'),
+         plotid = NA_character_,
          var_OLD = word(var),
-         siteid = "BENTON",
-         location = case_when(plotid %in% c('Field', 'Buffer') ~ NA_character_,
-                              TRUE ~ 'HELP')) %>%
+         siteid = "BENTON") %>%
   # convert N loads from kg/ha to mass based kg
-  mutate(value = case_when(var_OLD == 'WAT20' ~ value * 7.1,
+  mutate(value = case_when(location == 'By Buffer' ~ value * 7.1,
                            TRUE ~ value)) %>%
   # assign NEW var codes
-  mutate(var_NEW = case_when(plotid == 'Field' & var_OLD == 'WAT2'  ~ 'WAT30',
-                             plotid == 'Field' & var_OLD == 'WAT20' ~ 'WAT90',
-                             str_detect(var, 'diverted to SB') ~ 'WAT90', 
-                             str_detect(var, 'removed') ~ 'WAT91', 
+  mutate(var_NEW = case_when(location == 'From Field' & var_OLD == 'WAT2'  ~ 'WAT30',
+                             location == 'From Field' & var_OLD == 'WAT20' ~ 'WAT70',
+                             location == 'To Buffer' ~ 'WAT70', 
+                             location == 'By Buffer' ~ 'WAT90', 
                              TRUE ~ 'TBD')) %>%
   select(siteid, plotid, location, date, var_NEW, value) -> nl_BENTON_new
 
@@ -254,19 +260,21 @@ ReadExcelSheets('Input_Data/WATER/LOAD/DIKE Tile Nitrate-N Load.xlsx') %>%
 # assign NEW var codes
 nl_DIKE %>%
   mutate(date = as.Date(Date),
-         plotid = ifelse(plotid == 'tile1', 'Field', 'Buffer'), 
+         location = case_when(plotid == 'tile1' ~ 'From Field',
+                              plotid == 'tile2' & str_detect(var, 'diverted') ~ 'To Buffer',
+                              plotid == 'tile2' & str_detect(var, 'removed') ~ 'By Buffer',
+                              TRUE ~ 'HELP'),
+         plotid = NA_character_,
          var_OLD = word(var),
-         siteid = "DIKE",
-         location = case_when(plotid %in% c('Field', 'Buffer') ~ NA_character_,
-                              TRUE ~ 'HELP')) %>%
+         siteid = "DIKE") %>%
   # convert N loads from kg/ha to mass based kg
-  mutate(value = case_when(var_OLD == 'WAT20' ~ value * 28.6,
+  mutate(value = case_when(location == 'By Buffer' ~ value * 28.6,
                            TRUE ~ value)) %>%
   # assign NEW var codes
-  mutate(var_NEW = case_when(plotid == 'Field' & var_OLD == 'WAT2'  ~ 'WAT30',
-                             plotid == 'Field' & var_OLD == 'WAT20' ~ 'WAT90',
-                             str_detect(var, 'diverted to SB') ~ 'WAT90', 
-                             str_detect(var, 'removed') ~ 'WAT91', 
+  mutate(var_NEW = case_when(location == 'From Field' & var_OLD == 'WAT2'  ~ 'WAT30',
+                             location == 'From Field' & var_OLD == 'WAT20' ~ 'WAT70',
+                             location == 'To Buffer' ~ 'WAT70', 
+                             location == 'By Buffer' ~ 'WAT90', 
                              TRUE ~ 'TBD')) %>%
   select(siteid, plotid, location, date, var_NEW, value) -> nl_DIKE_new
 
@@ -349,19 +357,21 @@ ReadExcelSheets('Input_Data/WATER/LOAD/HICKORY Tile Nitrate-N Load.xlsx') %>%
 # assign NEW var codes
 nl_HICKORY %>%
   mutate(date = as.Date(Date),
-         plotid = ifelse(plotid == 'tile1', 'Field', 'Buffer'), 
+         location = case_when(plotid == 'tile1' ~ 'From Field',
+                              plotid == 'tile2' & str_detect(var, 'diverted') ~ 'To Buffer',
+                              plotid == 'tile2' & str_detect(var, 'removed') ~ 'By Buffer',
+                              TRUE ~ 'HELP'),
+         plotid = NA_character_,
          var_OLD = word(var),
-         siteid = "HICKORY",
-         location = case_when(plotid %in% c('Field', 'Buffer') ~ NA_character_,
-                              TRUE ~ 'HELP')) %>%
+         siteid = "HICKORY") %>%
   # convert N loads from kg/ha to mass based kg
-  mutate(value = case_when(var_OLD == 'WAT20' ~ value * 21.8,
+  mutate(value = case_when(location == 'By Buffer' ~ value * 21.8,
                            TRUE ~ value)) %>%
   # assign NEW var codes
-  mutate(var_NEW = case_when(plotid == 'Field' & var_OLD == 'WAT2'  ~ 'WAT30',
-                             plotid == 'Field' & var_OLD == 'WAT20' ~ 'WAT90',
-                             str_detect(var, 'diverted to') ~ 'WAT90', 
-                             str_detect(var, 'removed') ~ 'WAT91', 
+  mutate(var_NEW = case_when(location == 'From Field' & var_OLD == 'WAT2'  ~ 'WAT30',
+                             location == 'From Field' & var_OLD == 'WAT20' ~ 'WAT70',
+                             location == 'To Buffer' ~ 'WAT70', 
+                             location == 'By Buffer' ~ 'WAT90', 
                              TRUE ~ 'TBD')) %>%
   select(siteid, plotid, location, date, var_NEW, value) -> nl_HICKORY_new
 
@@ -375,19 +385,21 @@ ReadExcelSheets('Input_Data/WATER/LOAD/MAASS Tile Nitrate-N Load.xlsx') %>%
 # assign NEW var codes
 nl_MAASS %>%
   mutate(date = as.Date(Date),
-         plotid = ifelse(plotid == 'tile1', 'Field', 'Buffer'), 
+         location = case_when(plotid == 'tile1' ~ 'From Field',
+                              plotid == 'tile2' & str_detect(var, 'diverted') ~ 'To Buffer',
+                              plotid == 'tile2' & str_detect(var, 'removed') ~ 'By Buffer',
+                              TRUE ~ 'HELP'),
+         plotid = NA_character_,
          var_OLD = word(var),
-         siteid = "MAASS",
-         location = case_when(plotid %in% c('Field', 'Buffer') ~ NA_character_,
-                              TRUE ~ 'HELP')) %>%
+         siteid = "MAASS") %>%
   # convert N loads from kg/ha to mass based kg
-  mutate(value = case_when(var_OLD == 'WAT20' ~ value * 4.7,
+  mutate(value = case_when(location == 'By Buffer' ~ value * 4.7,
                            TRUE ~ value)) %>%
   # assign NEW var codes
-  mutate(var_NEW = case_when(plotid == 'Field' & var_OLD == 'WAT2'  ~ 'WAT30',
-                             plotid == 'Field' & var_OLD == 'WAT20' ~ 'WAT90',
-                             str_detect(var, 'diverted to') ~ 'WAT90', 
-                             str_detect(var, 'removed') ~ 'WAT91', 
+  mutate(var_NEW = case_when(location == 'From Field' & var_OLD == 'WAT2'  ~ 'WAT30',
+                             location == 'From Field' & var_OLD == 'WAT20' ~ 'WAT70',
+                             location == 'To Buffer' ~ 'WAT70', 
+                             location == 'By Buffer' ~ 'WAT90', 
                              TRUE ~ 'TBD')) %>%
   select(siteid, plotid, location, date, var_NEW, value) -> nl_MAASS_new
 
@@ -517,19 +529,21 @@ ReadExcelSheets('Input_Data/WATER/LOAD/SHEARER Tile Nitrate-N Load.xlsx') %>%
 # assign NEW var codes
 nl_SHEARER %>%
   mutate(date = as.Date(Date),
-         plotid = ifelse(plotid == 'tile1', 'Field', 'Buffer'), 
+         location = case_when(plotid == 'tile1' ~ 'From Field',
+                              plotid == 'tile2' & str_detect(var, 'diverted') ~ 'To Buffer',
+                              plotid == 'tile2' & str_detect(var, 'removed') ~ 'By Buffer',
+                              TRUE ~ 'HELP'),
+         plotid = NA_character_,
          var_OLD = word(var),
-         siteid = "SHEARER",
-         location = case_when(plotid %in% c('Field', 'Buffer') ~ NA_character_,
-                              TRUE ~ 'HELP')) %>%
+         siteid = "SHEARER") %>%
   # convert N loads from kg/ha to mass based kg
-  mutate(value = case_when(var_OLD == 'WAT20' ~ value * 3.4,
+  mutate(value = case_when(location == 'By Buffer' ~ value * 3.4,
                            TRUE ~ value)) %>%
   # assign NEW var codes
-  mutate(var_NEW = case_when(plotid == 'Field' & var_OLD == 'WAT2'  ~ 'WAT30',
-                             plotid == 'Field' & var_OLD == 'WAT20' ~ 'WAT90',
-                             str_detect(var, 'diverted to') ~ 'WAT90', 
-                             str_detect(var, 'removed') ~ 'WAT91', 
+  mutate(var_NEW = case_when(location == 'From Field' & var_OLD == 'WAT2'  ~ 'WAT30',
+                             location == 'From Field' & var_OLD == 'WAT20' ~ 'WAT70',
+                             location == 'To Buffer' ~ 'WAT70', 
+                             location == 'By Buffer' ~ 'WAT90', 
                              TRUE ~ 'TBD')) %>%
   select(siteid, plotid, location, date, var_NEW, value) -> nl_SHEARER_new
 
@@ -715,21 +729,21 @@ nl_WILKIN3 %>%
                            str_detect(var, 'WAT2 Tile ') ~ MEANs,
                            TRUE ~ NA_real_)) %>%
   mutate(siteid = "WILKIN3",
-         plotid = case_when(plotid %in% c('CS03', 'From_Field') ~ 'Field',
-                            plotid %in% 'To_Buffer' ~ 'Buffer',
-                            plotid %in% 'To_Stream' ~ 'Stream',
-                            TRUE ~ 'HELP'),
-         location = NA_character_, 
+         location = case_when(plotid %in% c('CS03', 'From_Field') ~ 'From Field',
+                              plotid %in% 'To_Buffer' ~ 'To Buffer',
+                              plotid %in% 'To_Stream' ~ 'To Stream',
+                              TRUE ~ 'HELP'),
+         plotid = NA_character_, 
          var_OLD = word(var)) %>%
   # convert N loads from kg/ha to mass based kg
-  mutate(value = case_when(var_OLD == 'WAT20' ~ value * 4,
+  mutate(value = case_when(location == 'By Buffer' & var_OLD == 'WAT20' ~ value * 4,
                            TRUE ~ value)) %>%
   # assign NEW var codes
-  mutate(var_NEW = case_when(plotid == 'Field' & var_OLD == 'WAT2'  ~ 'WAT30',
-                             plotid == 'Field' & var_OLD == 'WAT20' ~ 'WAT90',
-                             plotid == 'Buffer' & var_OLD == 'WAT20' ~ 'WAT90',
-                             plotid == 'Stream' & var_OLD == 'WAT20' ~ 'WAT90',
-                             str_detect(var, 'removed') ~ 'WAT91', 
+  mutate(var_NEW = case_when(location == 'From Field' & var_OLD == 'WAT2'  ~ 'WAT30',
+                             location == 'From Field' & var_OLD == 'WAT20' ~ 'WAT70',
+                             location == 'To Stream' ~ 'WAT70', 
+                             location == 'To Buffer' ~ 'WAT70', 
+                             location == 'By Buffer' ~ 'WAT90', 
                              TRUE ~ 'TBD')) %>%
   select(siteid, plotid, location, date, var_NEW, value) -> nl_WILKIN3_new
 

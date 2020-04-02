@@ -16,12 +16,8 @@ nl_ALL %>%
   filter(!var_NEW %in% c('WAT30', 'WAT31', 'WAT40', 'WAT42')) %>%
   # add locations and assign plots
   mutate(location = case_when(siteid == 'ACRE' & str_detect(plotid, 'Inlet') ~ NA_character_,
-                              siteid %in% c('BEAR', 'BEAR2', 'BENTON', 'DIKE', 
-                                            'HICKORY', 'MAASS', 'SHEARER', 'WILKIN3') ~ plotid,
                               TRUE  ~ location),
-         plotid = case_when(# siteid %in% c('BEAR', 'BEAR2', 'BENTON', 'DIKE', 
-                            #               'HICKORY', 'MAASS', 'SHEARER', 'WILKIN3') ~ NA_character_,
-                            siteid == 'FAIRM' & plotid == 'Sump1' ~ 'West',
+         plotid = case_when(siteid == 'FAIRM' & plotid == 'Sump1' ~ 'West',
                             siteid == 'FAIRM' & plotid == 'Sump2' ~ 'East',
                             siteid == 'WILKIN2' & plotid == 'WEST' ~ 'West',
                             siteid == 'WILKIN2' & plotid == 'EAST' ~ 'East',
@@ -36,5 +32,13 @@ nl_ALL %>%
          var_NEW, value) -> nl_ALL_daily_standard
 
 
+
+# Save standardized data --------------------------------------------------
+nl_ALL_daily_standard %>%
+  write_rds('Standard_Data/nl_ALL_daily.rds', compress = 'xz')
+
+# after saving it was gzip-ed via shell command line  
+nl_ALL_daily_standard %>%
+  write_csv('Standard_Data/CSV/nitrate_load_ALL_daily.csv')
 
 

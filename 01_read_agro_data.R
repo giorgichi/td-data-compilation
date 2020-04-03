@@ -3,18 +3,6 @@ source('00_project_settings.R')
 
 
 
-# DOWNLOAD ................................................................
-# Download all agronomic data
-
-gs_ls('Crop Yield') %>%
-  pull(sheet_title) -> sheets
-
-for (i in sheets) {
-  DownloadGoogleSheet(TITLE = i, FOLDER = 'AGR')
-}
-
-
-
 # READ ....................................................................
 # Read each site-data separately
 

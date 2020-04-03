@@ -3,33 +3,6 @@ source('00_project_settings.R')
 
 
 
-# DOWNLOAD ................................................................
-# Download all water table data
-
-gs_ls('Water Table Depth') %>%
-  pull(sheet_title) -> sheets
-
-for (i in sheets) {
-  DownloadGoogleSheet(TITLE = i, FOLDER = 'WATER/WATER_TABLE')
-}
-
-
-# Download all stage (water level) data
-
-gs_ls('Stage') %>%
-  pull(sheet_title) -> sheets
-
-for (i in sheets) {
-  DownloadGoogleSheet(TITLE = i, FOLDER = 'WATER/WATER_TABLE')
-}
-
-
-# Download piezometric data that are not in the standard sheets
-DownloadGoogleSheet('ACRE Piezometer', FOLDER = 'WATER/WATER_TABLE')
-DownloadGoogleSheet('WILKIN2 Piezometer', FOLDER = 'WATER/WATER_TABLE')
-
-
-
 # READ ....................................................................
 # Read each site-data separately
 

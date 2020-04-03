@@ -3,18 +3,6 @@ source('00_project_settings.R')
 
 
 
-# DOWNLOAD ................................................................
-# Download all N load data
-
-sheets <- drive_find(pattern = 'Nitrate-N Load', type = 'spreadsheet')
-
-
-for (i in sheets$name) {
-  DownloadGoogleSheet(TITLE = i, FOLDER = 'WATER/LOAD')
-}
-
-
-
 # READ ....................................................................
 # Read each site-data separately
 

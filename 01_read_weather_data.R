@@ -3,18 +3,6 @@ source('00_project_settings.R')
 
 
 
-# DOWNLOAD ................................................................
-# Download all weather data
-
-gs_ls('Weather$') %>%
-  pull(sheet_title) -> sheets
-
-for (i in sheets) {
-  DownloadGoogleSheet(TITLE = i, FOLDER = 'WEATHER')
-}
-
-
-
 # READ ....................................................................
 # Read each site-data separately
 

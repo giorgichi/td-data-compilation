@@ -9,25 +9,6 @@ transform_df <- function(df) {
 }
 
 
-# DOWNLOAD ................................................................
-# Download all water quality data
-
-gs_ls('WQ') %>%
-  filter(!str_detect(sheet_title, 'WQFS')) %>%
-  pull(sheet_title) -> sheets
-
-for (i in sheets) {
-  DownloadGoogleSheet(TITLE = i, FOLDER = 'WATER/WQ')
-}
-
-
-# Download WQ data that are not in the standard sheets
-DownloadGoogleSheet('CLAY_R Turbidity', FOLDER = 'WATER/WQ')
-DownloadGoogleSheet('CLAY_R Tile Water EC', FOLDER = 'WATER/WQ')
-DownloadGoogleSheet('FAIRM Tile Water EC', FOLDER = 'WATER/WQ')
-
-
-
 # READ ....................................................................
 # Read each site-data separately
 

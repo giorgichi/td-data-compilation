@@ -3,31 +3,6 @@ source('00_project_settings.R')
 
 
 
-# DOWNLOAD ................................................................
-# Download all tile flow data
-
-gs_ls('Tile Flow') %>%
-  pull(sheet_title) -> sheets
-
-for (i in sheets) {
-  DownloadGoogleSheet(TITLE = i, FOLDER = 'WATER/TILE_FLOW')
-}
-
-
-# Download all irrigation data
-
-gs_ls('Irri') %>%
-  pull(sheet_title) -> sheets
-
-for (i in sheets) {
-  DownloadGoogleSheet(TITLE = i, FOLDER = 'WATER/TILE_FLOW')
-}
-
-
-# Download WRSIS csv files for tile flow data
-
-
-
 # READ ....................................................................
 # Read each site-data separately
 

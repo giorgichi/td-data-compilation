@@ -619,7 +619,9 @@ ReadExcelSheets('Input_Data/WATER/TILE_FLOW/SERF_SD Tile Flow.xlsx') %>%
   gather(key, value, contains('WAT')) %>%
   separate(key, into = c('plotid', 'var', 'var_name'), sep = ' ', extra = 'merge') %>%
   # select only tile water temp 
-  filter(var == 'WAT11') -> temp_SERF_SD
+  filter(var == 'WAT11') %>%
+  # remove duplicated measurements
+  filter(!duplicated(.)) -> temp_SERF_SD
 
 # assign NEW var codes
 temp_SERF_SD %>%

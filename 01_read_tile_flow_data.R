@@ -14,6 +14,8 @@ ReadExcelSheets('Input_Data/WATER/TILE_FLOW/ACRE Tile Flow.xlsx') %>%
   select(tmsp, contains('WAT16')) %>%
   gather(key, value, contains('WAT')) %>%
   separate(key, into = c('plotid', 'var', 'var_name'), sep = ' ', extra = 'merge') %>%
+  # remove duplicated data
+  filter(!duplicated(.)) %>%
   mutate(siteid = 'ACRE') -> tf_ACRE_hourly
 
 tf_ACRE_hourly %>%
@@ -474,6 +476,8 @@ ReadExcelSheets('Input_Data/WATER/TILE_FLOW/SERF_SD Tile Flow.xlsx') %>%
   separate(key, into = c('plotid', 'var', 'var_name'), sep = ' ', extra = 'merge') %>%
   # drop tile water temp and use only flow data
   filter(var == 'WAT1') %>%
+  # remove duplicated data
+  filter(!duplicated(.)) %>%
   mutate(siteid = 'SERF_SD') -> 
   tf_SERF_SD_hourly
 

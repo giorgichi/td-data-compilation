@@ -82,7 +82,7 @@ HOURLY_Tile_Flow <-
             tf_HARDIN_hourly,   # NOTE this contains both DAILY and HOURLY data
             tf_MUDS3_NEW_hourly,
             tf_SERF_IA_hourly,
-            tf_SERF_SD_hourly,  # NEET TO look for final version in my laptop
+            tf_SERF_SD_hourly,
             tf_STJOHNS_hourly,
             tf_WILKIN1_hourly,
             tf_WILKIN2_hourly) %>%

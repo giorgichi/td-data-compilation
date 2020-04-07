@@ -181,7 +181,9 @@ tf_DEFI_M_daily %>%
 # DEFI_R ------------------------------------------------------------------
 read_csv('Input_Data/WATER/TILE_FLOW/DEFI_R_flow_data_1999-2008_2018-10-01.csv') %>%
   select(tmsp = timestamp, siteid = site_ID, location, value = flow) %>%
-  mutate(var = 'WAT16', plotid = NA) -> 
+  mutate(var = 'WAT16', plotid = NA) %>%
+  # remove duplicated timestamps 
+  filter(!duplicated(.[c(1,2,3,5)])) ->
   tf_DEFI_R_houly
 
 tf_DEFI_R_houly %>%

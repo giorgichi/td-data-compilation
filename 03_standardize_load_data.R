@@ -23,7 +23,8 @@ nl_ALL %>%
                             siteid == 'WILKIN2' & plotid == 'EAST' ~ 'East',
                             TRUE ~ plotid)) %>%
   # remove loads the go to stream (because it can be calculated from Buffer and Field loads)
-  filter(plotid != 'Stream') %>%
+  mutate(remove = ifelse(location == 'To Stream', 'Yes', NA_character_)) %>% 
+  filter(is.na(remove)) %>%
   # standardize timestamp
   mutate(time = NA_character_,
          UTC = NA_character_,

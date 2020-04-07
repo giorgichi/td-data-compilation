@@ -21,9 +21,9 @@ tribble(
   'soil_moisture',   'SOIL12',   'soil_bulk_electrical_conductivity',     'dS/m',
   
   'soil_properties', 'SOIL01',       'soil_texture',                      '',
-  'soil_properties', 'SOIL02.01',    'precent_sand',                      '%',
-  'soil_properties', 'SOIL02.02',    'precent_silt',                      '%',
-  'soil_properties', 'SOIL02.03',    'precent_clay',                      '%',
+  'soil_properties', 'SOIL02.01',    'percent_sand',                      '%',
+  'soil_properties', 'SOIL02.02',    'percent_silt',                      '%',
+  'soil_properties', 'SOIL02.03',    'percent_clay',                      '%',
   'soil_properties', 'SOIL03',       'soil_bulk_density',                 'g/cm3',
   'soil_properties', 'SOIL06.01',    'saturated_hydraulic_conductivity',  'cm/hr',
   'soil_properties', 'SOIL06.02',    'infiltration_rate',                 'cm/hr',
@@ -134,17 +134,19 @@ tribble(
   'water_quality',  'WAT52', 'Inorganic Carbon (filtered)',                               'mg C/l',
   'water_quality',  'WAT60', 'Water pH',                                                  ''
   
+  # 'water_quality',  'WAT70', 'Nitrate-Nitrite (NO3-N + NO2-N) Loads',                   'kg N/ha'                                                  ''
+  
   )
 
 
 
 # Agronomic Data ----------------------------------------------------------
 
-read_rds('Output_Data/agro_ALL.rds') -> agr
+read_rds('Standard_Data/agro_ALL.rds') -> agr
 
 agr %>%
   # standardize plot and locations names for FAIRM
-  mutate(location = ifelse(siteid == 'FAIRM' & plotid == 'CD/SI', 'East & West plots', location),
+  mutate(location = ifelse(siteid == 'FAIRM' & plotid == 'CD/SI', 'East and West plots', location),
          plotid = ifelse(siteid == 'FAIRM' & plotid == 'CD/SI', 'SI', plotid),
          plotid = ifelse(siteid == 'FAIRM' & str_detect(plotid, 'CD'), word(plotid, 2), plotid)) %>%
   mutate(year = as.integer(year),
@@ -153,6 +155,27 @@ agr %>%
 
 dbWriteTable(conn, "agronomic", agr_DB, overwrite = TRUE)
   
+
+# count sites per variable
+agr_DB %>%
+  gather(code, value, starts_with('AGR')) %>%
+  filter(!is.na(value)) %>%
+  distinct(siteid, code) %>%
+  group_by(code) %>%
+  nest() %>%
+  mutate(n = map_dbl(data, nrow),
+         sites = map_chr(data, ~ .x %>% pull(siteid) %>% paste(collapse = ', '))) %>%
+  ungroup() %>%
+  left_join(read_csv('Final_Database/var_code_key.csv'), 
+            by = c('code' = 'NEW_CODE')) %>%
+  select(CODE = code, 
+         CROP, 
+         VARIABLE_NAME = NEW_VAR_NAME,
+         UNITS,
+         NUMBER_OF_SITES = n, 
+         LIST_OF_SITES = sites) %>%
+  write_csv('Final_Database/summaries/agr_variable_count.csv')
+
 
 # Save selected data (variables) for FINAL DB.
 agr_DB %>%
@@ -176,7 +199,7 @@ dbWriteTable(conn_final, "agronomic", agr_FINAL_DB, overwrite = TRUE)
 
 
 # Water Quality Data ------------------------------------------------------
-read_rds('Output_Data/wq_ALL.rds') -> wq_hourly
+read_rds('Standard_Data/wq_ALL.rds') -> wq_hourly
 
 wq_hourly %>%
   spread(var_NEW, value) %>%
@@ -184,8 +207,27 @@ wq_hourly %>%
   select(siteid, plotid, location, height, subsample, sample_type, tmsp, date, time, UTC, timestamp_type,
          starts_with('WAT'), comments) -> wq_DB
 
-dbWriteTable(conn, "water_quality", wq_DB)
+dbWriteTable(conn, "water_quality", wq_DB, overwrite = TRUE)
 
+
+# count sites per variable
+wq_DB %>%
+  gather(code, value, starts_with('WAT')) %>%
+  filter(!is.na(value)) %>%
+  distinct(siteid, code) %>%
+  group_by(code) %>%
+  nest() %>%
+  mutate(n = map_dbl(data, nrow),
+         sites = map_chr(data, ~ .x %>% pull(siteid) %>% paste(collapse = ', '))) %>%
+  ungroup() %>%
+  left_join(read_csv('Final_Database/var_code_key.csv'), 
+            by = c('code' = 'NEW_CODE')) %>%
+  select(CODE = code, 
+         VARIABLE_NAME = NEW_VAR_NAME, 
+         UNITS,
+         NUMBER_OF_SITES = n, 
+         LIST_OF_SITES = sites) %>%
+  write_csv('Final_Database/summaries/wq_variable_count.csv')
 
 
 # Save selected data (variables) for FINAL DB. > NOTE: only DAILY values goes to the FINAL DB
@@ -228,15 +270,138 @@ wq_hourly %>%
   spread(var_NEW, value) -> wq_FINAL_DB
 
 
-dbWriteTable(conn_final, "water_quality", wq_FINAL_DB)
+dbWriteTable(conn_final, "water_quality", wq_FINAL_DB, overwrite = TRUE)
+
+
+
+# Tile Flow ---------------------------------------------------------------
+read_rds('Standard_Data/tf_ALL_hourly_ORIGINAL.rds') -> tf
+
+tf %>%
+  select(-units, -var_name) %>%
+  spread(var_NEW, value) %>%
+  mutate(date = format(date, '%Y-%m-%d')) ->
+  tf_DB
+
+dbWriteTable(conn, "tile_flow", tf_DB)
+
+
+# read daily data
+read_rds('Standard_Data/tf_ALL_daily.rds') -> tf_daily
+
+tf_daily %>%
+  spread(var_NEW, value) ->
+  tf_FINAL_DB
+
+dbWriteTable(conn_final, "tile_flow", tf_FINAL_DB)
+
+
+# count sites per variable
+tf_FINAL_DB %>%
+  gather(code, value, starts_with('WAT')) %>%
+  filter(!is.na(value)) %>%
+  distinct(siteid, code) %>%
+  group_by(code) %>%
+  nest() %>%
+  mutate(n = map_dbl(data, nrow),
+         sites = map_chr(data, ~ .x %>% pull(siteid) %>% paste(collapse = ', '))) %>%
+  ungroup() %>%
+  left_join(read_csv('Final_Database/var_code_key.csv'), 
+            by = c('code' = 'NEW_CODE')) %>%
+  select(CODE = code, 
+         VARIABLE_NAME = NEW_VAR_NAME, 
+         UNITS,
+         NUMBER_OF_SITES = n, 
+         LIST_OF_SITES = sites) %>%
+  write_csv('Final_Database/summaries/tf_variable_count.csv')
+
+
+
+# Irrigation ---------------------------------------------------------------
+read_rds('Standard_Data/irr_ALL_daily.rds') -> irr
+
+irr %>%
+  spread(var_NEW, value) %>%
+  remove_empty_cols() %>%
+  mutate(date = format(date, '%Y-%m-%d')) ->
+  irr_DB
+
+dbWriteTable(conn, "irrigation", irr_DB)
+
+
+# save daily data
+irr_DB -> irr_FINAL_DB
+
+dbWriteTable(conn_final, "irrigation", irr_FINAL_DB)
+
+
+# count sites per variable
+irr_FINAL_DB %>%
+  gather(code, value, starts_with('WAT')) %>%
+  filter(!is.na(value)) %>%
+  distinct(siteid, code) %>%
+  group_by(code) %>%
+  nest() %>%
+  mutate(n = map_dbl(data, nrow),
+         sites = map_chr(data, ~ .x %>% pull(siteid) %>% paste(collapse = ', '))) %>%
+  ungroup() %>%
+  left_join(read_csv('Final_Database/var_code_key.csv'), 
+            by = c('code' = 'NEW_CODE')) %>%
+  select(CODE = code, 
+         VARIABLE_NAME = NEW_VAR_NAME, 
+         UNITS,
+         NUMBER_OF_SITES = n, 
+         LIST_OF_SITES = sites) %>%
+  write_csv('Final_Database/summaries/irr_variable_count.csv')
+
+
+
+
+# N Loads ---------------------------------------------------------------
+read_rds('Standard_Data/nl_ALL_daily.rds') -> nl
+
+nl %>%
+  spread(var_NEW, value) %>%
+  remove_empty("cols") %>%
+  mutate(date = format(date, '%Y-%m-%d')) ->
+  nl_DB
+
+dbWriteTable(conn, "n_loads", nl_DB)
+
+
+# save daily data
+nl_DB -> nl_FINAL_DB
+
+dbWriteTable(conn_final, "n_loads", nl_FINAL_DB)
+
+
+# count sites per variable
+nl_FINAL_DB %>%
+  gather(code, value, starts_with('WAT')) %>%
+  filter(!is.na(value)) %>%
+  distinct(siteid, code) %>%
+  group_by(code) %>%
+  nest() %>%
+  mutate(n = map_dbl(data, nrow),
+         sites = map_chr(data, ~ .x %>% pull(siteid) %>% paste(collapse = ', '))) %>%
+  ungroup() %>%
+  left_join(read_csv('Final_Database/var_code_key.csv'), 
+            by = c('code' = 'NEW_CODE')) %>%
+  select(CODE = code, 
+         VARIABLE_NAME = NEW_VAR_NAME, 
+         UNITS,
+         NUMBER_OF_SITES = n, 
+         LIST_OF_SITES = sites) %>%
+  write_csv('Final_Database/summaries/nl_variable_count.csv')
+
 
 
 
 # Water Table and Stage Data ----------------------------------------------
 
 # Water table, water level and piezometric head data
-read_rds('Output_Data/water_table_daily_ALL.rds') -> wt_daily
-read_rds('Output_Data/water_table_hourly_ALL.rds') -> wt_hourly
+read_rds('Standard_Data/water_table_daily_ALL.rds') -> wt_daily
+read_rds('Standard_Data/water_table_hourly_ALL.rds') -> wt_hourly
 
 bind_rows(wt_daily, wt_hourly) %>%
   select(siteid, plotid, location, reading_type, date, time, UTC, timestamp_type, tmsp,
@@ -247,6 +412,27 @@ wt %>%
   wt_DB
 
 dbWriteTable(conn, "water_table", wt_DB)
+
+
+# count sites per variable
+wt_DB %>%
+  gather(code, value, starts_with('WAT')) %>%
+  filter(!is.na(value)) %>%
+  distinct(siteid, code) %>%
+  group_by(code) %>%
+  nest() %>%
+  mutate(n = map_dbl(data, nrow),
+         sites = map_chr(data, ~ .x %>% pull(siteid) %>% paste(collapse = ', '))) %>%
+  ungroup() %>%
+  left_join(read_csv('Final_Database/var_code_key.csv'), 
+            by = c('code' = 'NEW_CODE')) %>%
+  select(CODE = code, 
+         VARIABLE_NAME = NEW_VAR_NAME, 
+         UNITS,
+         NUMBER_OF_SITES = n, 
+         LIST_OF_SITES = sites) %>%
+  write_csv('Final_Database/summaries/wt_variable_count.csv')
+
 
 
 # Save selected data (variables) for FINAL DB. > NOTE: only DAILY values goes to the FINAL DB
@@ -262,6 +448,8 @@ wt_DB %>%
   mutate(CHECK = sum(!is.na(WAT01))) %>%
   filter(CHECK != 0) %>%
   ungroup() %>%
+  # replace NaN with NAs
+  mutate(WAT01 = ifelse(is.nan(WAT01), NA_real_, WAT01)) %>%
   select(-CHECK) ->
   wt_FINAL_DB
 
@@ -269,7 +457,7 @@ dbWriteTable(conn_final, "water_table", wt_FINAL_DB)
 
 
 # Stage and water storage data
-read_rds('Output_Data/stage_hourly_ALL.rds') -> stage_hourly
+read_rds('Standard_Data/stage_hourly_ALL.rds') -> stage_hourly
 
 stage_hourly %>%
   mutate(date = format(date, '%Y-%m-%d')) %>%
@@ -278,6 +466,26 @@ stage_hourly %>%
   stage_hourly_DB
 
 dbWriteTable(conn, "water_stage", stage_hourly_DB)
+
+
+# count sites per variable
+stage_hourly_DB %>%
+  gather(code, value, starts_with('WAT')) %>%
+  filter(!is.na(value)) %>%
+  distinct(siteid, code) %>%
+  group_by(code) %>%
+  nest() %>%
+  mutate(n = map_dbl(data, nrow),
+         sites = map_chr(data, ~ .x %>% pull(siteid) %>% paste(collapse = ', '))) %>%
+  ungroup() %>%
+  left_join(read_csv('Final_Database/var_code_key.csv'), 
+            by = c('code' = 'NEW_CODE')) %>%
+  select(CODE = code, 
+         VARIABLE_NAME = NEW_VAR_NAME, 
+         UNITS,
+         NUMBER_OF_SITES = n, 
+         LIST_OF_SITES = sites) %>%
+  write_csv('Final_Database/summaries/st_variable_count.csv')
 
 
 # Save selected data (variables) for FINAL DB. > NOTE: only DAILY values goes to the FINAL DB
@@ -300,36 +508,86 @@ rm(wt, wt_daily, wt_hourly, wt_DB, wt_FINAL_DB,
 # Weather Data ------------------------------------------------------------
 
 # Hourly weather data
-read_rds('Output_Data/weather_hourly_all_variable.rds') -> weather_hourly
+read_rds('Standard_Data/weather_hourly_all_variable.rds') -> weather_hourly
 
 weather_hourly %>% 
+  # replace NaN with NA
+  gather(key, value, starts_with('CLIM')) %>%
+  mutate(value = ifelse(is.nan(value), NA_real_, value)) %>%
+  spread(key, value) %>%
   mutate(date = format(date, '%Y-%m-%d')) ->
   weather_hourly_DB
 
 dbWriteTable(conn, "weather_hourly", weather_hourly_DB)
 
+# count sites per variable
+weather_hourly_DB %>%
+  gather(code, value, starts_with('CLIM')) %>%
+  filter(!is.na(value)) %>%
+  distinct(siteid, code) %>%
+  group_by(code) %>%
+  nest() %>%
+  mutate(n = map_dbl(data, nrow),
+         sites = map_chr(data, ~ .x %>% pull(siteid) %>% paste(collapse = ', '))) %>%
+  ungroup() %>%
+  left_join(read_csv('Final_Database/var_code_key.csv') %>%
+              filter(CROP == 'HOURLY'), 
+            by = c('code' = 'NEW_CODE')) %>%
+  select(CODE = code, 
+         VARIABLE_NAME = NEW_VAR_NAME, 
+         UNITS,
+         NUMBER_OF_SITES = n, 
+         LIST_OF_SITES = sites) %>%
+  write_csv('Final_Database/summaries/weather_hourly_variable_count.csv')
+
 
 # Daily weather data
-read_rds('Output_Data/weather_daily_all_variable.rds') -> weather_daily
+read_rds('Standard_Data/weather_daily_all_variable.rds') -> weather_daily
 
 weather_daily %>% 
+  gather(key, value, starts_with('CLIM')) %>% 
+  mutate(value = ifelse(is.nan(value), NA_real_, value)) %>%
+  spread(key, value) %>%
   mutate(date = format(date, '%Y-%m-%d')) ->
   weather_daily_DB
 
+
 dbWriteTable(conn, "weather_daily", weather_daily_DB)
+
+# count sites per variable
+weather_daily_DB %>%
+  gather(code, value, starts_with('CLIM')) %>%
+  filter(!is.na(value)) %>%
+  distinct(siteid, code) %>%
+  group_by(code) %>%
+  nest() %>%
+  mutate(n = map_dbl(data, nrow),
+         sites = map_chr(data, ~ .x %>% pull(siteid) %>% paste(collapse = ', '))) %>%
+  ungroup() %>%
+  left_join(read_csv('Final_Database/var_code_key.csv') %>%
+              filter(CROP == 'DAILY'), 
+            by = c('code' = 'NEW_CODE')) %>%
+  select(CODE = code, 
+         VARIABLE_NAME = NEW_VAR_NAME, 
+         UNITS,
+         NUMBER_OF_SITES = n, 
+         LIST_OF_SITES = sites) %>%
+  write_csv('Final_Database/summaries/weather_daily_variable_count.csv')
 
 
 # Save selected data (variables) for FINAL DB. > NOTE: only DAILY WEATHER goes to the FINAL DB
-weather_daily %>%
+weather_daily_DB %>%
   select(siteid:date, CLIM01, CLIM03.01.01, CLIM03.01.02, CLIM03.01.03,
          CLIM04.01.01, CLIM05.02, CLIM06.01, CLIM06.02, starts_with('CLIM07.02')) %>%
   # remove erroneous readings from WRSIS sites
-  mutate(CLIM05.02 = case_when(siteid == 'DEFI_R' & year(date) %in% 2003:2006 ~ NA_real_,
-                               siteid == 'FULTON' & year(date) %in% 2004:2006 ~ NA_real_,
+  mutate(DATE = ymd(date),
+         YEAR = year(DATE),
+         CLIM05.02 = case_when(siteid == 'DEFI_R' & YEAR %in% 2003:2006 ~ NA_real_,
+                               siteid == 'FULTON' & YEAR %in% 2004:2006 ~ NA_real_,
                                siteid == 'VANWERT' ~ NA_real_,
                                TRUE ~ CLIM05.02)) %>%
-  arrange(siteid, station, date) %>%
-  mutate(date = as.character(date)) ->
+  arrange(siteid, station, DATE) %>%
+  select(-DATE, -YEAR) ->
   weather_daily_FINAL_DB
 
 dbWriteTable(conn_final, "weather", weather_daily_FINAL_DB, overwrite = TRUE)
@@ -338,7 +596,7 @@ dbWriteTable(conn_final, "weather", weather_daily_FINAL_DB, overwrite = TRUE)
 
 # Soil Moisture, Temperature and EC ---------------------------------------
 
-read_rds('Inter_Data/sm_ALL_hourly_ORIGINAL.rds') -> sm
+read_rds('Standard_Data/sm_ALL_hourly_ORIGINAL.rds') -> sm
 
 sm %>%
   mutate(date = format(date, '%Y-%m-%d')) -> 
@@ -362,13 +620,34 @@ sm_DB %>%
 
 dbWriteTable(conn_final, "soil_moisture", sm_FINAL_DB)
 
+
+# count sites per variable
+sm_FINAL_DB %>%
+  gather(code, value, starts_with('SOIL')) %>%
+  filter(!is.na(value)) %>%
+  distinct(siteid, code) %>%
+  group_by(code) %>%
+  nest() %>%
+  mutate(n = map_dbl(data, nrow),
+         sites = map_chr(data, ~ .x %>% pull(siteid) %>% paste(collapse = ', '))) %>%
+  ungroup() %>%
+  left_join(read_csv('Final_Database/var_code_key.csv'), 
+            by = c('code' = 'NEW_CODE')) %>%
+  select(CODE = code, 
+         VARIABLE_NAME = NEW_VAR_NAME, 
+         UNITS,
+         NUMBER_OF_SITES = n, 
+         LIST_OF_SITES = sites) %>%
+  write_csv('Final_Database/summaries/sm_variable_count.csv')
+
+
 rm(sm_DB, sm_FINAL_DB)
 
 
 
 # Soil Properties Data ----------------------------------------------------
 
-read_rds('Output_Data/soil_properties_ALL.rds') -> soil_properties
+read_rds('Standard_Data/soil_properties_ALL.rds') -> soil_properties
 
 soil_properties %>%
   mutate(plotid = ifelse(siteid == 'FAIRM' & plotid == 'CD/SI', 'SI', plotid)) %>%
@@ -377,6 +656,27 @@ soil_properties %>%
   soil_properties_DB
 
 dbWriteTable(conn, "soil_properties", soil_properties_DB, overwrite = TRUE)
+
+
+# count sites per variable
+soil_properties_DB %>%
+  gather(code, value, starts_with('SOIL')) %>%
+  filter(!is.na(value)) %>%
+  distinct(siteid, code) %>%
+  group_by(code) %>%
+  nest() %>%
+  mutate(n = map_dbl(data, nrow),
+         sites = map_chr(data, ~ .x %>% pull(siteid) %>% paste(collapse = ', '))) %>%
+  ungroup() %>%
+  left_join(read_csv('Final_Database/var_code_key.csv'), 
+            by = c('code' = 'NEW_CODE')) %>%
+  select(CODE = code, 
+         VARIABLE_NAME = NEW_VAR_NAME, 
+         UNITS,
+         NUMBER_OF_SITES = n, 
+         LIST_OF_SITES = sites) %>%
+  write_csv('Final_Database/summaries/sp_variable_count.csv')
+
 
 # Save selected data (variables) for FINAL DB
 soil_properties %>%

@@ -425,8 +425,8 @@ nl_MUDS3_NEW %>%
   select(siteid, plotid, location, date, var_OLD, var, value) %>% 
   mutate(var_NEW = case_when(var_OLD %in% c('WAT2')  ~ 'WAT30',
                              var_OLD %in% c('WAT20') ~ 'WAT70',
-                             var_OLD == 'WAT8'  ~ 'WAT42',
-                             var_OLD == 'WATXX' ~ 'WAT82',
+                             var_OLD == 'WAT8'  ~ 'WAT43',
+                             var_OLD == 'WATXX' ~ 'WAT83',
                              TRUE ~ 'TBD')) %>%
   select(siteid, plotid, location, date, var_NEW, value) -> nl_MUDS3_NEW_new
 

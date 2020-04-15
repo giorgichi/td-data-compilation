@@ -841,7 +841,7 @@ wq_WILKIN1 %>%
   select(siteid, plotid, location, date, time, var_OLD, var, value) %>% 
   mutate(var_NEW = case_when(var_OLD == 'WAT2' ~ 'WAT30',
                              var_OLD == 'WAT9' ~ 'WAT40',
-                             var_OLD == 'WAT8' ~ 'WAT42', # unsure, maybe WAT43?
+                             var_OLD == 'WAT8' ~ 'WAT43',
                              var_OLD == 'WAT12' ~ 'WAT22',
                              var_OLD == 'WATXX' ~ 'WAT36',
                              TRUE ~ 'TBD')) %>%
@@ -867,7 +867,7 @@ wq_WILKIN2 %>%
   select(siteid, plotid, location, date, time, var_OLD, var, value) %>%
   mutate(var_NEW = case_when(var_OLD == 'WAT2' ~ 'WAT30',
                              var_OLD == 'WAT9' ~ 'WAT40',
-                             var_OLD == 'WAT8' ~ 'WAT42', # unsure, maybe WAT43?
+                             var_OLD == 'WAT8' ~ 'WAT43',
                              var_OLD == 'WAT12' ~ 'WAT22',
                              var_OLD == 'WATXX' ~ 'WAT36',
                              TRUE ~ 'TBD')) %>%

@@ -13,7 +13,7 @@ nl_ALL <- read_rds('Inter_Data/nl_ALL.rds')
 # Standardize N load data
 nl_ALL %>%
   # get rid of interpolated concentration data
-  filter(!var_NEW %in% c('WAT30', 'WAT31', 'WAT40', 'WAT42')) %>%
+  filter(!var_NEW %in% c('WAT30', 'WAT31', 'WAT40', 'WAT42', 'WAT43')) %>%
   # add locations and assign plots
   mutate(location = case_when(siteid == 'ACRE' & str_detect(plotid, 'Inlet') ~ NA_character_,
                               TRUE  ~ location),

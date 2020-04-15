@@ -665,8 +665,8 @@ nl_WILKIN1 %>%
                              var_OLD == 'WAT20' ~ 'WAT70',
                              var_OLD == 'WAT9'  ~ 'WAT40',
                              var_OLD == 'WAT26' ~ 'WAT80',
-                             var_OLD == 'WAT8'  ~ 'WAT42',  # unsure, maybe WAT43?
-                             var_OLD == 'WATXX' ~ 'WAT82',  # unsure, maybe WAT83?
+                             var_OLD == 'WAT8'  ~ 'WAT43',
+                             var_OLD == 'WATXX' ~ 'WAT83',
                              TRUE ~ 'TBD')) %>%
   select(siteid, plotid, location, date, var_NEW, value) -> nl_WILKIN1_new
 
@@ -696,8 +696,8 @@ nl_WILKIN2 %>%
                              var_OLD == 'WAT20' ~ 'WAT70',
                              var_OLD == 'WAT9'  ~ 'WAT40',
                              var_OLD == 'WAT26' ~ 'WAT80',
-                             var_OLD == 'WAT8'  ~ 'WAT42',  # unsure, maybe WAT43?
-                             var_OLD == 'WATXX' ~ 'WAT82',  # unsure, maybe WAT83?
+                             var_OLD == 'WAT8'  ~ 'WAT43',
+                             var_OLD == 'WATXX' ~ 'WAT83',
                              TRUE ~ 'TBD')) %>%
   select(siteid, plotid, location, date, var_NEW, value) -> nl_WILKIN2_new
 

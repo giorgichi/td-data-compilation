@@ -33,7 +33,7 @@ agr_ALL %>%
          # corn yield reported at 15% - adjust to 15.5%
          value = ifelse(siteid == 'DPAC' & str_detect(key, 'AGR17') & !year %in% c(2011:2015), 
                         as.character(round(value_new*0.85/0.845 ,2)), value),
-         value = ifelse(siteid %in% c('MUDS4', 'MUDS2', 'MUDS3_NEW') & str_detect(key, 'AGR17'), 
+         value = ifelse(siteid %in% c('MUDS4', 'MUDS2', 'MUDS3_NEW', 'MUDS1') & str_detect(key, 'AGR17'), 
                         as.character(round(value_new*0.85/0.845 ,2)), value),
          # corn grain carbon is calculated based on crop yield - recalculate based on corn grain biomass
          value = ifelse(siteid == 'STJOHNS' & str_detect(key, 'AGR23 ') & year == 2013, as.character(value_new * 0.845), value)) %>%

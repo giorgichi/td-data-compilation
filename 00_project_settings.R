@@ -21,12 +21,13 @@ DownloadGoogleSheet <-
     } else {
       folder = FOLDER
     }
-    gs_title(TITLE) %>%
-      gs_download(to = paste0('Input_Data/', folder, '/', TITLE, '.xlsx' ), 
+    gs_title(TITLE) -> my_title
+    gs_download(my_title, to = paste0('Input_Data/', folder, '/', TITLE, '.xlsx' ), 
                   overwrite = TRUE)
-    gs_ls(TITLE) %>%
-      mutate(downloaded = Sys.time()) %>%
-      select(sheet_title, sheet_key, updated, downloaded) %>%
+    tibble(sheet_title = my_title$sheet_title, 
+           sheet_key = my_title$sheet_key, 
+           updated = my_title$updated,
+           downloaded = Sys.time()) %>%
       write_csv('Input_Data/log.csv', append = TRUE)
   }
 

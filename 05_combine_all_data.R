@@ -194,7 +194,7 @@ read_rds('Standard_Data/irr_ALL_daily.rds') -> irr
 
 irr %>%
   spread(var_NEW, value) %>%
-  remove_empty_cols() %>%
+  remove_empty(which = 'cols') %>%
   mutate(date = format(date, '%Y-%m-%d')) ->
   irr_DB
 

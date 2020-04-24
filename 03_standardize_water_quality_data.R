@@ -93,6 +93,11 @@ wq_ALL_corrected %>%
          value = ifelse(value == 'NV', NA_character_, value),          # at WRSIS
          comments = str_replace_all(comments, 'changed to .* from', 'changed to NA from'),
          value = str_replace(value, '< ', '<')) %>%
+  mutate(value = case_when(str_detect(siteid, 'WILKIN') & value == 'BDL' & var_NEW == 'WAT22' ~ '<0.1',
+                           str_detect(siteid, 'WILKIN') & value == 'BDL' & var_NEW == 'WAT30' ~ '<0.4',
+                           str_detect(siteid, 'WILKIN') & value == 'BDL' & var_NEW == 'WAT36' ~ '<0.1',
+                           str_detect(siteid, 'WILKIN') & value == 'BDL' & var_NEW == 'WAT40' ~ '<5',
+                           TRUE ~ value)) %>%
   select(siteid, plotid, location, height, date, time, sample_type, var_NEW, value, comments) %>%
   # standardize timestamp
   mutate(timestamp_type = ifelse(is.na(time), 'D', 'I')) %>%

@@ -13,6 +13,8 @@ irr_ALL_daily <- read_rds('Inter_Data/irr_ALL_daily.rds')
 
 # Standardize tile flow and discharge data
 tf_ALL_daily %>%
+  # convert discharge from m3/hr to m3/day
+  mutate(value = ifelse(var_NEW == 'WAT05', value *24, value)) %>%
   # add locations and assign plots
   mutate(location = case_when(siteid %in% c('BEAR', 'BEAR2', 'BENTON', 'DIKE', 
                                             'HICKORY', 'MAASS', 'SHEARER', 'WILKIN3') ~ plotid,

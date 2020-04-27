@@ -12,15 +12,21 @@ conn_final <- dbConnect(RSQLite::SQLite(), 'Final_Database//TD_FINAL_Data.db')
 
 
 
+# Field Management --------------------------------------------------------
+
+write_rds(dwm_standard, 'Standard_Data/dwm_ALL.rds', compress = 'xz')
+write_rds(fertilizing_standard, 'Standard_Data/fertilizing_ALL.rds', compress = 'xz')
+write_rds(irrigation_standard, 'Standard_Data/irrigation_ALL.rds', compress = 'xz')
+write_rds(notes_standard, 'Standard_Data/notes_ALL.rds', compress = 'xz')
+write_rds(planting_standard, 'Standard_Data/planting_ALL.rds', compress = 'xz')
+
+
+
 # Agronomic Data ----------------------------------------------------------
 
 read_rds('Standard_Data/agro_ALL.rds') -> agr
 
 agr %>%
-  # standardize plot and locations names for FAIRM
-  mutate(location = ifelse(siteid == 'FAIRM' & plotid == 'CD/SI', 'East and West plots', location),
-         plotid = ifelse(siteid == 'FAIRM' & plotid == 'CD/SI', 'SI', plotid),
-         plotid = ifelse(siteid == 'FAIRM' & str_detect(plotid, 'CD'), word(plotid, 2), plotid)) %>%
   mutate(year = as.integer(year),
          date = as.character(date)) %>%
   spread(var_NEW, value) -> agr_DB
@@ -424,7 +430,7 @@ weather_daily %>%
   weather_daily_DB
 
 
-dbWriteTable(conn, "weather_daily", weather_daily_DB)
+dbWriteTable(conn, "weather_daily", weather_daily_DB, overwrite = TRUE)
 
 # count sites per variable
 weather_daily_DB %>%

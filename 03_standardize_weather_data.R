@@ -291,8 +291,14 @@ weather_ALL_hourly %>%
   
 
 
-# Standardize hourly weather data
+# Standardize daily weather data
 weather_ALL_daily %>%
+  # correct ET names to reflect the method used
+  mutate(key = case_when(str_detect(key, 'Penman') ~ str_replace(key, 'Monteith', 'Monteith Short Grass'),  # NEED confirmation from Mohamed
+                         str_detect(key, 'Short Crop') ~ str_replace(key, 'Short', 'Penman-Monteith Short'),
+                         str_detect(key, 'Grass') ~ str_replace(key, '\\(', '\\(Penman-Monteith '),
+                         str_detect(key, 'ET$') ~ str_replace(key, 'ET', 'ET (Thornthwaite)'),   # NEED to check again
+                         TRUE ~ key)) %>%
   # get rid of duplicated WIND SPEED measurements at WIRSIS
   left_join(df8 %>% mutate(value = 'Y') %>% select(everything(), DUPS = value), 
             by = c("siteid", "station", "date", "key")) %>%
@@ -324,11 +330,10 @@ weather_ALL_daily %>%
                            'Wind Run',
                            'Max Wind Speed',
                            'Pan Evaporation',
-                           'Reference ET',
-                           'Reference ET (Penman-Monteith)',
-                           'Reference ET (Short Grass)',
-                           'Reference ET (Tall Grass)',
-                           'Reference ET (Short Crop)',
+                           'Reference ET (Penman-Monteith Short Grass)',
+                           'Reference ET (Penman-Monteith Tall Grass)',
+                           'Reference ET (Penman-Monteith Short Crop)',
+                           'Reference ET (Thornthwaite Grass)',   
                            'Ave Bare Soil Temperature (10 cm depth)',
                            'Min Bare Soil Temperature (10 cm depth)',
                            'Max Bare Soil Temperature (10 cm depth)',
@@ -358,11 +363,10 @@ weather_ALL_daily %>%
                             'CLIM06.04',
                             'CLIM06.05',
                             'CLIM07.01',
-                            'CLIM07.02',
-                            'CLIM07.02.01',
-                            'CLIM07.02.02',
-                            'CLIM07.02.03',
-                            'CLIM07.02.04',
+                            'CLIM07.03.01',
+                            'CLIM07.03.02',
+                            'CLIM07.03.03',
+                            'CLIM07.04.01',
                             'CLIM08.01.01',
                             'CLIM08.01.02',
                             'CLIM08.01.03',

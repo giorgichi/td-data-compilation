@@ -44,7 +44,10 @@ agr_ALL %>%
 # Standardize agronomic data
 agr_ALL_correct %>%
   # standardize plot and location names
-  mutate(location = ifelse(siteid == 'ACRE', paste('Field', location), location)) %>%
+  mutate(location = ifelse(siteid == 'ACRE', paste('Field', location), location),
+         location = ifelse(siteid == 'FAIRM' & plotid == 'CD/SI', 'East and West plots', location),
+         plotid = ifelse(siteid == 'FAIRM' & plotid == 'CD/SI', 'SI', plotid),
+         plotid = ifelse(siteid == 'FAIRM' & str_detect(plotid, 'CD'), word(plotid, 2), plotid)) %>%
   # standardize crop names
   mutate(crop = ifelse(crop == 'soy', 'soybean', crop)) %>%
   # update variable names
@@ -60,6 +63,7 @@ agr_ALL_correct %>%
          var_NEW = NEW_CODE, value, action, harvested_area) %>%
   filter(!is.na(value)) ->
   agr_ALL_standard
+
 
 
 # Save standardized data --------------------------------------------------

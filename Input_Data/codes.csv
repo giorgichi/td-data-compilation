@@ -8,7 +8,7 @@ AGR,Popcorn,AGR58 Popcorn grain yield at 13.5% MB,AGR20.02.60,Popcorn grain yiel
 AGR,Wheat,AGR21 Wheat grain yield at 13.5% MB,AGR20.03.60,Wheat grain yield
 AGR,Soybean,AGR19 Soybean grain yield at 13.0% MB,AGR20.21.60,Soybean grain yield
 AGR,Soybean,AGRXX Soybean Yield at DWM Zone,AGR20.21.60,Soybean grain yield
-AGR,Sugarbeet,AGR60 Sugarbeet yield (root; freshweight),AGR20.55.10,Sugarbeet yield
+AGR,Sugarbeet,AGR60 Sugarbeet yield (root; freshweight),AGR20.55.10,Sugar beet yield
 AGR,Corn,AGR18 Corn grain moisture,AGR30.01.60,Corn grain moisture
 AGR,Popcorn,AGR59 Popcorn grain moisture,AGR30.02.60,Popcorn grain moisture
 AGR,Wheat,AGR22 Wheat grain moisture,AGR30.03.60,Wheat grain moisture

@@ -94,8 +94,13 @@ planting %>%
 
 # Standardize Fertilizer Data ----------
 
-# correct elemental rates
+# correct rates
 fertilizing %>%
+  # convert manure rate from gpa to L/ha
+  mutate(temp = round(as.numeric(manure_rate) * 9.354, 0),
+         manure_rate = ifelse(is.na(temp), manure_rate, as.character(temp)),
+         temp = NULL) %>%
+  # calculate elemental rate of synthetic fertilizer 
   mutate(check_n = as.numeric(fertilizer_rate) * as.numeric(nitrogen_percent) / 100,
          check_p = as.numeric(fertilizer_rate) * as.numeric(phosphate_percent) / 100 / 2.2915,
          check_k = as.numeric(fertilizer_rate) * as.numeric(potash_percent) / 100 / 1.2047,

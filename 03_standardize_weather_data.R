@@ -294,7 +294,7 @@ weather_ALL_hourly %>%
 # Standardize daily weather data
 weather_ALL_daily %>%
   # correct ET names to reflect the method used
-  mutate(key = case_when(str_detect(key, 'Penman') ~ str_replace(key, 'Monteith', 'Monteith Short Grass'),  # NEED confirmation from Mohamed
+  mutate(key = case_when(str_detect(key, 'Penman') ~ str_replace(key, 'Monteith', 'Monteith Short Grass'),
                          str_detect(key, 'Short Crop') ~ str_replace(key, 'Short', 'Penman-Monteith Short'),
                          str_detect(key, 'Grass') ~ str_replace(key, '\\(', '\\(Penman-Monteith '),
                          str_detect(key, 'ET$') ~ str_replace(key, 'ET', 'ET (Thornthwaite)'),   # NEED to check again

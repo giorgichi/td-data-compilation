@@ -29,6 +29,8 @@ nl_ALL %>%
   mutate(time = NA_character_,
          UTC = NA_character_,
          timestamp_type = 'D') %>%
+  # remove loads at ACRE that extend beyond tile flow measurements
+  filter(!(siteid == 'ACRE' & date < ymd(20071104))) %>%
   select(siteid, plotid, location, date, time, UTC, timestamp_type, 
          var_NEW, value) -> nl_ALL_daily_standard
 

@@ -137,6 +137,14 @@ tf_CLAY_R_hourly %>%
   ungroup() %>% 
   mutate(value = ifelse(check == 0, NA_real_, value)) %>%
   mutate(var_NEW = ifelse(var == 'WAT1', 'WAT06', 'HELP')) %>%
+  # N loads have additional days reported with 0 flow, add them here
+  bind_rows(tibble(date = seq(ymd(20131002),ymd(20131105), 'day'),
+                   siteid = 'CLAY_R', plotid = 'SI',
+                   value = 0, var_NEW = 'WAT06')) %>%
+  bind_rows(tibble(date = seq(ymd(20131002),ymd(20131105), 'day'),
+                   siteid = 'CLAY_R', plotid = 'CD',
+                   value = 0, var_NEW = 'WAT06')) %>%
+  arrange(plotid, date) %>%
   select(siteid, plotid, date, var_NEW, value) -> tf_CLAY_R_daily_GOOD
 
 
@@ -678,6 +686,8 @@ tf_WILKIN2_hourly %>%
 ReadExcelSheets('Input_Data/WATER/TILE_FLOW/WILKIN3 Tile Flow.xlsx') %>%
   bind_rows() %>%
   select(tmsp = Date, contains('WAT')) %>%
+  # calculate water diverted to buffer
+  mutate(`To_Buffer WAT16 Discharge` = `From_Field WAT16 Discharge` - `To_Stream WAT16 Discharge`) %>%
   gather(key, value, contains('WAT')) %>%
   separate(key, into = c('plotid', 'var', 'var_name'), sep = ' ', extra = 'merge') %>%
   mutate(siteid = 'WILKIN3') -> tf_WILKIN3_hourly

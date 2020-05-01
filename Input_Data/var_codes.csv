@@ -8,13 +8,13 @@ AGR,Popcorn,AGR58 Popcorn grain yield at 13.5% MB,AGR20.02.60,Popcorn grain yiel
 AGR,Wheat,AGR21 Wheat grain yield at 13.5% MB,AGR20.03.60,Wheat grain yield
 AGR,Soybean,AGR19 Soybean grain yield at 13.0% MB,AGR20.21.60,Soybean grain yield
 AGR,Soybean,AGRXX Soybean Yield at DWM Zone,AGR20.21.60,Soybean grain yield
-AGR,Sugarbeet,AGR60 Sugarbeet yield (root; freshweight),AGR20.55.10,Sugar beet yield
+AGR,Sugar beet,AGR60 Sugarbeet yield (root; freshweight),AGR20.55.10,Sugar beet yield
 AGR,Corn,AGR18 Corn grain moisture,AGR30.01.60,Corn grain moisture
 AGR,Popcorn,AGR59 Popcorn grain moisture,AGR30.02.60,Popcorn grain moisture
 AGR,Wheat,AGR22 Wheat grain moisture,AGR30.03.60,Wheat grain moisture
 AGR,Soybean,AGR20 Soybean grain moisture,AGR30.21.60,Soybean grain moisture
-AGR,Forage,AGR53 Forage (cereal rye) Biomass,AGR40.43.10,Cereal rye (forage) biomass
-AGR,Forage,AGR62 Forage (sorghum-sudangrass) Biomass,AGR40.47.10,Sorghum-sudangrass (forage) biomass
+AGR,Cereal rye,AGR53 Forage (cereal rye) Biomass,AGR40.43.10,Cereal rye (forage) biomass
+AGR,Sorghum-sudangrass,AGR62 Forage (sorghum-sudangrass) Biomass,AGR40.47.10,Sorghum-sudangrass (forage) biomass
 AGR,Corn,AGR4x Corn vegetative biomass at R6 (dry),AGR46.01.10,Corn whole plant biomass at R6
 AGR,Corn,AGR4 Corn vegetative biomass at R6 (dry),AGR46.01.20,Corn vegetative biomass at R6
 AGR,Corn,AGR33 Corn grain biomass at R6 (dry),AGR46.01.60,Corn grain biomass at R6

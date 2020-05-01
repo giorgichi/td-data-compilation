@@ -43,6 +43,11 @@ agr_ALL %>%
 
 # Standardize agronomic data
 agr_ALL_correct %>%
+  # standardize crop names
+  mutate(crop = case_when(crop == 'sugarbeet' ~ 'sugar beet',
+                          crop == 'forage' & str_detect(key, 'cereal rye') ~ 'cereal rye',
+                          crop == 'forage' & str_detect(key, 'sorghum-sudangrass') ~ 'sorghum-sudangrass',
+                          TRUE ~ crop)) %>%
   # standardize plot and location names
   mutate(location = ifelse(siteid == 'ACRE', paste('Field', location), location),
          location = ifelse(siteid == 'FAIRM' & plotid == 'CD/SI', 'East and West plots', location),

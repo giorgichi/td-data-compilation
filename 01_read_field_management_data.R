@@ -127,6 +127,7 @@ fm_backend %>%
          siteid = uniqueid,
          year_calendar = calendaryear,
          year_crop = cropyear,
+         crop,
          notill,
          comments) %>%
   ungroup() -> fm_residue
@@ -138,7 +139,7 @@ fm_backend %>%
   backend_date() %>%
   mutate(operation_type = operation,
          operation = 'pesticide application') %>%
-  select(#action,
+  select(action,
     siteid = uniqueid,
     #plotid,
     year_calendar = calendaryear,
@@ -160,8 +161,10 @@ fm_backend %>%
 # ... Irrigation ----
 fm_backend %>%
   pluck(5) %>%
-  backend_date(COL = 'irr_end_date') %>%
-  backend_date(COL = 'irr_start_date') %>%
+  separate(irr_end_date, into = c('irr_end_date', 'irr_end_time'), sep = "T") %>%
+  separate(irr_start_date, into = c('irr_start_date', 'irr_start_time'), sep = "T") %>%
+  mutate_at(vars(ends_with('time')), function(x) str_remove(x, 'Z')) %>%
+  mutate_at(vars(ends_with("_date")), ymd) %>%
   plotid_expansion(COL = 'irr_structure') %>%
   mutate(plotid = ifelse(uniqueid %in% c('DEFI_R', 'VANWERT'), 
                          plotid, 
@@ -173,7 +176,9 @@ fm_backend %>%
          irrigation_method = irrigationmethod,
          year_calendar = calendaryear,
          date_irrigation_start = irr_start_date,
+         time_irrigation_start = irr_start_time,
          date_irrigation_end = irr_end_date,
+         time_irrigation_end = irr_end_time,
          irrigation_amount = irrigationamount, 
          comments) -> fm_irrigation
 

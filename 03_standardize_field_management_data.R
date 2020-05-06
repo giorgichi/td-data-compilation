@@ -84,12 +84,47 @@ correct_STORY_action <- function(df){
 
 # Standardize Planting Data ----------
 
+# spread SERF_IA plots and locations
+dl <- vector('list', 8)
+df <- planting %>% filter(siteid == 'SERF_IA')
+for (i in 1:8) {
+  dl[[i]] <- df %>% mutate(plotid = paste0('S', i))
+}
+
+bind_rows(dl) %>%
+  # correct harvest date for plot S8 in 2010
+  mutate(date = ifelse(plotid == 'S8' & str_detect(comments, 'S8'), ymd(20101012), date),
+         date = as_date(date),
+         comments = ifelse(str_detect(comments, 'S8 was'), NA_character_, comments),
+         location = NA_character_) %>%
+  # add locations to SERF_IA 
+  mutate(temp = ifelse(siteid == 'SERF_IA' & action == 'keep', year_calendar %% 2, NA),
+         location = case_when(siteid == 'SERF_IA' & cashcrop == 'corn' &
+                                plotid %in% c('S1','S2','S4','S7') & temp == 0 ~ 'North half',
+                              siteid == 'SERF_IA' & cashcrop == 'corn' &
+                                plotid %in% c('S3','S5','S6','S8') & temp == 0 ~ 'South half',
+                              siteid == 'SERF_IA' & cashcrop == 'corn' &
+                                plotid %in% c('S1','S2','S4','S7') & temp == 1 ~ 'South half',
+                              siteid == 'SERF_IA' & cashcrop == 'corn' &
+                                plotid %in% c('S3','S5','S6','S8') & temp == 1 ~ 'North half',
+                              siteid == 'SERF_IA' & cashcrop == 'soybean' &
+                                plotid %in% c('S1','S2','S4','S7') & temp == 0 ~ 'South half',
+                              siteid == 'SERF_IA' & cashcrop == 'soybean' &
+                                plotid %in% c('S3','S5','S6','S8') & temp == 0 ~ 'North half',
+                              siteid == 'SERF_IA' & cashcrop == 'soybean' &
+                                plotid %in% c('S1','S2','S4','S7') & temp == 1 ~ 'North half',
+                              siteid == 'SERF_IA' & cashcrop == 'soybean' &
+                                plotid %in% c('S3','S5','S6','S8') & temp == 1 ~ 'South half',
+                              TRUE ~ location)) %>%
+  select(-temp) -> df
+
 # standardize plot ids
 planting %>%
   rename_ACRE_plots() %>%
   rename_DEFI_R_plots() %>%
-  correct_ACRE_action() -> planting_standard
-
+  correct_ACRE_action() %>%
+  filter(siteid != 'SERF_IA') %>%
+  bind_rows(df) -> planting_standard
 
 
 # Standardize Fertilizer Data ----------
@@ -124,12 +159,45 @@ fertilizing %>%
   select(everything()) -> fertilizing_corrected
 
 
+# spread SERF_IA plots and locations
+dl <- vector('list', 8)
+df <- fertilizing_corrected %>% filter(siteid == 'SERF_IA')
+for (i in 1:8) {
+  dl[[i]] <- df %>% mutate(plotid = paste0('S', i))
+}
+
+bind_rows(dl) %>%
+  mutate(location = NA_character_) %>%
+  # add locations to SERF_IA 
+  mutate(temp = ifelse(siteid == 'SERF_IA' & action == 'keep', year_crop %% 2, NA),
+         location = case_when(siteid == 'SERF_IA' & cashcrop == 'corn' &
+                                plotid %in% c('S1','S2','S4','S7') & temp == 0 ~ 'North half',
+                              siteid == 'SERF_IA' & cashcrop == 'corn' &
+                                plotid %in% c('S3','S5','S6','S8') & temp == 0 ~ 'South half',
+                              siteid == 'SERF_IA' & cashcrop == 'corn' &
+                                plotid %in% c('S1','S2','S4','S7') & temp == 1 ~ 'South half',
+                              siteid == 'SERF_IA' & cashcrop == 'corn' &
+                                plotid %in% c('S3','S5','S6','S8') & temp == 1 ~ 'North half',
+                              siteid == 'SERF_IA' & cashcrop == 'soybean' &
+                                plotid %in% c('S1','S2','S4','S7') & temp == 0 ~ 'South half',
+                              siteid == 'SERF_IA' & cashcrop == 'soybean' &
+                                plotid %in% c('S3','S5','S6','S8') & temp == 0 ~ 'North half',
+                              siteid == 'SERF_IA' & cashcrop == 'soybean' &
+                                plotid %in% c('S1','S2','S4','S7') & temp == 1 ~ 'North half',
+                              siteid == 'SERF_IA' & cashcrop == 'soybean' &
+                                plotid %in% c('S3','S5','S6','S8') & temp == 1 ~ 'South half',
+                              TRUE ~ location)) %>%
+  select(-temp) -> df
+
+
 # standardize plot ids
 fertilizing_corrected %>%
   rename_ACRE_plots() %>%
   correct_STORY_action() %>%
   rename_SWROC_plots() %>% 
   rename_DEFI_R_plots() %>%
+  filter(siteid != 'SERF_IA') %>%
+  bind_rows(df) %>%
   # remove erroneous plot id and correct locations at VANWERT
   mutate(plotid = ifelse(siteid == 'VANWERT' & plotid == '68', NA, plotid),
          location = case_when(siteid == 'VANWERT' & plotid == 1 ~ 'SE',
@@ -144,15 +212,59 @@ fertilizing_corrected %>%
 
 # Standardize Pesticide Data ----------
 
-pesticide -> pesticide_standard
+# spread SERF_IA plots and locations
+dl <- vector('list', 8)
+df <- pesticide %>% filter(siteid == 'SERF_IA')
+for (i in 1:8) {
+  dl[[i]] <- df %>% mutate(plotid = paste0('S', i))
+}
+
+bind_rows(dl) %>%
+  # assign application only to plot S8 in 2011
+  mutate(comments = ifelse(plotid == 'S8' & str_detect(comments, 'treatment to plot 8'), 
+                           NA_character_, comments)) %>%
+  filter(!(str_detect(comments, 'treatment to plot 8')) | is.na(comments)) %>%
+  rename(cashcrop = crop) %>%
+  mutate(action = ifelse(is.na(action), 'keep', action),
+         location = NA_character_) %>%
+  # add locations to SERF_IA 
+  mutate(temp = ifelse(siteid == 'SERF_IA' & action == 'keep', year_calendar %% 2, NA),
+         location = case_when(siteid == 'SERF_IA' & cashcrop == 'corn' &
+                                plotid %in% c('S1','S2','S4','S7') & temp == 0 ~ 'North half',
+                              siteid == 'SERF_IA' & cashcrop == 'corn' &
+                                plotid %in% c('S3','S5','S6','S8') & temp == 0 ~ 'South half',
+                              siteid == 'SERF_IA' & cashcrop == 'corn' &
+                                plotid %in% c('S1','S2','S4','S7') & temp == 1 ~ 'South half',
+                              siteid == 'SERF_IA' & cashcrop == 'corn' &
+                                plotid %in% c('S3','S5','S6','S8') & temp == 1 ~ 'North half',
+                              siteid == 'SERF_IA' & cashcrop == 'soybean' &
+                                plotid %in% c('S1','S2','S4','S7') & temp == 0 ~ 'South half',
+                              siteid == 'SERF_IA' & cashcrop == 'soybean' &
+                                plotid %in% c('S3','S5','S6','S8') & temp == 0 ~ 'North half',
+                              siteid == 'SERF_IA' & cashcrop == 'soybean' &
+                                plotid %in% c('S1','S2','S4','S7') & temp == 1 ~ 'North half',
+                              siteid == 'SERF_IA' & cashcrop == 'soybean' &
+                                plotid %in% c('S3','S5','S6','S8') & temp == 1 ~ 'South half',
+                              TRUE ~ location)) %>%
+  select(-temp) -> df
+
+pesticide %>%
+  rename(cashcrop = crop) %>%
+  mutate(cashcrop = ifelse(cashcrop == 'other' & !is.na(comments), 
+                           str_to_lower(comments),
+                           cashcrop),
+         comments = ifelse(cashcrop %in% c('popcorn', 'oats', 'sorghum'),
+                           NA_character_, comments)) %>%
+  filter(siteid != 'SERF_IA') %>%
+  bind_rows(df) %>%
+  select(siteid, plotid, location, everything()) -> pesticide_standard
   
 
 
 # Standardize Residue Data ----------
 
-residue -> 
-  # NEED to move crop from comments to cashcrop column
-  residue_standard
+residue %>%
+  mutate(year_calendar = year_crop) -> residue_standard
 
 
 
@@ -183,11 +295,13 @@ notes ->
 
 # Save standardized data --------------------------------------------------
 
-write_rds(dwm_standard, 'Standard_Data/dwm_ALL.rds', compress = 'xz')
-write_rds(fertilizing_standard, 'Standard_Data/fertilizing_ALL.rds', compress = 'xz')
-write_rds(irrigation_standard, 'Standard_Data/irrigation_ALL.rds', compress = 'xz')
-write_rds(notes_standard, 'Standard_Data/notes_ALL.rds', compress = 'xz')
 write_rds(planting_standard, 'Standard_Data/planting_ALL.rds', compress = 'xz')
+write_rds(fertilizing_standard, 'Standard_Data/fertilizing_ALL.rds', compress = 'xz')
+write_rds(pesticide_standard, 'Standard_Data/pesticide_ALL.rds', compress = 'xz')
+write_rds(residue_standard, 'Standard_Data/residue_ALL.rds', compress = 'xz')
+write_rds(irrigation_standard, 'Standard_Data/irrigation_ALL.rds', compress = 'xz')
+write_rds(dwm_standard, 'Standard_Data/dwm_ALL.rds', compress = 'xz')
+write_rds(notes_standard, 'Standard_Data/notes_ALL.rds', compress = 'xz')
 
 
 

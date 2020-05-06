@@ -44,6 +44,8 @@ Input_Data/*/
 Inter_Data/
 Standard_Data/
 Output_Data/
+Ag_Commons_Data/
+
 
 # PROJECT FILES ...........................................................
 *.html

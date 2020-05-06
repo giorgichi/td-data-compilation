@@ -14,11 +14,86 @@ conn_final <- dbConnect(RSQLite::SQLite(), 'Final_Database//TD_FINAL_Data.db')
 
 # Field Management --------------------------------------------------------
 
-write_rds(dwm_standard, 'Standard_Data/dwm_ALL.rds', compress = 'xz')
-write_rds(fertilizing_standard, 'Standard_Data/fertilizing_ALL.rds', compress = 'xz')
-write_rds(irrigation_standard, 'Standard_Data/irrigation_ALL.rds', compress = 'xz')
-write_rds(notes_standard, 'Standard_Data/notes_ALL.rds', compress = 'xz')
-write_rds(planting_standard, 'Standard_Data/planting_ALL.rds', compress = 'xz')
+# ... Planting ------------------------------------------------------------
+planting <- read_rds('Standard_Data/planting_ALL.rds')
+
+planting %>%
+  mutate(location = ifelse(location == 'NA N', NA_character_, location)) %>%
+  mutate_at(vars(starts_with("date")), as.character) -> planting_DB
+dbWriteTable(conn, "mngt_planting", planting_DB, overwrite = TRUE)
+
+planting_DB %>%
+  filter(action == "keep") %>%
+  select(-action) -> planting_FINAL_DB
+dbWriteTable(conn_final, "mngt_planting", planting_FINAL_DB, overwrite = TRUE)
+
+# ... Fertilizing and Tillage ---------------------------------------------
+fertilizing <- read_rds('Standard_Data/fertilizing_ALL.rds')
+
+fertilizing %>%
+  mutate(location = ifelse(location == 'NA N', NA_character_, location)) %>%
+  mutate_at(vars(starts_with("date")), as.character) -> fertilizing_DB
+dbWriteTable(conn, "mngt_fertilizing", fertilizing_DB, overwrite = TRUE)
+
+fertilizing_DB %>%
+  filter(action == "keep") %>%
+  # select variables of high value, quality and abundance 
+  select(-action, 
+         -manure_rate) -> fertilizing_FINAL_DB
+dbWriteTable(conn_final, "mngt_fertilizing", fertilizing_FINAL_DB, overwrite = TRUE)
+
+# ... DWM -----------------------------------------------------------------
+dwm <- read_rds('Standard_Data/dwm_ALL.rds')
+
+dwm %>%
+  mutate_at(vars(starts_with("date")), as.character) -> dwm_DB
+dbWriteTable(conn, "mngt_dwm", dwm_DB, overwrite = TRUE)
+
+dwm_DB %>%
+  filter(action == "keep") %>%
+  select(-action, -time) -> dwm_FINAL_DB
+dbWriteTable(conn_final, "mngt_dwm", dwm_FINAL_DB, overwrite = TRUE)
+
+# ... Irrigation ----------------------------------------------------------
+irrigation <- read_rds('Standard_Data/irrigation_ALL.rds')
+
+irrigation %>%
+  mutate_at(vars(starts_with("date_")), as.character) -> irrigation_DB
+dbWriteTable(conn, "mngt_irrigation", irrigation_DB, overwrite = TRUE)
+
+irrigation_DB %>%
+  filter(action == "keep") %>%
+  # after removing hours some entries become redandunt and need to remove
+  filter(!(siteid == 'DEFI_R' & date_irrigation_end == '2000-08-22')) %>%
+  select(-action, -starts_with('time_irr')) -> irrigation_FINAL_DB
+dbWriteTable(conn_final, "mngt_irrigation", irrigation_FINAL_DB, overwrite = TRUE)
+
+# ... Notes ---------------------------------------------------------------
+notes <- read_rds('Standard_Data/notes_ALL.rds')
+
+notes -> notes_DB
+dbWriteTable(conn, "mngt_notes", notes_DB, overwrite = TRUE)
+
+notes %>%
+  filter(action == "keep") %>%
+  select(-action) %>%
+  filter(!siteid %in% c('BATH_A', 'HICKS_S')) -> notes_FINAL_DB
+dbWriteTable(conn_final, "mngt_notes", notes_FINAL_DB, overwrite = TRUE)
+
+# ... Pesticide (not included in public dataset) --------------------------
+pesticide <- read_rds('Standard_Data/pesticide_ALL.rds')
+
+pesticide %>%
+  mutate_at(vars(starts_with("date")), as.character) %>%
+  select(action, everything()) -> pesticide_DB
+dbWriteTable(conn, "mngt_pesticide", pesticide_DB, overwrite = TRUE)
+
+
+# ... Reside (not included in public dataset) -----------------------------
+residue <- read_rds('Standard_Data/residue_ALL.rds')
+
+residue -> residue_DB
+dbWriteTable(conn, "mngt_residue", residue_DB, overwrite = TRUE)
 
 
 
@@ -29,7 +104,37 @@ read_rds('Standard_Data/agro_ALL.rds') -> agr
 agr %>%
   mutate(year = as.integer(year),
          date = as.character(date)) %>%
-  spread(var_NEW, value) -> agr_DB
+  spread(var_NEW, value) %>%
+  # separate (by duplication) SI into East and West plots at FAIRM
+  add_row(filter(., siteid == 'FAIRM' & plotid == 'SI')) %>%
+  group_by(siteid, plotid, crop, year) %>%
+  mutate(temp = ifelse(siteid == 'FAIRM' & !is.na(location), 1:n(), NA_real_)) %>%
+  ungroup() %>%
+  mutate(plotid = case_when(siteid == 'FAIRM' & temp == 1 ~ 'East',
+                            siteid == 'FAIRM' & temp == 2 ~ 'West',
+                            TRUE ~ plotid),
+         location = ifelse(siteid == 'FAIRM', NA_character_, location)) %>%
+  # add locations to SERF_IA 
+  mutate(temp = ifelse(siteid == 'SERF_IA', year %% 2, NA),
+         location = case_when(siteid == 'SERF_IA' & crop == 'corn' &
+                                plotid %in% c('S1','S2','S4','S7') & temp == 0 ~ 'North half',
+                              siteid == 'SERF_IA' & crop == 'corn' &
+                                plotid %in% c('S3','S5','S6','S8') & temp == 0 ~ 'South half',
+                              siteid == 'SERF_IA' & crop == 'corn' &
+                                plotid %in% c('S1','S2','S4','S7') & temp == 1 ~ 'South half',
+                              siteid == 'SERF_IA' & crop == 'corn' &
+                                plotid %in% c('S3','S5','S6','S8') & temp == 1 ~ 'North half',
+                              siteid == 'SERF_IA' & crop == 'soybean' &
+                                plotid %in% c('S1','S2','S4','S7') & temp == 0 ~ 'South half',
+                              siteid == 'SERF_IA' & crop == 'soybean' &
+                                plotid %in% c('S3','S5','S6','S8') & temp == 0 ~ 'North half',
+                              siteid == 'SERF_IA' & crop == 'soybean' &
+                                plotid %in% c('S1','S2','S4','S7') & temp == 1 ~ 'North half',
+                              siteid == 'SERF_IA' & crop == 'soybean' &
+                                plotid %in% c('S3','S5','S6','S8') & temp == 1 ~ 'South half',
+                              TRUE ~ location)) %>%
+  select(-temp) %>%
+  arrange(siteid, plotid, year, date) -> agr_DB
 
 dbWriteTable(conn, "agronomic", agr_DB, overwrite = TRUE)
   
@@ -60,15 +165,23 @@ agr_DB %>%
   # select plots and locations of interest
   mutate(action = ifelse(is.na(action), 'keep', action)) %>%
   filter(action != 'remove') %>%
+  # only data before 2019 goes to public db
+  filter(year < 2019) %>%
   # remove plots that are under more than one drainage system
   filter(plotid != 'Inlet_A, Inlet_B') %>%
   # select variables of high value, quality and abundance 
-  select(-action, -harvested_area, -AGR90.01.10) %>%
-  # aggregate Ease and West into SI at FAIRM
-  mutate(location = ifelse(siteid == 'FAIRM', NA_character_, location),
-         AGR20.01.60 = ifelse(siteid == 'FAIRM' & plotid == 'East', '9675.74', AGR20.01.60),
-         plotid = ifelse(siteid == 'FAIRM' & plotid == 'East', 'SI', plotid)) %>% 
-  filter(!(siteid == 'FAIRM' & plotid == 'West')) %>%
+  select(-action, -harvested_area, 
+         -AGR90.01.10, 
+         -AGR46.21.10,
+         -AGR48.21.20,
+         -AGR48.21.25,
+         -AGR58.21.20,
+         -AGR58.21.60,
+         -AGR66.21.10,
+         -AGR66.21.60,
+         -AGR68.21.20) %>%
+  # remove rows with no data (after implementing selection of variables)
+  filter_at(vars(starts_with('AGR')), any_vars(!is.na(.))) %>%
   mutate(year = as.integer(year),
          date = as.character(date)) -> agr_FINAL_DB
 
@@ -166,12 +279,22 @@ dbWriteTable(conn, "tile_flow", tf_DB)
 
 # read daily data
 read_rds('Standard_Data/tf_ALL_daily.rds') -> tf_daily
+read_csv('Input_Data/WATER/tile_flow_for_ANOVA_2020-03-09.csv') -> tf_filled
 
 tf_daily %>%
-  spread(var_NEW, value) ->
+  select(-time, -UTC, -timestamp_type) %>%
+  spread(var_NEW, value) %>%
+  full_join(tf_filled %>% select(-trt, -rep, -year, -season), 
+            by = c('siteid' = 'site', 'plotid' = 'plot', 'date')) %>%
+  arrange(siteid, plotid, location, date) %>%
+  # standardize comments
+  mutate(comments = case_when(str_detect(comments, 'predicted') ~ 'imputed',
+                              str_detect(comments, 'filled') ~ 'imputed zero',
+                              TRUE ~ comments)) %>%
+  rename(WAT06x = flow) ->
   tf_FINAL_DB
 
-dbWriteTable(conn_final, "tile_flow", tf_FINAL_DB)
+dbWriteTable(conn_final, "tile_flow", tf_FINAL_DB, overwrite = TRUE)
 
 
 # count sites per variable
@@ -208,9 +331,10 @@ dbWriteTable(conn, "irrigation", irr_DB)
 
 
 # save daily data
-irr_DB -> irr_FINAL_DB
+irr_DB %>%
+  select(-timestamp_type) -> irr_FINAL_DB
 
-dbWriteTable(conn_final, "irrigation", irr_FINAL_DB)
+dbWriteTable(conn_final, "irrigation", irr_FINAL_DB, overwrite = TRUE)
 
 
 # count sites per variable
@@ -244,17 +368,28 @@ nl %>%
   mutate(date = format(date, '%Y-%m-%d')) ->
   nl_DB
 
-dbWriteTable(conn, "n_loads", nl_DB)
+dbWriteTable(conn, "n_loads", nl_DB, overwrite = TRUE)
 
 
-# save daily data
-nl_DB -> nl_FINAL_DB
+# read filled daily data
+read_csv('Input_Data/WATER/loads_for_ANOVA_2020-03-09.csv') -> nl_filled
 
-dbWriteTable(conn_final, "n_loads", nl_FINAL_DB)
+nl_DB %>%
+  select(-timestamp_type) %>%
+  # select variables of high value, quality and abundance 
+  select(-WAT80, -WAT83) %>%
+  mutate(date = ymd(date)) %>%
+  full_join(nl_filled %>% select(-trt, -rep, -year, -season), 
+            by = c('siteid' = 'site', 'plotid' = 'plot', 'date')) %>%
+  arrange(siteid, plotid, location, date) %>%
+  rename(WAT70x = loads) ->
+  nl_FINAL_DB
+
+dbWriteTable(conn_final, "n_loads", nl_FINAL_DB, overwrite = TRUE)
 
 
 # count sites per variable
-nl_FINAL_DB %>%
+nl_DB %>%
   gather(code, value, starts_with('WAT')) %>%
   filter(!is.na(value)) %>%
   distinct(siteid, code) %>%
@@ -564,8 +699,7 @@ soil_properties %>%
   select(-SOIL04, -SOIL07, 
          -SOIL05.01, -SOIL05.02,
          -SOIL20.02,
-         -SOIL23.05,
-         -SOIL23.04, -SOIL24.04, 
+         -SOIL23.05, 
          -SOIL31.02, -SOIL32.03) %>%
   filter_at(vars(starts_with('SOIL')), any_vars(!is.na(.))) -> temp
 
@@ -576,7 +710,6 @@ soil_properties %>%
          -SOIL05.01, -SOIL05.02,
          -SOIL20.02,
          -SOIL23.05,
-         -SOIL23.04, -SOIL24.04, 
          -SOIL31.02, -SOIL32.03) %>%
   filter_at(vars(starts_with('SOIL')), all_vars(is.na(.))) %>%
   filter(!siteid %in% c('ACRE', 'CLAY_R', 'DPAC', 'FAIRM', 'MUDS1', 'SERF_SD')) %>%

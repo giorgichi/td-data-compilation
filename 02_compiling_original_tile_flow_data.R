@@ -136,12 +136,19 @@ bind_rows(ALL_Discharge, HOURLY_Tile_Flow, DAILY_Tile_Flow) %>%
 
 
 
-# Save standardized data --------------------------------------------------
+# Update discharge data for SB --------------------------------------------
 tf_ORIGINAL_hourly_standard %>%
+  filter(!siteid %in% c('BEAR', 'BEAR2', 'BENTON', 'DIKE', 'HICKORY', 'MAASS', 'SHEARER')) %>%
+  bind_rows(read_rds('Input_Data/WATER/discharge_Iowa_SBs.rds')) -> tf_ORIGINAL_hourly_standard_UPDATED
+
+
+
+# Save standardized data --------------------------------------------------
+tf_ORIGINAL_hourly_standard_UPDATED %>%
   write_rds('Standard_Data/tf_ALL_hourly_ORIGINAL.rds', compress = 'xz')
 
 # after saving it was gzip-ed via shell command line  
-tf_ORIGINAL_hourly_standard %>%
+tf_ORIGINAL_hourly_standard_UPDATED %>%
   write_csv('Standard_Data/CSV/tile_flow_and_discharge_all_ORIGINAL.csv')
 
 

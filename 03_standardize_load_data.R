@@ -36,12 +36,20 @@ nl_ALL %>%
 
 
 
-# Save standardized data --------------------------------------------------
+# Update load data for SB --------------------------------------------
 nl_ALL_daily_standard %>%
+  filter(!siteid %in% c('BEAR', 'BEAR2', 'BENTON', 'DIKE', 'HICKORY', 'MAASS', 'SHEARER')) %>%
+  bind_rows(read_rds('Input_Data/WATER/load_Iowa_SBs_DAILY.rds')) -> nl_ALL_daily_standard_UPDATED
+
+
+
+
+# Save standardized data --------------------------------------------------
+nl_ALL_daily_standard_UPDATED %>%
   write_rds('Standard_Data/nl_ALL_daily.rds', compress = 'xz')
 
 # after saving it was gzip-ed via shell command line  
-nl_ALL_daily_standard %>%
+nl_ALL_daily_standard_UPDATED %>%
   write_csv('Standard_Data/CSV/nitrate_load_ALL_daily.csv')
 
 

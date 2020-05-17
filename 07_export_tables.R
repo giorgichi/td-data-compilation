@@ -275,7 +275,7 @@ wq %>%
             by = c('key' = 'NEW_CODE')) %>%
   mutate(value2 = as.numeric(value),
          value2 = round(value2, DIGITS),
-         value = ifelse(is.na(value2), value, as.character(value2))) %>%
+         value = ifelse(is.na(value2), value, as.character(value2))) %>% 
   select(-key, -DIGITS, -value2) %>%
   filter(!is.na(value)) %>%
   spread(EXPORT_VAR_NAME, value) %>%
@@ -312,21 +312,45 @@ drive_upload(media = 'Ag_Commons_Data/water_quality_data.csv',
 
 
 
-# >>>> Tile Flow and N Load data -----------------------------------------------
+# Tile Flow and N Load data -----------------------------------------------
 tf <- dbReadTable(conn_final, 'tile_flow') %>% as_tibble()
 nl <- dbReadTable(conn_final, 'n_loads') %>% as_tibble()
 
 tf %>% 
-  mutate(CHECK = 'go') %>%
   full_join(nl, by = c('siteid', 'plotid', 'location', 'date')) %>%
   mutate(date = as_date(date)) %>%
-  filter(is.na(CHECK)) %>%
-  # filter(siteid == 'ACRE')
-  count(siteid)
+  gather(key, value, starts_with('WAT')) %>%
+  left_join(codes %>% select(-TYPE, -(CROP:UNITS)), 
+            by = c('key' = 'NEW_CODE')) %>%
+  mutate(value2 = as.numeric(value),
+         value2 = round(value2, DIGITS),
+         value = ifelse(is.na(value2), value, as.character(value2))) %>% 
+  select(-key, -DIGITS, -value2)%>%
+  filter(!is.na(value)) %>%
+  spread(EXPORT_VAR_NAME, value) %>%
+  # remove measurements after 2018
+  filter(year(date) < 2019) %>%
+  ReplaceIDs() %>%
+  arrange(siteid, plotid, location, date) %>% 
+  select(siteid:date,
+         tile_flow,
+         discharge,
+         nitrate_N_load,
+         nitrate_N_removed,
+         tile_flow_filled,
+         nitrate_N_load_filled,
+         comments) -> tf_EXP
 
 
+write_csv(tf_EXP, 'Ag_Commons_Data/tile_flow_and_N_loads_data.csv')
 
-# >>>> Irrigation data ---------------------------------------------------------
+drive_upload(media = 'Ag_Commons_Data/tile_flow_and_N_loads_data.csv',
+             path = as_id('1zblZuTiEUdZOq1_IHgO_gEtR018TidRq'), 
+             overwrite = TRUE)
+
+  
+
+# Irrigation data ---------------------------------------------------------
 irr <- dbReadTable(conn_final, 'irrigation') %>% as_tibble()
 
 # Format data
@@ -340,39 +364,61 @@ irr %>%
   select(-key, -DIGITS, -value2) %>%
   filter(!is.na(value)) %>%
   spread(EXPORT_VAR_NAME, value) %>%
-  mutate(nitrate_N_concentration = ifelse(nitrate_N_concentration == '<0.030', 
-                                          '<0.03', 
-                                          nitrate_N_concentration),
-         ortho_P_filtered_concentration = ifelse(ortho_P_filtered_concentration == '<2.0', 
-                                                 '<2', 
-                                                 ortho_P_filtered_concentration)) %>%
   # remove measurements after 2018
   mutate(date = ymd(date)) %>%
   filter(year(date) < 2019) %>%
   ReplaceIDs() %>%
-  arrange(siteid, plotid, location, height, sample_type, date) %>% 
-  select(siteid:sample_type,
-         nitrate_N_concentration,
-         ammonia_N_concentration,
-         total_N_filtered_concentration,
-         total_N_unfiltered_concentration,
-         ortho_P_filtered_concentration,
-         ortho_P_unfiltered_concentration,
-         total_P_filtered_concentration,
-         total_P_unfiltered_concentration,
-         pH,
-         water_ec) -> wq_EXP
+  arrange(siteid, plotid, date) %>% 
+  select(siteid:date,
+         irrigation_amount) -> irr_EXP
 
 
-write_csv(wq_EXP, 'Ag_Commons_Data/water_quality_data.csv')
+write_csv(irr_EXP, 'Ag_Commons_Data/irrigation_data.csv')
 
-drive_upload(media = 'Ag_Commons_Data/water_quality_data.csv',
+drive_upload(media = 'Ag_Commons_Data/irrigation_data.csv',
              path = as_id('1zblZuTiEUdZOq1_IHgO_gEtR018TidRq'), 
              overwrite = TRUE)
 
 
-# >>>> Weather data -------------------------------------------------------
+# Weather data -------------------------------------------------------
+clim <- dbReadTable(conn_final, 'weather') %>% as_tibble()
 
+# Format data
+clim %>%
+  gather(key, value, starts_with('CLIM')) %>%
+  left_join(codes %>% filter(CROP == 'DAILY') %>% select(-TYPE, -(CROP:UNITS)), 
+            by = c('key' = 'NEW_CODE')) %>%
+  mutate(value = round(value, DIGITS)) %>%
+  select(-key, -DIGITS) %>%
+  spread(EXPORT_VAR_NAME, value) %>%
+  # combine ET data for export
+  mutate(et = ifelse(is.na(reference_ET_pm_sg),
+                     reference_ET_pm_sc, reference_ET_pm_sg),
+         et_method = ifelse(!is.na(et), 'Penman-Monteith (Short Grass)', NA),
+         et = ifelse(is.na(reference_ET_t_g), et, reference_ET_t_g),
+         et_method = ifelse(is.na(et_method) & !is.na(et), 'Thornthwaite (Grass)', et_method)) %>%
+  select(!contains("_ET_")) %>%
+  # remove measurements after 2018
+  mutate(date = ymd(date)) %>%
+  filter(year(date) < 2019) %>%
+  ReplaceIDs() %>%
+  arrange(siteid, station, date) %>%
+  select(siteid:date,
+         precipitation,
+         relative_humidity = relative_humidity_avg,
+         air_temp_avg, air_temp_min, air_temp_max,
+         solar_radiation,
+         wind_speed, wind_direction,
+         et, et_method) %>% 
+  # remove date with no readings
+  filter(!(siteid == 'IA_Boone' & date == ymd(20160609))) -> clim_EXP
+
+
+write_csv(clim_EXP, 'Ag_Commons_Data/weather_data.csv')
+
+drive_upload(media = 'Ag_Commons_Data/weather_data.csv',
+             path = as_id('1zblZuTiEUdZOq1_IHgO_gEtR018TidRq'), 
+             overwrite = TRUE)
 
 
 
@@ -380,6 +426,7 @@ drive_upload(media = 'Ag_Commons_Data/water_quality_data.csv',
 mngt_planting <- dbReadTable(conn_final, 'mngt_planting') %>% as_tibble()
 mngt_fertilizing <- dbReadTable(conn_final, 'mngt_fertilizing') %>% as_tibble()
 mngt_irrigation <- dbReadTable(conn_final, 'mngt_irrigation') %>% as_tibble()
+mngt_residue <- dbReadTable(conn_final, 'mngt_residue') %>% as_tibble()
 mngt_dwm <- dbReadTable(conn_final, 'mngt_dwm') %>% as_tibble()
 mngt_notes <- dbReadTable(conn_final, 'mngt_notes') %>% as_tibble()
 
@@ -430,6 +477,18 @@ mngt_fertilizing %>%
 write_csv(fertilizing_EXP, 'Ag_Commons_Data/mngt_fertilizing_and_tillage_data.csv')
 
 drive_upload(media = 'Ag_Commons_Data/mngt_fertilizing_and_tillage_data.csv',
+             path = as_id('1zblZuTiEUdZOq1_IHgO_gEtR018TidRq'), 
+             overwrite = TRUE)
+
+
+# Format Residue data
+mngt_residue %>%
+  ReplaceIDs() %>%
+  arrange(siteid, year_calendar) -> residue_EXP
+
+write_csv(residue_EXP, 'Ag_Commons_Data/mngt_residue_data.csv')
+
+drive_upload(media = 'Ag_Commons_Data/mngt_residue_data.csv',
              path = as_id('1zblZuTiEUdZOq1_IHgO_gEtR018TidRq'), 
              overwrite = TRUE)
 

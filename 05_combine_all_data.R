@@ -24,6 +24,8 @@ dbWriteTable(conn, "mngt_planting", planting_DB, overwrite = TRUE)
 
 planting_DB %>%
   filter(action == "keep") %>%
+  # this location was removed due to harvest area criteria
+  filter(!(siteid == 'ACRE' & location == 'Field 8')) %>%
   select(-action) -> planting_FINAL_DB
 dbWriteTable(conn_final, "mngt_planting", planting_FINAL_DB, overwrite = TRUE)
 
@@ -31,12 +33,16 @@ dbWriteTable(conn_final, "mngt_planting", planting_FINAL_DB, overwrite = TRUE)
 fertilizing <- read_rds('Standard_Data/fertilizing_ALL.rds')
 
 fertilizing %>%
+  # standardize location names for SWROC
+  mutate(location = ifelse(siteid == 'SWROC', str_remove(location, "^0{1,2}"), location)) %>%
   mutate(location = ifelse(location == 'NA N', NA_character_, location)) %>%
   mutate_at(vars(starts_with("date")), as.character) -> fertilizing_DB
 dbWriteTable(conn, "mngt_fertilizing", fertilizing_DB, overwrite = TRUE)
 
 fertilizing_DB %>%
   filter(action == "keep") %>%
+  # this location was removed due to harvest area criteria
+  filter(!(siteid == 'ACRE' & location == 'Field 8')) %>%
   # select variables of high value, quality and abundance 
   select(-action, 
          -manure_rate) -> fertilizing_FINAL_DB
@@ -89,11 +95,16 @@ pesticide %>%
 dbWriteTable(conn, "mngt_pesticide", pesticide_DB, overwrite = TRUE)
 
 
-# ... Reside (not included in public dataset) -----------------------------
+# ... Reside --------------------------------------------------------------
 residue <- read_rds('Standard_Data/residue_ALL.rds')
 
 residue -> residue_DB
 dbWriteTable(conn, "mngt_residue", residue_DB, overwrite = TRUE)
+
+residue_DB %>%
+  filter(action == 'keep') %>%
+  select(-action)  -> residue_FINAL_DB
+dbWriteTable(conn_final, "mngt_residue", residue_FINAL_DB, overwrite = TRUE)
 
 
 
@@ -591,7 +602,10 @@ weather_daily_DB %>%
 # Save selected data (variables) for FINAL DB. > NOTE: only DAILY WEATHER goes to the FINAL DB
 weather_daily_DB %>%
   select(siteid:date, CLIM01, CLIM03.01.01, CLIM03.01.02, CLIM03.01.03,
-         CLIM04.01.01, CLIM05.02, CLIM06.01, CLIM06.02, starts_with('CLIM07.02')) %>%
+         CLIM04.01.01, CLIM05.02, CLIM06.01, CLIM06.02, 
+         CLIM07.03.01, CLIM07.03.03, CLIM07.04.01) %>%
+  # remove 0 solar radiation readings
+  mutate(CLIM05.02 = ifelse(!is.na(CLIM05.02) & CLIM05.02 == 0, NA, CLIM05.02)) %>%
   # remove erroneous readings from WRSIS sites
   mutate(DATE = ymd(date),
          YEAR = year(DATE),

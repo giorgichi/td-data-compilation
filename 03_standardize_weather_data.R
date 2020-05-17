@@ -8,12 +8,6 @@ weather_ALL_daily <- read_rds('Inter_Data/weather_ALL_daily.rds')
 
 
 
-# .......!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!.......
-# !!!!!!! THE HOURLY DATA NEEDS to UPDATE ACRE WEATHER and READY TO OUTPUT !!!!!!
-# .......!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!.......
-
-
-
 # HOURLY WEATHER DATA -----------------------------------------------------
 
 # Standartize timestamps (make hourly steps)
@@ -174,8 +168,7 @@ weather_ALL_hourly %>%
             by = c('siteid', 'station', 'key', 'year')) %>%
   filter(is.na(daily) & !is.na(hourly)) %>%
   select(-daily) %>%
-  spread(key, hourly) %>% 
-  View()
+  spread(key, hourly) #%>% View()
 
 # calculate daily values based on hourly weather measurements for missing sites
 weather_ALL_hourly %>%
@@ -297,7 +290,7 @@ weather_ALL_daily %>%
   mutate(key = case_when(str_detect(key, 'Penman') ~ str_replace(key, 'Monteith', 'Monteith Short Grass'),
                          str_detect(key, 'Short Crop') ~ str_replace(key, 'Short', 'Penman-Monteith Short'),
                          str_detect(key, 'Grass') ~ str_replace(key, '\\(', '\\(Penman-Monteith '),
-                         str_detect(key, 'ET$') ~ str_replace(key, 'ET', 'ET (Thornthwaite)'),   # NEED to check again
+                         str_detect(key, 'ET$') ~ str_replace(key, 'ET', 'ET (Thornthwaite Grass)'),   # NEED to check again
                          TRUE ~ key)) %>%
   # get rid of duplicated WIND SPEED measurements at WIRSIS
   left_join(df8 %>% mutate(value = 'Y') %>% select(everything(), DUPS = value), 

@@ -12,6 +12,20 @@ conn_final <- dbConnect(RSQLite::SQLite(), 'Final_Database//TD_FINAL_Data.db')
 
 
 
+# MetaData ----------------------------------------------------------------
+# ... Methods -------------------------------------------------------------
+methods <- read_rds('Standard_Data/meta_methods.rds')
+dbWriteTable(conn, "meta_methods", methods, overwrite = TRUE)
+dbWriteTable(conn_final, "meta_methods", methods, overwrite = TRUE)
+
+site_history <- read_rds('Standard_Data/meta_site_history.rds')
+dbWriteTable(conn, "meta_site_history", site_history, overwrite = TRUE)
+site_history %>%
+  filter(!siteid %in% c('BATH_A', 'BATH_R', 'HICKS_S')) -> site_history_FINAL_DB
+dbWriteTable(conn_final, "meta_site_history", site_history_FINAL_DB, overwrite = TRUE)
+
+
+
 # Field Management --------------------------------------------------------
 
 # ... Planting ------------------------------------------------------------

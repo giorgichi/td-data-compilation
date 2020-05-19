@@ -533,3 +533,54 @@ write_csv(notes_EXP, 'Ag_Commons_Data/mngt_notes_data.csv')
 drive_upload(media = 'Ag_Commons_Data/mngt_notes_data.csv',
              path = as_id('1zblZuTiEUdZOq1_IHgO_gEtR018TidRq'), 
              overwrite = TRUE)
+
+
+
+# Metadata --------------------------------------------------------
+# ....  Site History ---------
+meta_site_history <- dbReadTable(conn_final, 'meta_site_history') %>% as_tibble()
+
+
+# Format Site History data
+meta_site_history %>%
+  ReplaceIDs() %>%
+  arrange(siteid) -> site_history_EXP
+
+write_csv(site_history_EXP, 'Ag_Commons_Data/meta_site_history.csv')
+
+drive_upload(media = 'Ag_Commons_Data/meta_site_history.csv',
+             path = as_id('1zblZuTiEUdZOq1_IHgO_gEtR018TidRq'), 
+             overwrite = TRUE)
+
+
+
+# ....  Methods ---------
+meta_methods <- dbReadTable(conn_final, 'meta_methods') %>% as_tibble()
+
+
+# Format Methods data
+meta_methods %>%
+  # combine water NO3-N concentration and NO3-N + NO2-N 
+  mutate(NEW_CODE = ifelse(NEW_CODE == 'WAT30', 'WAT31', NEW_CODE)) %>%
+  group_by(siteid, data_categoty, NEW_CODE) %>%
+  mutate(count = 1:n(),
+         count = ifelse(siteid == 'ACRE' & NEW_CODE == 'WAT31', -1, count)) %>%
+  group_by(siteid, data_categoty, NEW_CODE, count) %>%
+  summarise(method_description = paste(method_description, collapse = ' ')) %>% 
+  ungroup() %>%
+  # remove entries without method description
+  filter(method_description != 'Method not available') %>%
+  left_join(codes %>% select(-TYPE, -CROP, -(UNITS:EXPORT_VAR_NAME)), 
+            by = 'NEW_CODE') %>%
+  # remove variables not included in the public database
+  filter(ACTION == 'YES' | is.na(ACTION)) %>%
+  select(siteid, data_categoty, variable_name = NEW_VAR_NAME, method_description) %>%
+  ReplaceIDs() %>%
+  arrange(siteid, data_categoty) -> methods_EXP
+
+write_csv(methods_EXP, 'Ag_Commons_Data/meta_methods.csv')
+
+drive_upload(media = 'Ag_Commons_Data/meta_methods.csv',
+             path = as_id('1zblZuTiEUdZOq1_IHgO_gEtR018TidRq'), 
+             overwrite = TRUE)
+

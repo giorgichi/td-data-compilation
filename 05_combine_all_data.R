@@ -24,6 +24,10 @@ site_history %>%
   filter(!siteid %in% c('BATH_A', 'BATH_R', 'HICKS_S')) -> site_history_FINAL_DB
 dbWriteTable(conn_final, "meta_site_history", site_history_FINAL_DB, overwrite = TRUE)
 
+plot_ids <- read_rds('Standard_Data/meta_plot_ids.rds')
+dbWriteTable(conn, "meta_plotids", plot_ids, overwrite = TRUE)
+dbWriteTable(conn_final, "meta_plotids", plot_ids, overwrite = TRUE)
+
 
 
 # Field Management --------------------------------------------------------

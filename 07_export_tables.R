@@ -554,6 +554,31 @@ drive_upload(media = 'Ag_Commons_Data/meta_site_history.csv',
 
 
 
+# ....  Plot IDs ---------
+meta_plotids <- dbReadTable(conn_final, 'meta_plotids') %>% as_tibble()
+plotids_locations <- read_excel('Final_Database/summaries/IDs.xlsx')
+
+# Format Plot ID data
+plotids_locations %>%
+  full_join(meta_plotids, by = c('siteid', 'plotid')) %>%
+  select(-ID) %>%
+  ReplaceIDs() %>%
+  select(siteid, plotid, 
+         dwm_treatment, dwmid, 
+         irrigation_type, irrid,
+         drainage_area:tile_material,
+         starts_with('location'),
+         comments) %>%
+  arrange(siteid, plotid) -> plotids_EXP
+
+write_csv(plotids_EXP, 'Ag_Commons_Data/meta_plot_identifier.csv')
+
+drive_upload(media = 'Ag_Commons_Data/meta_plot_identifier.csv',
+             path = as_id('1zblZuTiEUdZOq1_IHgO_gEtR018TidRq'), 
+             overwrite = TRUE)
+
+
+
 # ....  Methods ---------
 meta_methods <- dbReadTable(conn_final, 'meta_methods') %>% as_tibble()
 

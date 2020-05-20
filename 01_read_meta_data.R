@@ -25,6 +25,10 @@ read_excel('Input_Data/Metadata/TD Site Keys.xlsx',
            sheet = 'SITES',
            skip = 1) -> site_keys
 
+read_excel('Input_Data/Metadata/TD Site Keys.xlsx',
+           sheet = 'PLOTS',
+           skip = 1) -> plot_keys
+
 
 # Methods
 read_excel('Input_Data/Metadata/TD Sampling Methods.xlsx',
@@ -114,20 +118,47 @@ site_history %>%
                                as.character(round(as.numeric(buffer_width), 1)))) %>%
   mutate_all(function(x) {str_replace(x, 'TBD', 'n/a')})-> site_history_GOOD
 
-# Plot identifier
-site_keys %>%
-  filter(!Site_ID %in% c('BATH_A', 'BATH_R', 'HICKS_S', 'MILLER')) %>%
-  mutate(ID = paste(State, County, sep = "_"),
-         ID = str_remove_all(ID, " ")) %>%
-  group_by(ID) %>%
-  mutate(Site_Name = n(),
-         PI_Main = 1:n()) %>%
-  ungroup() %>%
-  mutate(ID = ifelse(Site_Name > 1, paste0(ID, PI_Main), ID),
-         KEY = str_replace(KEY_SITE, '\\.', '_')) %>%
-  select(siteid = Site_ID, ID, KEY) %>%
-  arrange(ID) %>%
-  write_csv('Ag_Commons_Data/siteids.csv')
+
+# ... Plot identifier ----------------------------------------------
+plot_keys %>%
+  filter(KEEP == 'YES') %>%
+  # swap plot ID with Name at FAIRM
+  mutate(Plot_ID = ifelse(str_detect(Plot_ID, 'Sump'), Plot_Name, Plot_ID)) %>%
+  # remove plot IDs for SB sites
+  mutate(Plot_ID = ifelse(DWM == 'saturated buffer', NA_character_, Plot_ID)) %>%
+  # round up numbers
+  mutate(Plot_Area_Agro = round(as.numeric(Plot_Area_Agro), 2),
+         Plot_Area_Drain = round(as.numeric(Plot_Area_Drain), 2),
+         Tile_Depth = round(as.numeric(Tile_Depth), 2),
+         Tile_Spacing = ifelse(Tile_Spacing == 'varies', Tile_Spacing, 
+                               as.character(round(as.numeric(Tile_Spacing), 2))),
+         Tile_Grade = round(as.numeric(Tile_Grade), 2),
+         Tile_Diameter = round(as.numeric(Tile_Diameter), 1),
+         Sub_Main_Diameter = round(as.numeric(Sub_Main_Diameter), 1),
+         Main_Diameter = round(as.numeric(Main_Diameter), 1)) %>%
+  # remove redundant comments
+  mutate(Comments = case_when(str_detect(Comments, 'soil types in the wetland') ~ NA_character_,
+                              str_detect(Comments, 'for SB Plot_Area_Agro') ~ NA_character_,
+                              str_detect(Comments, 'Field 10') ~ str_remove(Comments, ' is an extension of 4, but are farmed separately.\\ It'),
+                              str_detect(Comments, 'Field 11') ~ str_remove(Comments, ' is an extension of 5, but are farmed separately\\. It'),
+                              str_detect(Comments, 'N treatments') ~ NA_character_,
+                              str_detect(Comments, 'plot is not ') ~ NA_character_,
+                              TRUE ~ Comments),
+         Comments = ifelse(Site_ID == 'BEAR', 'drainage area before 2014 was 10.1 ha', Comments)) %>%
+  select(siteid = Site_ID,
+         plotid = Plot_ID,
+         dwm_treatment = DWM,
+         irrigation_type = IRR_Type,
+         drainage_area = Plot_Area_Drain,
+         plot_area = Plot_Area_Agro,
+         tile_depth = Tile_Depth,
+         tile_spacing = Tile_Spacing,
+         tile_main_diamter = Main_Diameter,
+         tile_submain_diamter = Sub_Main_Diameter,
+         tile_lateral_diameter = Tile_Diameter,
+         tile_grade = Tile_Grade,
+         tile_material = Tile_Material,
+         comments = Comments) -> plot_keys_GOOD
 
 
 # ... Methods -----------------------------------------------------------------
@@ -143,5 +174,6 @@ methods %>%
 # Save Metadata -----------------------------------------------------------
 
 write_rds(site_history_GOOD, 'Standard_Data/meta_site_history.rds', compress = 'xz')
+write_rds(plot_keys_GOOD, 'Standard_Data/meta_plot_ids.rds', compress = 'xz')
 write_rds(methods_GOOD, 'Standard_Data/meta_methods.rds', compress = 'xz')
 

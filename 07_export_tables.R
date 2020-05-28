@@ -59,6 +59,104 @@ GetSQLiteTable <- function(){
 }
 
 
+# Metadata --------------------------------------------------------
+# ....  Site History ---------
+meta_site_history <- dbReadTable(conn_final, 'meta_site_history') %>% as_tibble()
+
+
+# Format Site History data
+meta_site_history %>%
+  ReplaceIDs() %>%
+  arrange(siteid) -> site_history_EXP
+
+write_csv(site_history_EXP, 'Ag_Commons_Data/meta_site_history.csv')
+
+drive_upload(media = 'Ag_Commons_Data/meta_site_history.csv',
+             path = as_id('1zblZuTiEUdZOq1_IHgO_gEtR018TidRq'), 
+             overwrite = TRUE)
+
+
+
+# ....  Plot IDs ---------
+meta_plotids <- dbReadTable(conn_final, 'meta_plotids') %>% as_tibble()
+plotids_locations <- read_excel('Final_Database/summaries/IDs.xlsx')
+
+# Format Plot ID data
+plotids_locations %>%
+  full_join(meta_plotids, by = c('siteid', 'plotid')) %>%
+  select(-ID) %>%
+  ReplaceIDs() %>%
+  mutate(comments = str_replace_all(comments, '\n', '; ')) %>%
+  select(siteid, plotid, 
+         dwm_treatment, dwmid, 
+         irrigation_type, irrid,
+         drainage_area:tile_material,
+         starts_with('location'),
+         comments) %>%
+  arrange(siteid, plotid) -> plotids_EXP
+
+write_csv(plotids_EXP, 'Ag_Commons_Data/meta_plot_identifier.csv')
+
+drive_upload(media = 'Ag_Commons_Data/meta_plot_identifier.csv',
+             path = as_id('1zblZuTiEUdZOq1_IHgO_gEtR018TidRq'), 
+             overwrite = TRUE)
+
+
+
+# ....  Treatment by Year ---------
+meta_trt_year <- dbReadTable(conn_final, 'meta_treatment_years') %>% as_tibble()
+
+# Format Treatments data
+meta_trt_year %>%
+  select(-dwm_abb) %>%
+  mutate(SITEID = siteid) %>%
+  ReplaceIDs() %>%
+  select(SITEID, siteid, plotid, 
+         year, dwm, dwr) %>%
+  arrange(siteid, plotid) -> treatment_EXP
+
+treatment_EXP %>% 
+  select(-SITEID) %>%
+  write_csv('Ag_Commons_Data/meta_treatment_identifier.csv')
+
+drive_upload(media = 'Ag_Commons_Data/meta_treatment_identifier.csv',
+             path = as_id('1zblZuTiEUdZOq1_IHgO_gEtR018TidRq'),
+             overwrite = TRUE)
+
+
+
+# ....  Methods ---------
+meta_methods <- dbReadTable(conn_final, 'meta_methods') %>% as_tibble()
+
+
+# Format Methods data
+meta_methods %>%
+  # combine water NO3-N concentration and NO3-N + NO2-N 
+  mutate(NEW_CODE = ifelse(NEW_CODE == 'WAT30', 'WAT31', NEW_CODE)) %>%
+  group_by(siteid, data_category, NEW_CODE) %>%
+  mutate(count = 1:n(),
+         count = ifelse(siteid == 'ACRE' & NEW_CODE == 'WAT31', -1, count)) %>%
+  group_by(siteid, data_category, NEW_CODE, count) %>%
+  summarise(method_description = paste(method_description, collapse = ' ')) %>% 
+  ungroup() %>%
+  # remove entries without method description
+  filter(method_description != 'Method not available') %>%
+  left_join(codes %>% select(-TYPE, -CROP, -(UNITS:EXPORT_VAR_NAME)), 
+            by = 'NEW_CODE') %>%
+  # remove variables not included in the public database
+  filter(ACTION == 'YES' | is.na(ACTION)) %>%
+  select(siteid, data_category, variable_name = NEW_VAR_NAME, method_description) %>%
+  ReplaceIDs() %>%
+  arrange(siteid, data_category) -> methods_EXP
+
+write_csv(methods_EXP, 'Ag_Commons_Data/meta_methods.csv')
+
+drive_upload(media = 'Ag_Commons_Data/meta_methods.csv',
+             path = as_id('1zblZuTiEUdZOq1_IHgO_gEtR018TidRq'), 
+             overwrite = TRUE)
+
+
+
 # Agronomic data ----------------------------------------------------------
 agr <- dbReadTable(conn_final, 'agronomic') %>% as_tibble()
 
@@ -313,26 +411,47 @@ drive_upload(media = 'Ag_Commons_Data/water_quality_data.csv',
 
 
 # Tile Flow and N Load data -----------------------------------------------
-tf <- dbReadTable(conn_final, 'tile_flow') %>% as_tibble()
-nl <- dbReadTable(conn_final, 'n_loads') %>% as_tibble()
+tf <- dbReadTable(conn_final, 'tile_flow') %>% as_tibble() %>% mutate(date = as_date(date))
+nl <- dbReadTable(conn_final, 'n_loads') %>% as_tibble() %>% mutate(date = as_date(date)) %>% filter(!is.na(date))
 
 tf %>% 
   full_join(nl, by = c('siteid', 'plotid', 'location', 'date')) %>%
-  mutate(date = as_date(date)) %>%
   gather(key, value, starts_with('WAT')) %>%
   left_join(codes %>% select(-TYPE, -(CROP:UNITS)), 
             by = c('key' = 'NEW_CODE')) %>%
   mutate(value2 = as.numeric(value),
          value2 = round(value2, DIGITS),
          value = ifelse(is.na(value2), value, as.character(value2))) %>% 
-  select(-key, -DIGITS, -value2)%>%
+  select(-key, -DIGITS, -value2, -ACTION) %>%
   filter(!is.na(value)) %>%
   spread(EXPORT_VAR_NAME, value) %>%
+  # return back dates with missing measurements removed due to data transformations
+  full_join(tf %>% select(siteid:date)) %>%
+  full_join(nl %>% select(siteid:date)) %>%
   # remove measurements after 2018
   filter(year(date) < 2019) %>%
   ReplaceIDs() %>%
+  # add dwm treatment
+  mutate(year = year(date)) %>%
+  left_join(treatment_EXP %>% select(-dwr)) %>%
+  mutate(dwm = ifelse(SITEID == 'AUGLA' & plotid == 'East' & year == 2012 & date > ymd(20120617),
+                      'Controlled Drainage', dwm),
+         dwm = ifelse(SITEID == 'AUGLA' & plotid == 'West' & year == 2012 & date > ymd(20120617),
+                      'Free Drainage', dwm),
+         dwm = ifelse(SITEID == 'DEFI_M' & plotid == 'East' & year == 2012 & date < ymd(20120105),
+                      'Controlled Drainage', dwm),
+         dwm = ifelse(SITEID == 'DEFI_M' & plotid == 'West' & year == 2012 & date < ymd(20120105),
+                      'Free Drainage', dwm)) %>%
+  left_join(treatment_EXP %>% 
+              mutate(location = case_when(SITEID == 'DEFI_R' & plotid == 6 ~ "I",
+                                          SITEID == 'DEFI_R' & plotid == 8 ~ "J",
+                                          TRUE ~ NA_character_)) %>% 
+              filter(!is.na(location)) %>%
+              select(siteid, location, year, dwm2 = dwm)) %>%
+  mutate(dwm = ifelse(is.na(dwm2), dwm, dwm2)) %>%
   arrange(siteid, plotid, location, date) %>% 
   select(siteid:date,
+         dwm_treatment = dwm,
          tile_flow,
          discharge,
          nitrate_N_load,
@@ -535,77 +654,4 @@ drive_upload(media = 'Ag_Commons_Data/mngt_notes_data.csv',
              overwrite = TRUE)
 
 
-
-# Metadata --------------------------------------------------------
-# ....  Site History ---------
-meta_site_history <- dbReadTable(conn_final, 'meta_site_history') %>% as_tibble()
-
-
-# Format Site History data
-meta_site_history %>%
-  ReplaceIDs() %>%
-  arrange(siteid) -> site_history_EXP
-
-write_csv(site_history_EXP, 'Ag_Commons_Data/meta_site_history.csv')
-
-drive_upload(media = 'Ag_Commons_Data/meta_site_history.csv',
-             path = as_id('1zblZuTiEUdZOq1_IHgO_gEtR018TidRq'), 
-             overwrite = TRUE)
-
-
-
-# ....  Plot IDs ---------
-meta_plotids <- dbReadTable(conn_final, 'meta_plotids') %>% as_tibble()
-plotids_locations <- read_excel('Final_Database/summaries/IDs.xlsx')
-
-# Format Plot ID data
-plotids_locations %>%
-  full_join(meta_plotids, by = c('siteid', 'plotid')) %>%
-  select(-ID) %>%
-  ReplaceIDs() %>%
-  select(siteid, plotid, 
-         dwm_treatment, dwmid, 
-         irrigation_type, irrid,
-         drainage_area:tile_material,
-         starts_with('location'),
-         comments) %>%
-  arrange(siteid, plotid) -> plotids_EXP
-
-write_csv(plotids_EXP, 'Ag_Commons_Data/meta_plot_identifier.csv')
-
-drive_upload(media = 'Ag_Commons_Data/meta_plot_identifier.csv',
-             path = as_id('1zblZuTiEUdZOq1_IHgO_gEtR018TidRq'), 
-             overwrite = TRUE)
-
-
-
-# ....  Methods ---------
-meta_methods <- dbReadTable(conn_final, 'meta_methods') %>% as_tibble()
-
-
-# Format Methods data
-meta_methods %>%
-  # combine water NO3-N concentration and NO3-N + NO2-N 
-  mutate(NEW_CODE = ifelse(NEW_CODE == 'WAT30', 'WAT31', NEW_CODE)) %>%
-  group_by(siteid, data_categoty, NEW_CODE) %>%
-  mutate(count = 1:n(),
-         count = ifelse(siteid == 'ACRE' & NEW_CODE == 'WAT31', -1, count)) %>%
-  group_by(siteid, data_categoty, NEW_CODE, count) %>%
-  summarise(method_description = paste(method_description, collapse = ' ')) %>% 
-  ungroup() %>%
-  # remove entries without method description
-  filter(method_description != 'Method not available') %>%
-  left_join(codes %>% select(-TYPE, -CROP, -(UNITS:EXPORT_VAR_NAME)), 
-            by = 'NEW_CODE') %>%
-  # remove variables not included in the public database
-  filter(ACTION == 'YES' | is.na(ACTION)) %>%
-  select(siteid, data_categoty, variable_name = NEW_VAR_NAME, method_description) %>%
-  ReplaceIDs() %>%
-  arrange(siteid, data_categoty) -> methods_EXP
-
-write_csv(methods_EXP, 'Ag_Commons_Data/meta_methods.csv')
-
-drive_upload(media = 'Ag_Commons_Data/meta_methods.csv',
-             path = as_id('1zblZuTiEUdZOq1_IHgO_gEtR018TidRq'), 
-             overwrite = TRUE)
 

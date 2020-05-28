@@ -29,6 +29,10 @@ read_excel('Input_Data/Metadata/TD Site Keys.xlsx',
            sheet = 'PLOTS',
            skip = 1) -> plot_keys
 
+read_excel('Input_Data/Metadata/TD Site Keys.xlsx',
+           sheet = 'DWM ID',
+           skip = 1) -> dwm_keys
+
 
 # Methods
 read_excel('Input_Data/Metadata/TD Sampling Methods.xlsx',
@@ -72,16 +76,16 @@ site_history %>%
          lanscape_slope = `Landscape Slope`,
          tile_depth = `Depth of Tile`,
          tile_spacing = `Tile Spacing`,
-         tile_main_diamter = `Tile Main Diameter`,
-         tile_submain_diamter = `Tile Sub-Main Diameter`,
+         tile_main_diameter = `Tile Main Diameter`,
+         tile_submain_diameter = `Tile Sub-Main Diameter`,
          tile_lateral_diameter = `Tile Lateral Diameter`,
          depth_of_restrictive_layer = `Depth to restrictive layer`,
          tile_grade = `Tile Grade`,
          drainage_coefficient = `Drainage Coefficient`,
          drainage_intensity = `Drainage Intensity`,
          kirkham_coefficient = `Kirkham Coefficient`,
-         drainage_system_installation_date = `Installation Date of Drainage System`,
-         control_structure_installation_date = `Installation Date of Control Structure`,
+         drainage_system_installation_year = `Installation Date of Drainage System`,
+         control_structure_installation_year = `Installation Date of Control Structure`,
          buffer_width = `Buffer Width`,
          buffer_slope_parallel = `Buffer Slope_ Parallel`,
          buffer_slope_perp = `Buffer Slope_ Perp`,
@@ -99,7 +103,24 @@ site_history %>%
          # SE_lat = `SE Lat`,
          # SE_lon = `SE Lon`,
          # Row_lonlat = `Raw LonLat`,
-         `Drainage Class (1)`:`Soil Taxonomic Class (3)`) %>%
+         soil_series_name_1 = `Soil Series Name (1)`,
+         soil_series_description_1 = `Soil Series Description (1)`,
+         soil_texture_series_1 = `Soil Texture Series (1)`,
+         soil_drainage_class_1 = `Drainage Class (1)`,
+         soil_taxonomic_class_1 = `Soil Taxonomic Class (1)`,
+         
+         soil_series_name_2 = `Soil Series Name (2)`,
+         soil_series_description_2 = `Soil Series Description (2)`,
+         soil_texture_series_2 = `Soil Texture Series (2)`,
+         soil_drainage_class_2 = `Drainage Class (2)`,
+         soil_taxonomic_class_2 = `Soil Taxonomic Class (2)`,
+         
+         soil_series_name_3 = `Soil Series Name (3)`,
+         soil_series_description_3 = `Soil Series Description (3)`,
+         soil_texture_series_3 = `Soil Texture Series (3)`,
+         soil_drainage_class_3 = `Drainage Class (3)`,
+         soil_taxonomic_class_3 = `Soil Taxonomic Class (3)`
+         ) %>%
   mutate(data_year_first = str_remove(data_year_first, '\\.0$'),
          data_year_last  = str_remove(data_year_last,  '\\.0$'),
          latitude = round(as.numeric(latitude), 2),
@@ -111,8 +132,8 @@ site_history %>%
                                tile_spacing, 
                                as.character(round(as.numeric(tile_spacing), 1))),
          depth_of_restrictive_layer = str_replace(depth_of_restrictive_layer, "> ", ">"),
-         drainage_system_installation_date  = str_remove(drainage_system_installation_date,  '\\.0$'),
-         control_structure_installation_date  = str_remove(control_structure_installation_date,  '\\.0$'),
+         drainage_system_installation_year  = str_remove(drainage_system_installation_year,  '\\.0$'),
+         control_structure_installation_year  = str_remove(control_structure_installation_year,  '\\.0$'),
          buffer_width = ifelse(is.na(as.numeric(buffer_width)),
                                buffer_width, 
                                as.character(round(as.numeric(buffer_width), 1)))) %>%
@@ -145,7 +166,8 @@ plot_keys %>%
                               str_detect(Comments, 'plot is not ') ~ NA_character_,
                               TRUE ~ Comments),
          Comments = ifelse(Site_ID == 'BEAR', 'drainage area before 2014 was 10.1 ha', Comments)) %>%
-  select(siteid = Site_ID,
+  select(KEY_PLOT, 
+         siteid = Site_ID,
          plotid = Plot_ID,
          dwm_treatment = DWM,
          irrigation_type = IRR_Type,
@@ -153,27 +175,65 @@ plot_keys %>%
          plot_area = Plot_Area_Agro,
          tile_depth = Tile_Depth,
          tile_spacing = Tile_Spacing,
-         tile_main_diamter = Main_Diameter,
-         tile_submain_diamter = Sub_Main_Diameter,
+         tile_main_diameter = Main_Diameter,
+         tile_submain_diameter = Sub_Main_Diameter,
          tile_lateral_diameter = Tile_Diameter,
          tile_grade = Tile_Grade,
          tile_material = Tile_Material,
          comments = Comments) -> plot_keys_GOOD
 
 
+# ... DWM identifier ----------------------------------------------
+dwm_keys %>%
+  # get rid of site-plots that are not part of TD project
+  inner_join(plot_keys_GOOD[1:5], by = 'KEY_PLOT') %>%
+  # remove control structures managing sub-zones
+  filter(CS_ID != "west_z2") %>%
+  gather(year, dwm, starts_with('Y_')) %>%
+  mutate(year = parse_number(year)) %>%
+  filter(dwm != 'NA') %>% 
+  select(KEY_PLOT,
+         siteid,
+         plotid,
+         year,
+         dwm_abb = dwm,
+         dwm = DWM,
+         dwr = irrigation_type) %>%
+  mutate(dwm = case_when(dwm_abb == 'UD' ~ 'Non-Drained',
+                         dwm_abb == 'CD' ~ 'Controlled Drainage',
+                         dwm_abb == 'FD' ~ 'Free Drainage',
+                         dwm_abb == 'SB' ~ 'Saturated Buffer',
+                         dwm_abb == 'SD' ~ 'Surface Drainage',
+                         dwm_abb == 'SH' ~ 'Shallow Drainage',
+                         dwm_abb == 'SI' ~ 'Controlled Drainage with Subirrigation',
+                         TRUE  ~ 'TBD'),
+         dwr = case_when(dwr == 'subsurface' & !str_detect(dwm, 'Subirrigation') ~ 'none',
+                         dwr == 'overhead' & !year %in% 2004:2009 ~ 'none',
+                         str_detect(dwr, 'drip') ~ 'drip',
+                         TRUE ~ dwr),
+         dwr = case_when(dwr == 'none' ~ 'Non-Irrigated',
+                         TRUE ~ paste(str_to_title(dwr), 'Irrigation'))) %>%
+  arrange(siteid, year) -> dwm_keys_GOOD
+
+
 # ... Methods -----------------------------------------------------------------
 methods %>%
   filter(ACTION != 'NO DATA' | is.na(ACTION)) %>%
   select(siteid = SiteID, 
-         data_categoty = Data_Categoty, 
+         data_category = Data_Categoty, 
          NEW_CODE = NEW_VAR_CODE, 
          method_description = Description_of_Method) %>%
-  arrange(siteid, data_categoty, NEW_CODE) -> methods_GOOD
+  arrange(siteid, data_category, NEW_CODE) -> methods_GOOD
 
 
 # Save Metadata -----------------------------------------------------------
 
 write_rds(site_history_GOOD, 'Standard_Data/meta_site_history.rds', compress = 'xz')
-write_rds(plot_keys_GOOD, 'Standard_Data/meta_plot_ids.rds', compress = 'xz')
+plot_keys_GOOD %>%
+  select(-KEY_PLOT) %>%
+  write_rds('Standard_Data/meta_plot_ids.rds', compress = 'xz')
+dwm_keys_GOOD %>%
+  select(-KEY_PLOT) %>%
+  write_rds('Standard_Data/meta_plot_treatments_annual.rds', compress = 'xz')
 write_rds(methods_GOOD, 'Standard_Data/meta_methods.rds', compress = 'xz')
 

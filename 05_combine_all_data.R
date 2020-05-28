@@ -18,15 +18,22 @@ methods <- read_rds('Standard_Data/meta_methods.rds')
 dbWriteTable(conn, "meta_methods", methods, overwrite = TRUE)
 dbWriteTable(conn_final, "meta_methods", methods, overwrite = TRUE)
 
+# ... History -------------------------------------------------------------
 site_history <- read_rds('Standard_Data/meta_site_history.rds')
 dbWriteTable(conn, "meta_site_history", site_history, overwrite = TRUE)
 site_history %>%
   filter(!siteid %in% c('BATH_A', 'BATH_R', 'HICKS_S')) -> site_history_FINAL_DB
 dbWriteTable(conn_final, "meta_site_history", site_history_FINAL_DB, overwrite = TRUE)
 
+# ... Plot ID -------------------------------------------------------------
 plot_ids <- read_rds('Standard_Data/meta_plot_ids.rds')
 dbWriteTable(conn, "meta_plotids", plot_ids, overwrite = TRUE)
 dbWriteTable(conn_final, "meta_plotids", plot_ids, overwrite = TRUE)
+
+# ... Treatment ID (by year) ----------------------------------------------
+trt_by_year <- read_rds('Standard_Data/meta_plot_treatments_annual.rds')
+dbWriteTable(conn, "meta_treatment_years", trt_by_year, overwrite = TRUE)
+dbWriteTable(conn_final, "meta_treatment_years", trt_by_year, overwrite = TRUE)
 
 
 

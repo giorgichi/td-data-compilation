@@ -458,7 +458,14 @@ tf %>%
          nitrate_N_removed,
          tile_flow_filled,
          nitrate_N_load_filled,
-         comments) -> tf_EXP
+         comments) %>%
+  # CLAY_C has couple years with 0 drainage, but loads are missing
+  # add 0 loads for days when flow was measured at CLAY_C
+  mutate(nitrate_N_load = ifelse(siteid == 'MN_Clay1' & 
+                                   year(date) %in% 2015:2018 &
+                                   tile_flow == 0, 
+                                 0, 
+                                 nitrate_N_load)) -> tf_EXP
 
 
 write_csv(tf_EXP, 'Ag_Commons_Data/tile_flow_and_N_loads_data.csv')

@@ -20,8 +20,12 @@ dbWriteTable(conn_final, "meta_methods", methods, overwrite = TRUE)
 
 # ... History -------------------------------------------------------------
 site_history <- read_rds('Standard_Data/meta_site_history.rds')
-dbWriteTable(conn, "meta_site_history", site_history, overwrite = TRUE)
 site_history %>%
+  mutate(drainage_retention_practice = ifelse(siteid == 'FAIRM', 
+                                              'Other', 
+                                              drainage_retention_practice)) -> site_history_DB
+dbWriteTable(conn, "meta_site_history", site_history_DB, overwrite = TRUE)
+site_history_DB %>%
   filter(!siteid %in% c('BATH_A', 'BATH_R', 'HICKS_S')) -> site_history_FINAL_DB
 dbWriteTable(conn_final, "meta_site_history", site_history_FINAL_DB, overwrite = TRUE)
 
@@ -43,6 +47,8 @@ dbWriteTable(conn_final, "meta_treatment_years", trt_by_year, overwrite = TRUE)
 planting <- read_rds('Standard_Data/planting_ALL.rds')
 
 planting %>%
+  # remove redundant and incorrect entry
+  filter(!(siteid == 'STJOHNS' & cashcrop == 'wheat' & is.na(date))) %>%
   mutate(location = ifelse(location == 'NA N', NA_character_, location)) %>%
   mutate_at(vars(starts_with("date")), as.character) -> planting_DB
 dbWriteTable(conn, "mngt_planting", planting_DB, overwrite = TRUE)
@@ -58,6 +64,9 @@ dbWriteTable(conn_final, "mngt_planting", planting_FINAL_DB, overwrite = TRUE)
 fertilizing <- read_rds('Standard_Data/fertilizing_ALL.rds')
 
 fertilizing %>%
+  # fix erroneous entry
+  mutate(fertilizer_crop = ifelse(siteid == 'DPAC' & year_crop == 2012 & fertilizer_crop == 'soybean',
+                                  'corn', fertilizer_crop)) %>%
   # standardize location names for SWROC
   mutate(location = ifelse(siteid == 'SWROC', str_remove(location, "^0{1,2}"), location)) %>%
   mutate(location = ifelse(location == 'NA N', NA_character_, location)) %>%
@@ -69,8 +78,7 @@ fertilizing_DB %>%
   # this location was removed due to harvest area criteria
   filter(!(siteid == 'ACRE' & location == 'Field 8')) %>%
   # select variables of high value, quality and abundance 
-  select(-action, 
-         -manure_rate) -> fertilizing_FINAL_DB
+  select(-action) -> fertilizing_FINAL_DB
 dbWriteTable(conn_final, "mngt_fertilizing", fertilizing_FINAL_DB, overwrite = TRUE)
 
 # ... DWM -----------------------------------------------------------------
@@ -205,6 +213,9 @@ agr_DB %>%
   filter(year < 2019) %>%
   # remove plots that are under more than one drainage system
   filter(plotid != 'Inlet_A, Inlet_B') %>%
+  # remove 2012 data for CLAY_R due to poor field management
+  # see GitHub datateam/issues/276
+  filter(!(siteid == 'CLAY_R' & year == 2012)) %>%
   # select variables of high value, quality and abundance 
   select(-action, -harvested_area, 
          -AGR90.01.10, 

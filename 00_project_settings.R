@@ -10,7 +10,7 @@ library(googledrive)
 
 # download from the google drive and save in the site folder
 DownloadGoogleSheet <- 
-  function(TITLE, FOLDER = NA){
+  function(TITLE, FOLDER = NA, ID = NA){
     if (is.na(FOLDER)) {
       dt = stringr::word(TITLE, 2)
       folder = case_when(dt == 'Crop' ~ 'AGR',
@@ -21,14 +21,27 @@ DownloadGoogleSheet <-
     } else {
       folder = FOLDER
     }
-    gs_title(TITLE) -> my_title
-    gs_download(my_title, to = paste0('Input_Data/', folder, '/', TITLE, '.xlsx' ), 
+    if (is.na(ID)) {
+      gs_title(TITLE) -> my_title
+      gs_download(my_title, to = paste0('Input_Data/', folder, '/', TITLE, '.xlsx' ), 
                   overwrite = TRUE)
-    tibble(sheet_title = my_title$sheet_title, 
-           sheet_key = my_title$sheet_key, 
-           updated = my_title$updated,
-           downloaded = Sys.time()) %>%
-      write_csv('Input_Data/log.csv', append = TRUE)
+      
+      tibble(sheet_title = my_title$sheet_title, 
+             sheet_key = my_title$sheet_key, 
+             updated = my_title$updated,
+             downloaded = Sys.time()) %>%
+        write_csv('Input_Data/log.csv', append = TRUE)
+    } else {
+      googledrive::as_id(ID) %>%
+      googledrive::drive_get() %>% 
+        mutate(updated = map_chr(drive_resource, "modifiedTime")) -> my_id
+      
+      tibble(sheet_title = my_id$name, 
+             sheet_key = my_id$id, 
+             updated = my_id$updated,
+             downloaded = Sys.time()) %>%
+        write_csv('Input_Data/log.csv', append = TRUE) 
+    }
   }
 
 

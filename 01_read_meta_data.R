@@ -6,7 +6,8 @@ source('00_project_settings.R')
 # DOWNLOAD ................................................................
 
 # Site History
-DownloadGoogleSheet('TD Site Metadata + History (Master)', FOLDER = 'Metadata')
+DownloadGoogleSheet('TD Site Metadata + History (Master)', FOLDER = 'Metadata',
+                    ID = "1oZ2NEmoa0XHSGTWKaBLt0DJK1kIbpWO6iSZ0I2OE2gA")
 
 # Master Key
 DownloadGoogleSheet('TD Site Keys', FOLDER = 'Metadata')
@@ -52,6 +53,7 @@ site_history %>%
   select(siteid = UniqueID,
          lead_PI = `Lead PI`,
          co_leaders = `Co-Leaders`,
+         # PI_state = `State PI`,
          PI_institution = `Institution Name`,
          PI_institution_unit = Unit,
          official_farm_name = `Official Farm Name`, 
@@ -137,7 +139,7 @@ site_history %>%
          buffer_width = ifelse(is.na(as.numeric(buffer_width)),
                                buffer_width, 
                                as.character(round(as.numeric(buffer_width), 1)))) %>%
-  mutate_all(function(x) {str_replace(x, 'TBD', 'n/a')})-> site_history_GOOD
+  mutate_all(function(x) {str_replace(x, 'TBD', 'n/a')}) -> site_history_GOOD
 
 
 # ... Plot identifier ----------------------------------------------

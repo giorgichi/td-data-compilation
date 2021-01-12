@@ -35,6 +35,9 @@ DownloadGoogleSheet <-
       googledrive::as_id(ID) %>%
       googledrive::drive_get() %>% 
         mutate(updated = map_chr(drive_resource, "modifiedTime")) -> my_id
+      googledrive::drive_download(as_id(ID), 
+                                  path =  paste0('Input_Data/', folder, '/', my_id$name, '.xlsx'), 
+                                  overwrite = TRUE)
       
       tibble(sheet_title = my_id$name, 
              sheet_key = my_id$id, 

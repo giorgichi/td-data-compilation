@@ -96,6 +96,7 @@ site_history %>%
          buffer_distribution_pipe_depth = `Buffer_Depth of Distribution Pipe`,
          buffer_distribution_pipe_length = `Buffer_Depth of Distribution Pipe`,
          buffer_distribution_pipe_slope = `Buffer_Slope of Distribution Pipe`,
+         # IEM_climate_site = `IEM Climate Site`,
          # NW_lat = `NW Lat`,
          # NW_lon = `NW Lon`,
          # NE_lat = `NE Lat`,
@@ -139,6 +140,27 @@ site_history %>%
          buffer_width = ifelse(is.na(as.numeric(buffer_width)),
                                buffer_width, 
                                as.character(round(as.numeric(buffer_width), 1)))) %>%
+  # standardize soil texture names
+  mutate(soil_texture_series_1 = str_to_lower(soil_texture_series_1),
+         soil_texture_series_1 = 
+           case_when(soil_texture_series_1 == "fine sandy loam" ~ "sandy loam",
+                     soil_texture_series_1 == "silty loam" ~ "silt loam",
+                     TRUE ~ soil_texture_series_1),
+         soil_texture_series_2 = str_to_lower(soil_texture_series_2),
+         soil_texture_series_2 = 
+           case_when(soil_texture_series_2 == "fine sandy loam" ~ "sandy loam",
+                     soil_texture_series_2 == "silty loam" ~ "silt loam",
+                     TRUE ~ soil_texture_series_2),
+         soil_texture_series_3 = str_to_lower(soil_texture_series_3),
+         soil_texture_series_3 = 
+           case_when(soil_texture_series_3 == "fine sandy loam" ~ "sandy loam",
+                     soil_texture_series_3 == "silty loam" ~ "silt loam",
+                     soil_texture_series_3 == "n/a" ~ NA_character_,
+                     TRUE ~ soil_texture_series_3)) %>%
+  # standardize experimental design names
+  mutate(experimental_design = ifelse(str_detect(experimental_design, "split"),
+                                      str_to_title(experimental_design),
+                                      experimental_design)) %>%
   mutate_all(function(x) {str_replace(x, 'TBD', 'n/a')}) -> site_history_GOOD
 
 
@@ -231,9 +253,11 @@ methods %>%
 # Save Metadata -----------------------------------------------------------
 
 write_rds(site_history_GOOD, 'Standard_Data/meta_site_history.rds', compress = 'xz')
+
 plot_keys_GOOD %>%
   select(-KEY_PLOT) %>%
   write_rds('Standard_Data/meta_plot_ids.rds', compress = 'xz')
+
 dwm_keys_GOOD %>%
   select(-KEY_PLOT) %>%
   write_rds('Standard_Data/meta_plot_treatments_annual.rds', compress = 'xz')

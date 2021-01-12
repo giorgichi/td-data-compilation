@@ -10,6 +10,12 @@ library(janitor)
 conn <- dbConnect(RSQLite::SQLite(), 'Final_Database//TD_ALL_Data.db')
 conn_final <- dbConnect(RSQLite::SQLite(), 'Final_Database//TD_FINAL_Data.db')
 
+# Create list of private farms
+private_farms <- c("AUGLA", "BEAR", "BEAR2", "BENTON", "CLAY_C", "CLAY_R", "CLAY_U", "CRAWF", 
+                   "DEFI_M", "DEFI_R", "DIKE", "FAIRM", "FULTON", "HARDIN", "HARDIN_NW", "HENRY", 
+                   "HICKORY", "HICKS_B", "HICKS_P", "MAASS", "MUDS4", "SHEARER", "STJOHNS", 
+                   "STORY", "UBWC", "VANWERT", "WILKIN1", "WILKIN2", "WILKIN3")
+
 
 
 # MetaData ----------------------------------------------------------------
@@ -25,8 +31,44 @@ site_history %>%
                                               'Other', 
                                               drainage_retention_practice)) -> site_history_DB
 dbWriteTable(conn, "meta_site_history", site_history_DB, overwrite = TRUE)
+
 site_history_DB %>%
-  filter(!siteid %in% c('BATH_A', 'BATH_R', 'HICKS_S')) -> site_history_FINAL_DB
+  filter(!siteid %in% c('BATH_A', 'BATH_R', 'HICKS_S')) %>%
+  # standardize number of decimal points
+  mutate(drainage_coefficient = 
+           case_when(drainage_coefficient == '12.38 and 18.89' ~ '12.4 and 18.9', 
+                     drainage_coefficient == '4.54 and 7.10' ~ '4.5 and 7.1',
+                     drainage_coefficient == '8.95 and 15.41' ~ '9.0 and 15.4',
+                     drainage_coefficient == '4.28 and 3.25' ~ '4.3 and 3.3',
+                     drainage_coefficient == '20.71 and 17.26' ~ '20.7 and 17.3',
+                     drainage_coefficient == '13.95 and 13.19' ~ '14.0 and 13.2',
+                     drainage_coefficient == '20.22 and 36.87' ~ '20.2 and 36.9',
+                     TRUE ~ drainage_coefficient),
+         tile_depth =
+           case_when(tile_depth == '1.0' ~ '1.00',
+                     tile_depth == '1.2192' ~ '1.22',
+                     tile_depth == '0.9144' ~ '0.91',
+                     TRUE ~ tile_depth),
+         tile_spacing = 
+           case_when(tile_spacing == '10' ~ '10.0',
+                     tile_spacing == '2.4 and 4.9 (subirrigated); 6 and 12 (conventional)' ~
+                       '2.4 and 4.9 (subirrigated); 6.0 and 12.0 (conventional)',
+                     TRUE ~ tile_spacing),
+         latitude = 
+           case_when(str_length(latitude) == 2 ~ paste0(latitude, ".00"),
+                     str_length(latitude) == 4 ~ paste0(latitude, "0"),
+                     TRUE ~ latitude),
+         longitude = 
+           case_when(str_length(longitude) == 3 ~ paste0(longitude, ".00"),
+                     str_length(longitude) == 5 ~ paste0(longitude, "0"),
+                     TRUE ~ longitude)) %>%
+  # mask locations of private farms
+  mutate(latitude = ifelse(siteid %in% private_farms,
+                           paste0(str_sub(latitude, 1, -2), "X"),
+                           latitude),
+         longitude = ifelse(siteid %in% private_farms,
+                            paste0(str_sub(longitude, 1, -2), "X"),
+                            longitude)) -> site_history_FINAL_DB
 dbWriteTable(conn_final, "meta_site_history", site_history_FINAL_DB, overwrite = TRUE)
 
 # ... Plot ID -------------------------------------------------------------

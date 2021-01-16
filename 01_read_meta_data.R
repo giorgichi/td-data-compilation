@@ -10,7 +10,8 @@ DownloadGoogleSheet('TD Site Metadata + History (Master)', FOLDER = 'Metadata',
                     ID = "1oZ2NEmoa0XHSGTWKaBLt0DJK1kIbpWO6iSZ0I2OE2gA")
 
 # Master Key
-DownloadGoogleSheet('TD Site Keys', FOLDER = 'Metadata')
+DownloadGoogleSheet('TD Site Keys', FOLDER = 'Metadata',
+                    ID = "1PjB63WtYRyYnasm5mmLUF2-WdHuc_3dA_q8iEVV_C28")
 
 
 
@@ -204,7 +205,8 @@ plot_keys %>%
          tile_lateral_diameter = Tile_Diameter,
          tile_grade = Tile_Grade,
          tile_material = Tile_Material,
-         comments = Comments) -> plot_keys_GOOD
+         comments = Comments,
+         comments_dwm = Comments_DWM) -> plot_keys_GOOD
 
 
 # ... DWM identifier ----------------------------------------------
@@ -261,5 +263,6 @@ plot_keys_GOOD %>%
 dwm_keys_GOOD %>%
   select(-KEY_PLOT) %>%
   write_rds('Standard_Data/meta_plot_treatments_annual.rds', compress = 'xz')
+
 write_rds(methods_GOOD, 'Standard_Data/meta_methods.rds', compress = 'xz')
 

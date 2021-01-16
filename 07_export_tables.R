@@ -69,9 +69,9 @@ meta_site_history %>%
   ReplaceIDs() %>%
   arrange(siteid) -> site_history_EXP
 
-write_csv(site_history_EXP, 'Ag_Commons_Data/meta_site_history.csv')
+write_csv(site_history_EXP, 'Ag_Commons_Data/meta_site_characteristics.csv')
 
-drive_upload(media = 'Ag_Commons_Data/meta_site_history.csv',
+drive_upload(media = 'Ag_Commons_Data/meta_site_characteristics.csv',
              path = as_id('1zblZuTiEUdZOq1_IHgO_gEtR018TidRq'), 
              overwrite = TRUE)
 
@@ -88,16 +88,16 @@ plotids_locations %>%
   ReplaceIDs() %>%
   mutate(comments = str_replace_all(comments, '\n', '; ')) %>%
   select(siteid, plotid, 
-         dwm_treatment, dwmid, 
-         irrigation_type, irrid,
+         # dwm_treatment, dwmid, # THIS IS MOVED TO treatment_identifier
+         # irrigation_type, irrid, # THIS IS MOVED TO treatment_identifier
          drainage_area:tile_material,
          starts_with('location'),
          comments) %>%
   arrange(siteid, plotid) -> plotids_EXP
 
-write_csv(plotids_EXP, 'Ag_Commons_Data/meta_plot_identifier.csv')
+write_csv(plotids_EXP, 'Ag_Commons_Data/meta_plot_characteristics.csv')
 
-drive_upload(media = 'Ag_Commons_Data/meta_plot_identifier.csv',
+drive_upload(media = 'Ag_Commons_Data/meta_plot_characteristics.csv',
              path = as_id('1zblZuTiEUdZOq1_IHgO_gEtR018TidRq'), 
              overwrite = TRUE)
 
@@ -108,11 +108,13 @@ meta_trt_year <- dbReadTable(conn_final, 'meta_treatment_years') %>% as_tibble()
 
 # Format Treatments data
 meta_trt_year %>%
+  left_join(plotids_locations %>% 
+              select(siteid, plotid, dwmid, irrid)) %>%
   select(-dwm_abb) %>%
   mutate(SITEID = siteid) %>%
   ReplaceIDs() %>%
-  select(SITEID, siteid, plotid, 
-         year, dwm, dwr) %>%
+  select(SITEID, siteid, plotid, dwmid, irrid, 
+         year, drainage_water_management, irrigation, comments) %>%
   arrange(siteid, plotid) -> treatment_EXP
 
 treatment_EXP %>% 

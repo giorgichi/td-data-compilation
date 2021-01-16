@@ -74,12 +74,27 @@ dbWriteTable(conn_final, "meta_site_history", site_history_FINAL_DB, overwrite =
 # ... Plot ID -------------------------------------------------------------
 plot_ids <- read_rds('Standard_Data/meta_plot_ids.rds')
 dbWriteTable(conn, "meta_plotids", plot_ids, overwrite = TRUE)
-dbWriteTable(conn_final, "meta_plotids", plot_ids, overwrite = TRUE)
+
+plot_ids %>%
+  select(-(dwm_treatment:irrigation_type), -comments_dwm) -> plot_ids_FINAL_DB
+dbWriteTable(conn_final, "meta_plotids", plot_ids_FINAL_DB, overwrite = TRUE)
 
 # ... Treatment ID (by year) ----------------------------------------------
 trt_by_year <- read_rds('Standard_Data/meta_plot_treatments_annual.rds')
 dbWriteTable(conn, "meta_treatment_years", trt_by_year, overwrite = TRUE)
-dbWriteTable(conn_final, "meta_treatment_years", trt_by_year, overwrite = TRUE)
+
+trt_by_year %>%
+  left_join(plot_ids %>% select(siteid:irrigation_type, comments_dwm)) %>%
+  mutate(comments = 
+           case_when(siteid == 'AUGLA' & year == 2012 ~ comments_dwm,
+                     siteid == 'DEFI_M' & year == 2012 ~ comments_dwm,
+                     TRUE ~ NA_character_)) %>%
+  mutate(dwm_treatment = ifelse(dwm_treatment == "varies" & is.na(comments),
+                                str_to_lower(dwm), dwm_treatment)) %>%
+  select(siteid, plotid, year, dwm_abb, 
+         drainage_water_management = dwm_treatment, 
+         irrigation = irrigation_type, comments) -> trt_by_year_FINAL_DB
+dbWriteTable(conn_final, "meta_treatment_years", trt_by_year_FINAL_DB, overwrite = TRUE)
 
 
 

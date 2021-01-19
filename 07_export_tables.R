@@ -149,6 +149,8 @@ meta_methods %>%
   filter(ACTION == 'YES' | is.na(ACTION)) %>%
   select(siteid, data_category, variable_name = NEW_VAR_NAME, method_description) %>%
   ReplaceIDs() %>%
+  # implement edits suggested by Lori GitHub issue # 224
+  mutate(method_description = str_replace(method_description, "at RX", "at R8")) %>%
   arrange(siteid, data_category) -> methods_EXP
 
 write_csv(methods_EXP, 'Ag_Commons_Data/meta_methods.csv')

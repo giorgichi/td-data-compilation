@@ -273,7 +273,13 @@ residue %>%
 dwm %>%
   mutate(temp = round(as.numeric(outlet_depth), 2),
          outlet_depth = ifelse(!is.na(temp), as.character(temp), outlet_depth),
+         temp = round(as.numeric(outlet_height), 2),
+         outlet_height = ifelse(!is.na(temp), as.character(temp), outlet_height),
          temp = NULL) %>%
+  # remove comments about time stamp as there is only date used in final table
+  mutate(comments = str_remove(comments, " Time stamp is approximate."),
+         comments = str_remove(comments, "Time stamp is approximate. "),
+         comments = ifelse(comments == "Time stamp is approximate.", NA_character_, comments)) %>%
   rename(controlled_plotids = plotid) -> dwm_standard
 
 

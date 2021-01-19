@@ -642,6 +642,7 @@ drive_upload(media = 'Ag_Commons_Data/mngt_irrigation_data.csv',
 mngt_dwm %>%
   # round up variables
   RoundNumber(COL = "outlet_depth", ROUND = 1) %>%
+  RoundNumber(COL = "outlet_height", ROUND = 1) %>%
   ReplaceIDs() %>%
   arrange(siteid, control_structure, date) %>%
   select(-temp) -> dwm_EXP

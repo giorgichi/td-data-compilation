@@ -25,7 +25,8 @@ plotid_expansion <- function(df, COL = 'plotid') {
 
 # DOWNLOAD ................................................................
  
-DownloadGoogleSheet('Management DataStore (TD backend for mandata)', FOLDER = 'Metadata')
+DownloadGoogleSheet('Management DataStore (TD backend for mandata)', FOLDER = 'Metadata',
+                    ID = "1m797EoMbtAvasqum-pB5ykVMeHsGWwcVvre8MbvE-xM")
 
 
 
@@ -201,6 +202,7 @@ fm_backend %>%
          date,
          time,
          outlet_depth = outletdepth,
+         outlet_height = outletheight,
          comments) -> fm_dwm
 
 

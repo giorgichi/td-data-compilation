@@ -293,8 +293,8 @@ irrigation %>%
 
 
 # Standardize Notes Data ----------
-notes ->
-  notes_standard
+notes %>%
+  mutate(siteid = str_replace(siteid, "WILKINS", "WILKIN")) -> notes_standard
 
 
 

@@ -156,7 +156,6 @@ site_history %>%
          soil_texture_series_3 = 
            case_when(soil_texture_series_3 == "fine sandy loam" ~ "sandy loam",
                      soil_texture_series_3 == "silty loam" ~ "silt loam",
-                     soil_texture_series_3 == "n/a" ~ NA_character_,
                      TRUE ~ soil_texture_series_3)) %>%
   # standardize experimental design names
   mutate(experimental_design = ifelse(str_detect(experimental_design, "split"),

@@ -316,7 +316,11 @@ ReadExcelSheets('Input_Data/WEATHER/VANWERT Weather.xlsx') %>%
 
 
 # WILKIN1 -----------------------------------------------------------------
-ReadExcelSheets('Input_Data/WEATHER/WILKIN1 Weather.xlsx') 
+ReadExcelSheets('Input_Data/WEATHER/WILKIN1 Weather.xlsx') %>%
+  pluck(1) -> weather_WILKIN1_hourly
+
+ReadExcelSheets('Input_Data/WEATHER/WILKIN1 Weather.xlsx') %>%
+  pluck(2) -> weather_WILKIN1_daily
 
 
 # WILKIN2 -----------------------------------------------------------------
@@ -324,13 +328,17 @@ ReadExcelSheets('Input_Data/WEATHER/WILKIN1 Weather.xlsx')
 
 
 # WILKIN3 -----------------------------------------------------------------
-ReadExcelSheets('Input_Data/WEATHER/WILKIN3 Weather.xlsx') 
+ReadExcelSheets('Input_Data/WEATHER/WILKIN3 Weather.xlsx') %>%
+  pluck(1) -> weather_WILKIN3_hourly
+
+ReadExcelSheets('Input_Data/WEATHER/WILKIN3 Weather.xlsx') %>%
+  pluck(2) -> weather_WILKIN3_daily
 
 
 
 # ALL ---------------------------------------------------------------------
 # COMBINE .................................................................
-# Combnine all hourly weather data
+# Combine all hourly weather data
 rm(weather_ALL_hourly) 
 mget(ls(pattern = 'weather_[[:graph:]]+_hourly')) %>%
   map(~ .x %>% gather(key, value, -Date, -Time, -sheet, -starts_with('Station'))) %>%

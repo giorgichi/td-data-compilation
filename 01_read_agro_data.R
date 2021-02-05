@@ -275,7 +275,7 @@ ReadExcelSheets('Input_Data/AGR/VANWERT Crop Yield Data.xlsx') %>%
   mutate(trt = ifelse(is.na(trt_value), NA_character_, trt)) %>%
   distinct() %>%
   group_by(plotid, year, crop) %>%
-  # checking redundunt dups created as an artifact in year with treatments
+  # checking redundant dups created as an artifact in year with treatments
   mutate(CHECK = sum(!is.na(trt))) %>%
   filter(!(CHECK > 0 & is.na(trt))) %>%
   select(plotid, year, crop, everything(), -CHECK) %>% 
@@ -297,12 +297,15 @@ ReadExcelSheets('Input_Data/AGR/WILKIN2 Crop Yield Data.xlsx') %>%
 
 
 # WILKIN3 -----------------------------------------------------------------
-ReadExcelSheets('Input_Data/AGR/WILKIN3 Crop Yield Data.xlsx')
+ReadExcelSheets('Input_Data/AGR/WILKIN3 Crop Yield Data.xlsx') %>%
+  bind_rows() %>%
+  rename(year = sheet, plotid = `Plot ID`) %>%
+  gather(key, value, -plotid, -year) -> agr_WILKIN3
 
 
 
 # COMBINE .................................................................
-# Combnine all agronomic data
+# Combine all agronomic data
 mget(ls(pattern = 'agr_')) %>%
   map(.x = ., .f = ~ .x %>% mutate(value = as.character(value))) %>%
   bind_rows(.id = 'site') %>%

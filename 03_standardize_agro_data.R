@@ -3,7 +3,7 @@ source('00_project_settings.R')
 
 
 
-# Read All agr data
+# Read All agronomic data
 agr_ALL <- read_rds('Inter_Data/agr_ALL.rds')
 codes <- read_csv('Input_Data/codes.csv')
 
@@ -62,7 +62,7 @@ agr_ALL_correct %>%
                               CROP == 'Any' & crop == 'soybean' ~ 
                                 str_replace(NEW_CODE, '80.00.', '80.21.'),
                               TRUE ~ NEW_CODE)) %>%
-  # mark fileds with < 0.81 ha areas at ACRE for farther filter
+  # mark fields with < 0.81 ha areas at ACRE for farther filter
   mutate(action = ifelse(siteid == 'ACRE' & harvested_area < 0.81, 'remove', action)) %>%
   select(siteid, plotid, location, crop, trt, trt_value, year, date, 
          var_NEW = NEW_CODE, value, action, harvested_area) %>%

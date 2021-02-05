@@ -273,6 +273,8 @@ agr_DB %>%
   # remove 2012 data for CLAY_R due to poor field management
   # see GitHub datateam/issues/276
   filter(!(siteid == 'CLAY_R' & year == 2012)) %>%
+  # remove CRAWF data due to quality issues noted by Ehsan Ghane
+  filter(siteid != 'CRAWF') %>%
   # select variables of high value, quality and abundance 
   select(-action, -harvested_area, 
          -AGR90.01.10, 

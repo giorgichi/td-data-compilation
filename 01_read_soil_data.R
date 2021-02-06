@@ -931,6 +931,21 @@ soil_WILKIN1 %>%
          everything(), -sheet) -> 
   soil_WILKIN1_properties
 
+# format Soil Nitrate tables
+ReadExcelSheets('Input_Data/SOIL/WILKIN1 Soil Data.xlsx') %>%
+  pluck(3) %>%
+  remove_empty('cols') %>%
+  mutate(siteid = "WILKIN1",
+         plotid = as.character(plotID),
+         location = NA_character_,
+         subsample = NA_character_,
+         date = as.Date(date),
+         year = year(date)) %>%
+  select(siteid, plotid, location, subsample, depth, year, date, 
+         everything(), -sheet, -plotID) -> 
+  soil_WILKIN1_nitrate
+
+
 # WILKIN2 -----------------------------------------------------------------
 ReadExcelSheets('Input_Data/SOIL/WILKIN2 Soil Data.xlsx') %>%
   pluck(1) -> soil_WILKIN2
@@ -947,9 +962,50 @@ soil_WILKIN2 %>%
          everything(), -sheet) -> 
   soil_WILKIN2_properties
 
+# format Soil Nitrate tables
+ReadExcelSheets('Input_Data/SOIL/WILKIN2 Soil Data.xlsx') %>%
+  pluck(3) %>%
+  remove_empty('cols') %>%
+  mutate(siteid = "WILKIN2",
+         plotid = as.character(plotID),
+         location = NA_character_,
+         subsample = NA_character_,
+         date = as.Date(date),
+         year = year(date)) %>%
+  select(siteid, plotid, location, subsample, depth, year, date, 
+         everything(), -sheet, -plotID) -> 
+  soil_WILKIN2_nitrate
+
 
 # WILKIN3 -----------------------------------------------------------------
-ReadExcelSheets('Input_Data/SOIL/WILKIN3 Soil Data.xlsx')
+ReadExcelSheets('Input_Data/SOIL/WILKIN3 Soil Data.xlsx')  %>%
+  pluck(1) -> soil_WILKIN3
+
+# format Soil Properties tables
+soil_WILKIN3 %>%
+  remove_empty('cols') %>%
+  mutate(siteid = "WILKIN3",
+         # location = NA_character_,
+         subsample = NA_character_,
+         year = NA,
+         date = NA) %>%
+  select(siteid, plotid = plotID, location, subsample, depth, year, date, 
+         everything(), -sheet) -> 
+  soil_WILKIN3_properties
+
+# format Soil Nitrate tables
+ReadExcelSheets('Input_Data/SOIL/WILKIN3 Soil Data.xlsx') %>%
+  pluck(3) %>%
+  remove_empty('cols') %>%
+  mutate(siteid = "WILKIN3",
+         # plotid = as.character(plotID),
+         location = as.character(location),
+         subsample = NA_character_,
+         date = as.Date(date),
+         year = year(date)) %>%
+  select(siteid, location, subsample, depth, year, date, 
+         everything(), -sheet) -> 
+  soil_WILKIN3_nitrate
 
 
 
@@ -958,7 +1014,7 @@ ReadExcelSheets('Input_Data/SOIL/WILKIN3 Soil Data.xlsx')
 
 
 
-# Combnine all soil properties
+# Combine all soil properties
 mget(ls(pattern = 'soil_[[:graph:]]+_properties')) %>%
   map(~ .x %>% 
         mutate(subsample = as.character(subsample),
@@ -966,7 +1022,7 @@ mget(ls(pattern = 'soil_[[:graph:]]+_properties')) %>%
         mutate_at(vars(starts_with('SOIL')), as.character)) %>%
   bind_rows() -> soil_properties_ALL
 
-# Combnine all soil nitrates
+# Combine all soil nitrates
 mget(ls(pattern = 'soil_[[:graph:]]+_nitrate')) %>%
   map(~ .x %>%
         mutate(subsample = as.character(subsample),
@@ -974,7 +1030,7 @@ mget(ls(pattern = 'soil_[[:graph:]]+_nitrate')) %>%
         mutate_at(vars(starts_with('SOIL')), as.character)) %>%
   bind_rows() -> soil_nitrate_ALL
 
-# Combnine all soil water retensions
+# Combine all soil water retention
 mget(ls(pattern = 'soil_[[:graph:]]+_wr')) %>%
   map(~ .x %>%
         mutate(subsample = as.character(subsample),
@@ -982,7 +1038,7 @@ mget(ls(pattern = 'soil_[[:graph:]]+_wr')) %>%
         mutate_at(vars(starts_with('SOIL')), as.character)) %>%
   bind_rows() -> soil_wr_ALL
 
-# Combnine all soil penetration resistance
+# Combine all soil penetration resistance
 mget(ls(pattern = 'soil_[[:graph:]]+_pr$')) %>%
   map(~ .x %>%
         mutate(depth = as.character(depth))%>%

@@ -772,7 +772,6 @@ rm(sm_DB, sm_FINAL_DB)
 read_rds('Standard_Data/soil_properties_ALL.rds') -> soil_properties
 
 soil_properties %>%
-  mutate(plotid = ifelse(siteid == 'FAIRM' & plotid == 'CD/SI', 'SI', plotid)) %>%
   mutate(year = as.integer(year),
          date = as.character(date)) ->
   soil_properties_DB
@@ -802,7 +801,6 @@ soil_properties_DB %>%
 
 # Save selected data (variables) for FINAL DB
 soil_properties %>%
-  mutate(plotid = ifelse(siteid == 'FAIRM' & plotid == 'CD/SI', 'SI', plotid)) %>%
   rownames_to_column() %>%
   # remove variables that are measures < 3 sites
   select(-SOIL04, -SOIL07, 
@@ -832,7 +830,40 @@ soil_properties %>%
   filter(!(siteid == 'ACRE' & is.na(plotid))) %>%
   filter(!(siteid == 'ACRE' & str_detect(location, '22-E'))) %>%
   mutate(year = as.integer(year),
-         date = as.character(date)) ->
+         date = as.character(date)) %>%
+  mutate(depth = 
+           case_when(depth == '0 to 22.86 cm'       ~ '0 to 23 cm',
+                     depth == '22.86 to 55.88 cm'   ~ '23 to 56 cm',
+                     depth == '55.88 to 121.92 cm'  ~ '56 to 122 cm',
+                     depth == '3.81 to 11.43 cm'    ~ '4 to 11 cm',
+                     depth == '11.43 to 19.05 cm'   ~ '11 to 19 cm',
+                     depth == '26.67 to 34.29 cm'   ~ '27 to 34 cm',
+                     depth == '57.15 to 64.77 cm'   ~ '57 to 65 cm',
+                     depth == '87.63 to 95.25 cm'   ~ '88 to 95 cm',
+                     depth == '118.11 to 125.73 cm' ~ '118 to 126 cm',
+                     depth == '148.59 to 156.21 cm' ~ '149 to 156 cm',
+                     depth == '179.07 to 186.69 cm' ~ '179 to 187 cm',
+                     depth == '209.55 to 217.17 cm' ~ '210 to 217 cm',
+                     depth == '240.03 to 247.65 cm' ~ '240 to 248 cm',
+                     depth == '24.38 cm'     ~ '24 cm',
+                     depth == '48.77 cm'     ~ '49 cm',
+                     depth == '73.15 cm'     ~ '73 cm',
+                     depth == '97.54 cm'     ~ '98 cm',
+                     depth == '121.92 cm'    ~ '122 cm',
+                     depth == '2.5 cm'       ~ '3 cm',
+                     depth == '13.0 cm'      ~ '13 cm',
+                     depth == '28.0 cm'      ~ '28 cm',
+                     depth == '48.0 cm'      ~ '48 cm',
+                     depth == '7.5 cm'       ~ '8 cm',
+                     depth == '12.5 cm'      ~ '13 cm',
+                     depth == '17.5 cm'      ~ '18 cm',
+                     depth == '22.5 cm'      ~ '23 cm',
+                     depth == '27.5 cm'      ~ '28 cm',
+                     depth == '32.5 cm'      ~ '33 cm',
+                     depth == '37.5 cm'      ~ '38 cm',
+                     depth == '42.5 cm'      ~ '43 cm',
+                     depth == '47.5 cm'      ~ '48 cm',
+                     TRUE ~ depth)) ->
   soil_properties_FINAL_DB
 
 dbWriteTable(conn_final, "soil_properties", soil_properties_FINAL_DB, overwrite = TRUE)

@@ -194,7 +194,7 @@ agr %>%
          grain_total_C,
          corn_cob_total_C) -> agr_EXP
 
-write_csv(agr_EXP, 'Ag_Commons_Data/agronomic_data.csv')
+write_csv(agr_EXP, 'Ag_Commons_Data/agronomic_data.csv', na = "n/a")
 
 drive_upload(media = 'Ag_Commons_Data/agronomic_data.csv',
              path = as_id('1zblZuTiEUdZOq1_IHgO_gEtR018TidRq'), 
@@ -213,7 +213,7 @@ sp %>%
   mutate(value2 = as.numeric(value)) %>% 
   # round up results of particle analysis
   mutate(value3 = ifelse(str_detect(key, 'SOIL02'), round(value2, 1), NA)) %>%
-  # correct errors introduced du to rounding by adjusting sand content
+  # correct errors introduced due to rounding by adjusting sand content
   group_by(siteid, plotid, location, subsample, depth, year, date) %>%
   mutate(value4 = sum(value3, na.rm = TRUE),
          value4 = ifelse(key == 'SOIL02.01', round(value4, 1), NA)) %>%
@@ -270,10 +270,9 @@ sp %>%
          NH4_amount,
          P_B1_concentration,
          P_M3_concentration,
-         P_B1_amount,
-         P_M3_amount) -> sp_EXP
+         P_B1_amount) -> sp_EXP
 
-write_csv(sp_EXP, 'Ag_Commons_Data/soil_properties_data.csv')
+write_csv(sp_EXP, 'Ag_Commons_Data/soil_properties_data.csv', na = "n/a")
 
 drive_upload(media = 'Ag_Commons_Data/soil_properties_data.csv',
              path = as_id('1zblZuTiEUdZOq1_IHgO_gEtR018TidRq'), 

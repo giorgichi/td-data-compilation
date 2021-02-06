@@ -11,7 +11,7 @@ soil_pr_ALL <- read_rds('Inter_Data/soil_pr_ALL.rds')
 
 
 
-# Correct water retension curves at CLAY sites
+# Correct water retention curves at CLAY sites
 soil_wr_ALL %>%
   group_by(siteid, plotid, location, subsample, depth, year, date) %>%
   mutate(S1 = ifelse(str_detect(siteid, 'CLAY'), sort(as.numeric(SOIL08.01), decreasing = TRUE), -9999),
@@ -42,9 +42,10 @@ soil_ALL %>%
                                siteid == 'BENTON' & SOIL02.01 == '19' ~ '19.1',
                                siteid == 'BENTON' & SOIL02.01 == '23.4' ~ '23.5',
                                siteid == 'BENTON' & SOIL02.01 == '4.9' ~ '4.8',
+                               siteid == 'HICKS_P' & SOIL02.01 == '< 2.0' ~ '0.0',
                                siteid == 'STJOHNS' & plotid == 'WN' & SOIL02.01 == '13.9' ~ '13.8',
                                TRUE ~ SOIL02.01)) %>%
-  # make Matric Potentail negative
+  # make Matric Potential negative
   mutate(temp = as.numeric(SOIL08.01),
          SOIL08.01 = ifelse(temp > 0 & !is.na(temp), paste0('-', SOIL08.01), SOIL08.01)) %>%
   # convert Soil Water Content to decimal
@@ -64,12 +65,14 @@ soil_ALL %>%
 
 # Standardize soil data
 soil_ALL_correct %>%
+  # make soil texture all lower cases
+  mutate(SOIL01 = str_to_lower(SOIL01)) %>%
   # remove a digit signifying sample depth at FAIRM and CLAY sites
   mutate(location = ifelse(str_detect(siteid, 'CLAY') & str_length(location) == 4, 
                            str_sub(location, 1, 2), location),
          location = ifelse(siteid == 'FAIRM', str_remove(location, '-6$'), location),
          location = ifelse(siteid == 'FAIRM', str_remove(location, '-18$'), location)) %>%
-  # correct plotid and locations at ACRE
+  # correct plotid and locations at ACRE and FAIRM
   mutate(plotid = ifelse(siteid == 'ACRE', location, plotid),
          plotid = ifelse(siteid == 'ACRE' & str_detect(subsample, '10-'), NA_character_, plotid),
          plotid = ifelse(siteid == 'ACRE' & subsample %in% c('21-B', '21-C'), NA_character_, plotid),
@@ -79,6 +82,7 @@ soil_ALL_correct %>%
          subsample = ifelse(siteid == 'ACRE', word(location, 2), subsample),
          location = ifelse(siteid == 'ACRE', word(location, 1), location),
          location = ifelse(siteid == 'ACRE', paste('Field', location), location)) %>%
+  mutate(plotid = ifelse(siteid == 'FAIRM' & plotid == 'CD/SI', 'SI', plotid)) %>%
   # standardize depth 
   mutate(depth = case_when(str_detect(depth, 'cm') ~ str_replace(depth, '-', ' to '),
                            !str_detect(depth, 'cm') & str_detect(depth, ' to ') & str_length(depth) < 20 ~ paste(depth, 'cm'), 
@@ -92,10 +96,6 @@ soil_ALL_correct %>%
                            depth == '231+' ~ '>231 cm',
                            TRUE ~ depth),
          depth = ifelse(siteid != 'VANWERT' & !is.na(depth) & !str_ends(depth, ' cm'), paste(depth, 'cm'), depth),
-         depth = case_when(depth == '0 to 22.86 cm' ~ '0 to 23 cm',
-                           depth == '22.86 to 55.88 cm' ~ '23 to 56 cm',
-                           depth == '55.88 to 121.92 cm' ~ '56 to 122 cm',
-                           TRUE ~ depth),
          depth = case_when(siteid == 'STORY' & !is.na(SOIL32.04) & depth == '0 to 6 cm' ~ '0 to 15 cm',
                            siteid == 'STORY' & !is.na(SOIL32.04) & depth == '6 to 12 cm' ~ '15 to 30 cm',
                            siteid == 'STORY' & !is.na(SOIL32.04) & depth == '12 to 18 cm' ~ '30 to 46 cm',
@@ -104,7 +104,9 @@ soil_ALL_correct %>%
                            siteid == 'STORY' & !is.na(SOIL32.04) & depth == '30 to 36 cm' ~ '76 to 91 cm',
                            siteid == 'STORY' & !is.na(SOIL32.04) & depth == '36 to 42 cm' ~ '91 to 107 cm',
                            siteid == 'STORY' & !is.na(SOIL32.04) & depth == '42 to 48 cm' ~ '107 to 122 cm',
-                           TRUE ~ depth)) -> soil_ALL_standard
+                           TRUE ~ depth),
+         depth = ifelse(is.na(depth), "unknown", depth)) %>%
+  mutate(SOIL03 = as.character(round(as.numeric(SOIL03), 4))) -> soil_ALL_standard
 
 
 # Save standardized data --------------------------------------------------

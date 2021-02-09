@@ -12,6 +12,22 @@ dwm <- read_rds('Inter_Data/fm_dwm.rds')
 irrigation <- read_rds('Inter_Data/fm_irrigation.rds')
 notes <- read_rds('Inter_Data/fm_notes.rds')
 
+
+
+# DOWNLOAD ................................................................
+
+DownloadGoogleSheet('TD Site Keys', FOLDER = 'Metadata',
+                    ID = "1PjB63WtYRyYnasm5mmLUF2-WdHuc_3dA_q8iEVV_C28")
+
+
+
+# READ ....................................................................
+
+read_excel('Input_Data/Metadata/TD Site Keys.xlsx', sheet = 'AGRO ID', skip = 1,
+           col_types = 'text') ->
+  agro_plots
+
+
 # Get plot and location identifiers for agronomic data
 agr_ids <- 
   read_rds('Standard_Data/agro_ALL.rds') %>%
@@ -22,6 +38,33 @@ agr_ids <-
           PLOT = c('10', 'B2', 'B4'))
 
 
+# Get plot and crop identifiers for agronomic data
+agro_plot_crop_ids <-
+  agro_plots %>%
+  filter(FILTER != "NO") %>%
+  select(-KEY_PLOT, -FILTER, -CR, -Comments) %>%
+  gather(year, crop, starts_with('CY_')) %>%
+  mutate(year = parse_number(year)) %>%
+  filter(!crop %in% c('NA')) %>% 
+  # some sites have multiple crops planted in a plot within a year
+  mutate(crop = str_split(crop, "")) %>%
+  unnest(crop) %>%
+  mutate(crop = case_when(crop == 'B' ~ "sugar beet",
+                          crop == 'C' ~ "corn",
+                          crop == 'F' ~ "forage",
+                          crop == 'O' ~ "oats",
+                          crop == 'P' ~ "popcorn",
+                          crop == 'S' ~ "soybean",
+                          crop == 'W' ~ "wheat",
+                          TRUE ~ "help")) %>%
+  select(siteid = Site_ID, Agro_ID, Agro_Location, year_crop = year, crop) %>%
+  arrange(siteid, year_crop) %>%
+  # no need for ACRE since plot
+  filter(siteid != 'ACRE') 
+
+
+
+# FUNCTIONS ----------------------------------------------------------------------------------
 
 # Function to standardize plotids at ACRE
 rename_ACRE_plots <- function(df){
@@ -59,8 +102,8 @@ rename_DEFI_R_plots <- function(df) {
            plotid = ifelse(siteid == 'DEFI_R' & !is.na(location), 
                            str_remove(plotid, '[:alpha:]'), 
                            plotid),
-           location = case_when(siteid == 'DEFI_R' & location == 'N' ~ 'North half',
-                                siteid == 'DEFI_R' & location == 'S' ~ 'South half',
+           location = case_when(siteid == 'DEFI_R' & location == 'N' ~ 'NE',
+                                siteid == 'DEFI_R' & location == 'S' ~ 'SE',
                                 TRUE ~ location))
   }
 
@@ -70,7 +113,8 @@ rename_SWROC_plots <- function(df) {
   df %>%
     separate(plotid, into = c('PLOT', 'LOC'), sep = "_", remove = FALSE, convert = TRUE) %>%
     mutate(plotid   = ifelse(siteid == 'SWROC', PLOT, plotid),
-           location = ifelse(siteid == 'SWROC', paste(LOC, 'N'), location)) %>%
+           location = ifelse(siteid == 'SWROC' & !is.na(LOC), 
+                             paste(LOC, 'N'), location)) %>%
     select(-PLOT, - LOC)
 }
 
@@ -81,50 +125,99 @@ correct_STORY_action <- function(df){
                            'remove', action))
 }
 
+# Function to identify delayed planted plots at MUDS1
+delayed_plots <- 
+  planting %>% 
+  filter(siteid == 'MUDS1' & action == 'remove') %>% 
+  distinct(siteid, plotid, year_crop) %>%
+  mutate(NEW_action = 'remove')
+
+correct_MUDS1_action <- function(df){
+  df %>%
+    left_join(delayed_plots, by = c("siteid", "plotid", "year_crop")) %>%
+    mutate(action = ifelse(!is.na(NEW_action), NEW_action, action)) %>%
+    select(-NEW_action)
+}
+
+# Function to standardize plotids at VANVERT
+rename_VANWERT_plots <- function(df) {
+  df %>%
+    mutate(location = case_when(siteid == 'VANWERT' & plotid == 1 ~ 'SE',
+                                siteid == 'VANWERT' & plotid == 2 ~ 'SW',
+                                siteid == 'VANWERT' & plotid == 3 ~ 'DE',
+                                siteid == 'VANWERT' & plotid == 4 ~ 'DW',
+                                TRUE ~ location),
+           plotid =  case_when(siteid == 'VANWERT' & plotid == 1 ~ 'S',
+                               siteid == 'VANWERT' & plotid == 2 ~ 'S',
+                               siteid == 'VANWERT' & plotid == 3 ~ 'D',
+                               siteid == 'VANWERT' & plotid == 4 ~ 'D',
+                               TRUE ~ plotid))
+}
+
+
 
 # Standardize Planting Data ----------
 
-# spread SERF_IA plots and locations
-dl <- vector('list', 8)
-df <- planting %>% filter(siteid == 'SERF_IA')
-for (i in 1:8) {
-  dl[[i]] <- df %>% mutate(plotid = paste0('S', i))
-}
-
-bind_rows(dl) %>%
-  # correct harvest date for plot S8 in 2010
-  mutate(date = ifelse(plotid == 'S8' & str_detect(comments, 'S8'), ymd(20101012), date),
-         date = as_date(date),
-         comments = ifelse(str_detect(comments, 'S8 was'), NA_character_, comments),
-         location = NA_character_) %>%
-  # add locations to SERF_IA 
-  mutate(temp = ifelse(siteid == 'SERF_IA' & action == 'keep', year_calendar %% 2, NA),
-         location = case_when(siteid == 'SERF_IA' & cashcrop == 'corn' &
-                                plotid %in% c('S1','S2','S4','S7') & temp == 0 ~ 'North half',
-                              siteid == 'SERF_IA' & cashcrop == 'corn' &
-                                plotid %in% c('S3','S5','S6','S8') & temp == 0 ~ 'South half',
-                              siteid == 'SERF_IA' & cashcrop == 'corn' &
-                                plotid %in% c('S1','S2','S4','S7') & temp == 1 ~ 'South half',
-                              siteid == 'SERF_IA' & cashcrop == 'corn' &
-                                plotid %in% c('S3','S5','S6','S8') & temp == 1 ~ 'North half',
-                              siteid == 'SERF_IA' & cashcrop == 'soybean' &
-                                plotid %in% c('S1','S2','S4','S7') & temp == 0 ~ 'South half',
-                              siteid == 'SERF_IA' & cashcrop == 'soybean' &
-                                plotid %in% c('S3','S5','S6','S8') & temp == 0 ~ 'North half',
-                              siteid == 'SERF_IA' & cashcrop == 'soybean' &
-                                plotid %in% c('S1','S2','S4','S7') & temp == 1 ~ 'North half',
-                              siteid == 'SERF_IA' & cashcrop == 'soybean' &
-                                plotid %in% c('S3','S5','S6','S8') & temp == 1 ~ 'South half',
-                              TRUE ~ location)) %>%
-  select(-temp) -> df
-
-# standardize plot ids
+# standardize plot ids for planting data 
 planting %>%
   rename_ACRE_plots() %>%
   rename_DEFI_R_plots() %>%
+  mutate(crop = ifelse(siteid == 'MUDS3_OLD', 'forage', cashcrop)) %>%
+  filter(operation == 'planting') -> planting_ONLY
+
+# standardize plot ids
+planting_ONLY %>%
+  filter(!is.na(plotid) | !is.na(location)) %>%
+  distinct(siteid, 
+           Agro_ID = plotid, 
+           Agro_Location = location, 
+           year_crop, 
+           crop) %>%
+  # select ids that has no site-plot-location-year already defined 
+  anti_join(agro_plot_crop_ids, .) %>%
+  # this code below is redundant and should not effect input df
+  # unless there is some disagreement between management and agronomic plot identifiers
+  filter(!siteid %in% c('ACRE', 'MUDS1')) %>%
+  # add the ids for entries with missing site-plot-location for corresponding crop year
+  right_join(planting_ONLY) %>%
+  mutate(plotid = ifelse(!is.na(Agro_ID), Agro_ID, plotid),
+         location = ifelse(!is.na(Agro_Location), Agro_Location, location)) %>%
+  select(names(planting_ONLY), -crop) %>%
   correct_ACRE_action() %>%
-  filter(siteid != 'SERF_IA') %>%
-  bind_rows(df) -> planting_standard
+  correct_MUDS1_action() %>%
+  arrange(siteid) -> planting_standard
+
+
+
+# standardize plot ids for harvesting data
+planting %>%
+  rename_ACRE_plots() %>%
+  rename_DEFI_R_plots() %>%
+  mutate(crop = ifelse(siteid == 'MUDS3_OLD', 'forage', cashcrop)) %>%
+  filter(operation == 'harvesting') -> harvesting_ONLY
+
+# standardize plot ids
+harvesting_ONLY %>%
+  filter(!is.na(plotid) | !is.na(location)) %>%
+  distinct(siteid, 
+           Agro_ID = plotid, 
+           Agro_Location = location, 
+           year_crop, 
+           crop) %>%
+  # select ids that has no site-plot-location-year already defined 
+  anti_join(agro_plot_crop_ids, .) %>%
+  filter(!siteid %in% c('ACRE', 'MUDS1')) %>%
+  # add the ids for entries with missing site-plot-location for corresponding crop year
+  right_join(harvesting_ONLY) %>%
+  mutate(plotid = ifelse(!is.na(Agro_ID), Agro_ID, plotid),
+         location = ifelse(!is.na(Agro_Location), Agro_Location, location)) %>%
+  select(names(harvesting_ONLY)) %>%
+  correct_ACRE_action() %>%
+  correct_MUDS1_action() %>%
+  select(action, siteid, plotid, location, 
+         year_calendar, year_crop, date, operation, cashcrop, comments) %>%
+  arrange(siteid) -> harvesting_standard
+
 
 
 # Standardize Fertilizer Data ----------
@@ -155,116 +248,117 @@ fertilizing %>%
          calcium_elem = ifelse(!is.na(as.numeric(fertilizer_rate)), check_c, calcium_elem),
          iron_elem = ifelse(!is.na(as.numeric(fertilizer_rate)), check_i, iron_elem)) %>%
   select(-ends_with('percent'),-starts_with('check')) %>%
-  # variable 'stabilizer' is redundant - NEED TO ASK LORI
   select(everything()) -> fertilizing_corrected
 
 
-# spread SERF_IA plots and locations
-dl <- vector('list', 8)
-df <- fertilizing_corrected %>% filter(siteid == 'SERF_IA')
-for (i in 1:8) {
-  dl[[i]] <- df %>% mutate(plotid = paste0('S', i))
-}
 
-bind_rows(dl) %>%
-  mutate(location = NA_character_) %>%
-  # add locations to SERF_IA 
-  mutate(temp = ifelse(siteid == 'SERF_IA' & action == 'keep', year_crop %% 2, NA),
-         location = case_when(siteid == 'SERF_IA' & cashcrop == 'corn' &
-                                plotid %in% c('S1','S2','S4','S7') & temp == 0 ~ 'North half',
-                              siteid == 'SERF_IA' & cashcrop == 'corn' &
-                                plotid %in% c('S3','S5','S6','S8') & temp == 0 ~ 'South half',
-                              siteid == 'SERF_IA' & cashcrop == 'corn' &
-                                plotid %in% c('S1','S2','S4','S7') & temp == 1 ~ 'South half',
-                              siteid == 'SERF_IA' & cashcrop == 'corn' &
-                                plotid %in% c('S3','S5','S6','S8') & temp == 1 ~ 'North half',
-                              siteid == 'SERF_IA' & cashcrop == 'soybean' &
-                                plotid %in% c('S1','S2','S4','S7') & temp == 0 ~ 'South half',
-                              siteid == 'SERF_IA' & cashcrop == 'soybean' &
-                                plotid %in% c('S3','S5','S6','S8') & temp == 0 ~ 'North half',
-                              siteid == 'SERF_IA' & cashcrop == 'soybean' &
-                                plotid %in% c('S1','S2','S4','S7') & temp == 1 ~ 'North half',
-                              siteid == 'SERF_IA' & cashcrop == 'soybean' &
-                                plotid %in% c('S3','S5','S6','S8') & temp == 1 ~ 'South half',
-                              TRUE ~ location)) %>%
-  select(-temp) -> df
-
-
-# standardize plot ids
+# standardize plot ids for fertilizing data 
 fertilizing_corrected %>%
   rename_ACRE_plots() %>%
-  correct_STORY_action() %>%
-  rename_SWROC_plots() %>% 
   rename_DEFI_R_plots() %>%
-  filter(siteid != 'SERF_IA') %>%
-  bind_rows(df) %>%
-  # remove erroneous plot id and correct locations at VANWERT
-  mutate(plotid = ifelse(siteid == 'VANWERT' & plotid == '68', NA, plotid),
-         location = case_when(siteid == 'VANWERT' & plotid == 1 ~ 'SE',
-                              siteid == 'VANWERT' & plotid == 2 ~ 'SW',
-                              TRUE ~ location),
-         plotid =  case_when(siteid == 'VANWERT' & plotid == 1 ~ 'S',
-                             siteid == 'VANWERT' & plotid == 2 ~ 'S',
-                             siteid == 'VANWERT' & plotid == 3 ~ 'D',
-                             TRUE ~ plotid)) -> fertilizing_standard
+  rename_SWROC_plots() %>% 
+  rename_VANWERT_plots() %>%
+  mutate(crop = ifelse(siteid == 'MUDS3_OLD', 'forage', cashcrop)) %>%
+  filter(operation %in% c('fertilizing', 'soil amendment')) -> fertilizing_ONLY
+
+# standardize plot ids
+fertilizing_ONLY %>%
+  filter(!is.na(plotid) | !is.na(location)) %>%
+  distinct(siteid, 
+           Agro_ID = plotid, 
+           Agro_Location = location, 
+           year_crop, 
+           crop) %>%
+  # select ids that has no site-plot-location-year already defined 
+  anti_join(agro_plot_crop_ids, .) %>%
+  # this code below remove plots at MUDS1 with delayed planting
+  filter(!siteid %in% c('ACRE', 'MUDS1')) %>%
+  # add the ids for entries with missing site-plot-location for corresponding crop year
+  right_join(fertilizing_ONLY) %>%
+  mutate(plotid = ifelse(!is.na(Agro_ID), Agro_ID, plotid),
+         location = ifelse(!is.na(Agro_Location), Agro_Location, location)) %>%
+  select(names(fertilizing_ONLY), -crop) %>%
+  correct_ACRE_action() %>%
+  correct_STORY_action() %>%
+  correct_MUDS1_action() %>%
+  arrange(siteid) -> fertilizing_standard
+
+
+
+# standardize plot ids for tillage data 
+fertilizing_corrected %>%
+  rename_ACRE_plots() %>%
+  rename_DEFI_R_plots() %>%
+  rename_SWROC_plots() %>% 
+  rename_VANWERT_plots() %>%
+  mutate(crop = ifelse(siteid == 'MUDS3_OLD', 'forage', cashcrop)) %>%
+  filter(operation == 'tillage') -> tillage_ONLY
+
+# standardize plot ids
+tillage_ONLY %>%
+  filter(!is.na(plotid) | !is.na(location)) %>%
+  distinct(siteid, 
+           Agro_ID = plotid, 
+           Agro_Location = location, 
+           year_crop, 
+           crop) %>%
+  # select ids that has no site-plot-location-year already defined 
+  anti_join(agro_plot_crop_ids, .) %>%
+  # this code below remove plots at MUDS1 with delayed planting
+  filter(!siteid %in% c('ACRE', 'MUDS1')) %>%
+  # add the ids for entries with missing site-plot-location for corresponding crop year
+  right_join(tillage_ONLY) %>%
+  mutate(plotid = ifelse(!is.na(Agro_ID), Agro_ID, plotid),
+         location = ifelse(!is.na(Agro_Location), Agro_Location, location)) %>%
+  select(names(tillage_ONLY), -crop) %>%
+  correct_ACRE_action() %>%
+  correct_STORY_action() %>%
+  correct_MUDS1_action() %>%
+  select(action:depth, comments) %>%
+  arrange(siteid) -> tillage_standard
 
 
 
 # Standardize Pesticide Data ----------
 
-# spread SERF_IA plots and locations
-dl <- vector('list', 8)
-df <- pesticide %>% filter(siteid == 'SERF_IA')
-for (i in 1:8) {
-  dl[[i]] <- df %>% mutate(plotid = paste0('S', i))
-}
-
-bind_rows(dl) %>%
-  # assign application only to plot S8 in 2011
-  mutate(comments = ifelse(plotid == 'S8' & str_detect(comments, 'treatment to plot 8'), 
-                           NA_character_, comments)) %>%
-  filter(!(str_detect(comments, 'treatment to plot 8')) | is.na(comments)) %>%
-  rename(cashcrop = crop) %>%
-  mutate(action = ifelse(is.na(action), 'keep', action),
-         location = NA_character_) %>%
-  # add locations to SERF_IA 
-  mutate(temp = ifelse(siteid == 'SERF_IA' & action == 'keep', year_calendar %% 2, NA),
-         location = case_when(siteid == 'SERF_IA' & cashcrop == 'corn' &
-                                plotid %in% c('S1','S2','S4','S7') & temp == 0 ~ 'North half',
-                              siteid == 'SERF_IA' & cashcrop == 'corn' &
-                                plotid %in% c('S3','S5','S6','S8') & temp == 0 ~ 'South half',
-                              siteid == 'SERF_IA' & cashcrop == 'corn' &
-                                plotid %in% c('S1','S2','S4','S7') & temp == 1 ~ 'South half',
-                              siteid == 'SERF_IA' & cashcrop == 'corn' &
-                                plotid %in% c('S3','S5','S6','S8') & temp == 1 ~ 'North half',
-                              siteid == 'SERF_IA' & cashcrop == 'soybean' &
-                                plotid %in% c('S1','S2','S4','S7') & temp == 0 ~ 'South half',
-                              siteid == 'SERF_IA' & cashcrop == 'soybean' &
-                                plotid %in% c('S3','S5','S6','S8') & temp == 0 ~ 'North half',
-                              siteid == 'SERF_IA' & cashcrop == 'soybean' &
-                                plotid %in% c('S1','S2','S4','S7') & temp == 1 ~ 'North half',
-                              siteid == 'SERF_IA' & cashcrop == 'soybean' &
-                                plotid %in% c('S3','S5','S6','S8') & temp == 1 ~ 'South half',
-                              TRUE ~ location)) %>%
-  select(-temp) -> df
-
 pesticide %>%
-  rename(cashcrop = crop) %>%
-  mutate(cashcrop = ifelse(cashcrop == 'other' & !is.na(comments), 
-                           str_to_lower(comments),
-                           cashcrop),
-         comments = ifelse(cashcrop %in% c('popcorn', 'oats', 'sorghum'),
-                           NA_character_, comments)) %>%
-  filter(siteid != 'SERF_IA') %>%
-  bind_rows(df) %>%
-  select(siteid, plotid, location, everything()) -> pesticide_standard
+  mutate(CROP = crop,
+         crop = ifelse(siteid == 'MUDS3_OLD', 'forage', crop)) %>%
+  full_join(agro_plot_crop_ids) %>% 
+  filter(!is.na(action)) %>%
+  mutate(crop = CROP) %>%
+  select(plotid = Agro_ID, location = Agro_Location, 
+         names(pesticide), -CROP) %>%
+  correct_ACRE_action() %>%
+  correct_MUDS1_action() %>%
+  select(action, siteid, plotid, location, 
+         year_calendar, year_crop, date, crop, 
+         operation, operation_type, method, timing, total_rate, 
+         product1_name, product1_rate, product1_form, 
+         product2_name, product2_rate, product2_form, 
+         product3_name, product3_rate, product3_form, 
+         product4_name, product4_rate, product4_form, 
+         adjuvant1, adjuvant2, comments) %>%
+  arrange(siteid) -> pesticide_standard
   
 
 
 # Standardize Residue Data ----------
 
 residue %>%
-  mutate(year_calendar = year_crop) -> residue_standard
+  mutate(CROP = crop,
+         crop = ifelse(siteid == 'MUDS3_OLD', 'forage', crop)) %>%
+  full_join(agro_plot_crop_ids) %>% 
+  filter(!is.na(action)) %>%
+  mutate(crop = CROP) %>%
+  select(plotid = Agro_ID, location = Agro_Location, 
+         names(residue), -CROP) %>%
+  correct_ACRE_action() %>%
+  correct_MUDS1_action() %>%
+  select(action, siteid, plotid, location, 
+         year_calendar, year_crop, crop,
+         notill, comments) %>%
+  arrange(siteid, year_calendar) -> residue_standard
 
 
 
@@ -280,15 +374,15 @@ dwm %>%
   mutate(comments = str_remove(comments, " Time stamp is approximate."),
          comments = str_remove(comments, "Time stamp is approximate. "),
          comments = ifelse(comments == "Time stamp is approximate.", NA_character_, comments)) %>%
-  rename(controlled_plotids = plotid) -> dwm_standard
+  # replace 'NA' with 'n/a' at TIDE and SERF_IA for year when boards were not changed
+  mutate(date = ifelse(is.na(date), "n/a", date)) -> dwm_standard
 
 
 # Standardize Irrigation Data ----------
 irrigation %>%
   mutate(temp = round(as.numeric(irrigation_amount), 2),
          irrigation_amount = ifelse(!is.na(temp), as.character(temp), irrigation_amount),
-         temp = NULL) %>%
-  rename(irrigated_plotids = plotid) -> irrigation_standard
+         temp = NULL) -> irrigation_standard
   
 
 
@@ -299,24 +393,16 @@ notes %>%
 
 
 
-# Save standardized data --------------------------------------------------
+# SAVE standardized data --------------------------------------------------
 
 write_rds(planting_standard, 'Standard_Data/planting_ALL.rds', compress = 'xz')
+write_rds(harvesting_standard, 'Standard_Data/harvesting_ALL.rds', compress = 'xz')
 write_rds(fertilizing_standard, 'Standard_Data/fertilizing_ALL.rds', compress = 'xz')
+write_rds(tillage_standard, 'Standard_Data/tillage_ALL.rds', compress = 'xz')
 write_rds(pesticide_standard, 'Standard_Data/pesticide_ALL.rds', compress = 'xz')
 write_rds(residue_standard, 'Standard_Data/residue_ALL.rds', compress = 'xz')
 write_rds(irrigation_standard, 'Standard_Data/irrigation_ALL.rds', compress = 'xz')
 write_rds(dwm_standard, 'Standard_Data/dwm_ALL.rds', compress = 'xz')
 write_rds(notes_standard, 'Standard_Data/notes_ALL.rds', compress = 'xz')
 
-
-
-#########################
-##### CHEK PLOT IDs #####
-#########################
-dwm %>%
-  filter(!is.na(plotid)) %>%
-  anti_join(agr_ids, by = c('siteid', 'plotid' = 'PLOT')) %>%
-  distinct(action, siteid, plotid) %>%
-  View()
 

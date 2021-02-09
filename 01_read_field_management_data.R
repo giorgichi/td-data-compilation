@@ -3,7 +3,7 @@ source('00_project_settings.R')
 
 
 
-# functions for rectifying backend data
+# functions for rectifying backend date
 backend_date <- function(df, COL = 'date') {
   df %>%
     mutate(DATE = as.numeric(!!sym(COL))) %>%
@@ -42,7 +42,7 @@ ReadExcelSheets('Input_Data/Metadata/Management DataStore (TD backend for mandat
 #... Planting and Harvesting -----
 fm_backend %>%
   pluck(1) %>%
-  backend_date() %>%
+  # backend_date() %>%
   plotid_expansion() %>%
   select(action,
          siteid = uniqueid,
@@ -68,7 +68,7 @@ fm_backend %>%
 # ... Tillage and Fertilizer Application ----
 fm_backend %>%
   pluck(2) %>%
-  backend_date() %>%
+  # backend_date() %>%
   plotid_expansion() %>%
   select(action,
          siteid = uniqueid,
@@ -137,7 +137,7 @@ fm_backend %>%
 # ... Pesticides ----
 fm_backend %>%
   pluck(4) %>%
-  backend_date() %>%
+  # backend_date() %>%
   mutate(operation_type = operation,
          operation = 'pesticide application') %>%
   select(action,
@@ -165,11 +165,13 @@ fm_backend %>%
   separate(irr_end_date, into = c('irr_end_date', 'irr_end_time'), sep = "T") %>%
   separate(irr_start_date, into = c('irr_start_date', 'irr_start_time'), sep = "T") %>%
   mutate_at(vars(ends_with('time')), function(x) str_remove(x, 'Z')) %>%
-  mutate_at(vars(ends_with("_date")), ymd) %>%
+  # mutate_at(vars(ends_with("_date")), ymd) %>%
   plotid_expansion(COL = 'irr_structure') %>%
   mutate(plotid = ifelse(uniqueid %in% c('DEFI_R', 'VANWERT'), 
                          plotid, 
                          irr_structure)) %>%
+  # split plotids are DEFI_R
+  plotid_expansion(COL = 'plotid') %>%
   select(action,
          siteid = uniqueid,
          plotid,
@@ -189,11 +191,13 @@ fm_backend %>%
 fm_backend %>%
   pluck(6) %>%
   select(-(updated:sheet)) %>%
-  separate(outlet_date, into = c('date', 'time'), sep = 'T') %>%
-  mutate(date = as.Date(date),
-         time = str_sub(time, 1, 5)) %>%
+  separate(outlet_datetime, into = c('date', 'time'), sep = 'T') %>%
+  mutate(#date = as.Date(date),
+         time = str_sub(time, 1, 5)) %>% 
   plotid_expansion(COL = 'box_structure') %>%
   mutate(plotid = ifelse(uniqueid == 'MUDS1', box_structure, plotid)) %>%
+  # split plotids are DEFI_R
+  plotid_expansion(COL = 'plotid') %>%
   select(action,
          siteid = uniqueid,
          plotid,

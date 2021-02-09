@@ -104,39 +104,63 @@ dbWriteTable(conn_final, "meta_treatment_years", trt_by_year_FINAL_DB, overwrite
 planting <- read_rds('Standard_Data/planting_ALL.rds')
 
 planting %>%
-  # remove redundant and incorrect entry
-  filter(!(siteid == 'STJOHNS' & cashcrop == 'wheat' & is.na(date))) %>%
-  mutate(location = ifelse(location == 'NA N', NA_character_, location)) %>%
   mutate_at(vars(starts_with("date")), as.character) -> planting_DB
 dbWriteTable(conn, "mngt_planting", planting_DB, overwrite = TRUE)
 
 planting_DB %>%
-  filter(action == "keep") %>%
+  filter(action != "remove") %>%
   # this location was removed due to harvest area criteria
   filter(!(siteid == 'ACRE' & location == 'Field 8')) %>%
   select(-action) -> planting_FINAL_DB
 dbWriteTable(conn_final, "mngt_planting", planting_FINAL_DB, overwrite = TRUE)
 
-# ... Fertilizing and Tillage ---------------------------------------------
+# ... Harvesting ----------------------------------------------------------
+harvesting <- read_rds('Standard_Data/harvesting_ALL.rds')
+
+harvesting %>%
+  mutate_at(vars(starts_with("date")), as.character) -> harvesting_DB
+dbWriteTable(conn, "mngt_harvesting", harvesting_DB, overwrite = TRUE)
+
+harvesting_DB %>%
+  filter(action != "remove") %>%
+  # this location was removed due to harvest area criteria
+  filter(!(siteid == 'ACRE' & location == 'Field 8')) %>%
+  select(-action) -> harvesting_FINAL_DB
+dbWriteTable(conn_final, "mngt_harvesting", harvesting_FINAL_DB, overwrite = TRUE)
+
+# ... Fertilizing ---------------------------------------------------------
 fertilizing <- read_rds('Standard_Data/fertilizing_ALL.rds')
 
 fertilizing %>%
-  # fix erroneous entry
-  mutate(fertilizer_crop = ifelse(siteid == 'DPAC' & year_crop == 2012 & fertilizer_crop == 'soybean',
-                                  'corn', fertilizer_crop)) %>%
   # standardize location names for SWROC
   mutate(location = ifelse(siteid == 'SWROC', str_remove(location, "^0{1,2}"), location)) %>%
-  mutate(location = ifelse(location == 'NA N', NA_character_, location)) %>%
   mutate_at(vars(starts_with("date")), as.character) -> fertilizing_DB
 dbWriteTable(conn, "mngt_fertilizing", fertilizing_DB, overwrite = TRUE)
 
 fertilizing_DB %>%
-  filter(action == "keep") %>%
+  filter(action != "remove") %>%
   # this location was removed due to harvest area criteria
   filter(!(siteid == 'ACRE' & location == 'Field 8')) %>%
   # select variables of high value, quality and abundance 
   select(-action) -> fertilizing_FINAL_DB
 dbWriteTable(conn_final, "mngt_fertilizing", fertilizing_FINAL_DB, overwrite = TRUE)
+
+# ... Tillage -------------------------------------------------------------
+tillage <- read_rds('Standard_Data/tillage_ALL.rds')
+
+tillage %>%
+  # standardize location names for SWROC
+  mutate(location = ifelse(siteid == 'SWROC', str_remove(location, "^0{1,2}"), location)) %>%
+  mutate_at(vars(starts_with("date")), as.character) -> tillage_DB
+dbWriteTable(conn, "mngt_tillage", tillage_DB, overwrite = TRUE)
+
+tillage_DB %>%
+  filter(action != "remove") %>%
+  # this location was removed due to harvest area criteria
+  filter(!(siteid == 'ACRE' & location == 'Field 8')) %>%
+  # select variables of high value, quality and abundance 
+  select(-action) -> tillage_FINAL_DB
+dbWriteTable(conn_final, "mngt_tillage", tillage_FINAL_DB, overwrite = TRUE)
 
 # ... DWM -----------------------------------------------------------------
 dwm <- read_rds('Standard_Data/dwm_ALL.rds')
@@ -146,7 +170,7 @@ dwm %>%
 dbWriteTable(conn, "mngt_dwm", dwm_DB, overwrite = TRUE)
 
 dwm_DB %>%
-  filter(action == "keep") %>%
+  filter(action != "remove") %>%
   select(-action, -time) -> dwm_FINAL_DB
 dbWriteTable(conn_final, "mngt_dwm", dwm_FINAL_DB, overwrite = TRUE)
 
@@ -158,8 +182,8 @@ irrigation %>%
 dbWriteTable(conn, "mngt_irrigation", irrigation_DB, overwrite = TRUE)
 
 irrigation_DB %>%
-  filter(action == "keep") %>%
-  # after removing hours some entries become redandunt and need to remove
+  filter(action != "remove") %>%
+  # after removing hours some entries become redundant and need to remove
   filter(!(siteid == 'DEFI_R' & date_irrigation_end == '2000-08-22')) %>%
   select(-action, -starts_with('time_irr')) -> irrigation_FINAL_DB
 dbWriteTable(conn_final, "mngt_irrigation", irrigation_FINAL_DB, overwrite = TRUE)
@@ -215,26 +239,6 @@ agr %>%
                             siteid == 'FAIRM' & temp == 2 ~ 'West',
                             TRUE ~ plotid),
          location = ifelse(siteid == 'FAIRM', NA_character_, location)) %>%
-  # add locations to SERF_IA 
-  mutate(temp = ifelse(siteid == 'SERF_IA', year %% 2, NA),
-         location = case_when(siteid == 'SERF_IA' & crop == 'corn' &
-                                plotid %in% c('S1','S2','S4','S7') & temp == 0 ~ 'North half',
-                              siteid == 'SERF_IA' & crop == 'corn' &
-                                plotid %in% c('S3','S5','S6','S8') & temp == 0 ~ 'South half',
-                              siteid == 'SERF_IA' & crop == 'corn' &
-                                plotid %in% c('S1','S2','S4','S7') & temp == 1 ~ 'South half',
-                              siteid == 'SERF_IA' & crop == 'corn' &
-                                plotid %in% c('S3','S5','S6','S8') & temp == 1 ~ 'North half',
-                              siteid == 'SERF_IA' & crop == 'soybean' &
-                                plotid %in% c('S1','S2','S4','S7') & temp == 0 ~ 'South half',
-                              siteid == 'SERF_IA' & crop == 'soybean' &
-                                plotid %in% c('S3','S5','S6','S8') & temp == 0 ~ 'North half',
-                              siteid == 'SERF_IA' & crop == 'soybean' &
-                                plotid %in% c('S1','S2','S4','S7') & temp == 1 ~ 'North half',
-                              siteid == 'SERF_IA' & crop == 'soybean' &
-                                plotid %in% c('S3','S5','S6','S8') & temp == 1 ~ 'South half',
-                              TRUE ~ location)) %>%
-  select(-temp) %>%
   arrange(siteid, plotid, year, date) -> agr_DB
 
 dbWriteTable(conn, "agronomic", agr_DB, overwrite = TRUE)

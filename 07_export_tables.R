@@ -553,13 +553,15 @@ drive_upload(media = 'Ag_Commons_Data/weather_data.csv',
 
 # Field Management --------------------------------------------------------
 mngt_planting <- dbReadTable(conn_final, 'mngt_planting') %>% as_tibble()
+mngt_harvesting <- dbReadTable(conn_final, 'mngt_harvesting') %>% as_tibble()
 mngt_fertilizing <- dbReadTable(conn_final, 'mngt_fertilizing') %>% as_tibble()
+mngt_tillage <- dbReadTable(conn_final, 'mngt_tillage') %>% as_tibble()
 mngt_irrigation <- dbReadTable(conn_final, 'mngt_irrigation') %>% as_tibble()
 mngt_residue <- dbReadTable(conn_final, 'mngt_residue') %>% as_tibble()
 mngt_dwm <- dbReadTable(conn_final, 'mngt_dwm') %>% as_tibble()
 mngt_notes <- dbReadTable(conn_final, 'mngt_notes') %>% as_tibble()
 
-# Format Planting data
+# ... Format Planting data ------------------------------------------------
 mngt_planting %>%
   # round up variables
   mutate(plant_maturity = ifelse(str_length(plant_maturity) > 3, 
@@ -575,15 +577,28 @@ mngt_planting %>%
   arrange(siteid, plotid, location, date) %>%
   select(-temp) -> planting_EXP
 
-write_csv(planting_EXP, 'Ag_Commons_Data/mngt_planting_and_harvesting_data.csv')
+write_csv(planting_EXP, 'Ag_Commons_Data/mngt_planting_data.csv')
 
-drive_upload(media = 'Ag_Commons_Data/mngt_planting_and_harvesting_data.csv',
+drive_upload(media = 'Ag_Commons_Data/mngt_planting_data.csv',
              path = as_id('1zblZuTiEUdZOq1_IHgO_gEtR018TidRq'), 
              overwrite = TRUE)
 
 
 
-# Format Fertilizing data
+# ... Format Harvesting data ----------------------------------------------
+mngt_harvesting %>%
+  ReplaceIDs() %>%
+  arrange(siteid, plotid, location, date) -> harvesting_EXP
+
+write_csv(harvesting_EXP, 'Ag_Commons_Data/mngt_harvesting_data.csv')
+
+drive_upload(media = 'Ag_Commons_Data/mngt_harvesting_data.csv',
+             path = as_id('1zblZuTiEUdZOq1_IHgO_gEtR018TidRq'), 
+             overwrite = TRUE)
+
+
+
+# ... Format Fertilizing data ---------------------------------------------
 mngt_fertilizing %>%
   # round up variables
   mutate(lime_rate = as.character(round(lime_rate, 2)),
@@ -603,14 +618,28 @@ mngt_fertilizing %>%
   arrange(siteid, plotid, location, date) %>%
   select(-temp) -> fertilizing_EXP
 
-write_csv(fertilizing_EXP, 'Ag_Commons_Data/mngt_fertilizing_and_tillage_data.csv')
+write_csv(fertilizing_EXP, 'Ag_Commons_Data/mngt_fertilizing_data.csv')
 
-drive_upload(media = 'Ag_Commons_Data/mngt_fertilizing_and_tillage_data.csv',
+drive_upload(media = 'Ag_Commons_Data/mngt_fertilizing_data.csv',
              path = as_id('1zblZuTiEUdZOq1_IHgO_gEtR018TidRq'), 
              overwrite = TRUE)
 
 
-# Format Residue data
+
+# ... Format Harvesting data ----------------------------------------------
+mngt_tillage %>%
+  ReplaceIDs() %>%
+  arrange(siteid, plotid, location, date) -> tillage_EXP
+
+write_csv(tillage_EXP, 'Ag_Commons_Data/mngt_tillage_data.csv')
+
+drive_upload(media = 'Ag_Commons_Data/mngt_tillage_data.csv',
+             path = as_id('1zblZuTiEUdZOq1_IHgO_gEtR018TidRq'), 
+             overwrite = TRUE)
+
+
+
+# ... Format Residue data -------------------------------------------------
 mngt_residue %>%
   ReplaceIDs() %>%
   arrange(siteid, year_calendar) -> residue_EXP
@@ -622,12 +651,12 @@ drive_upload(media = 'Ag_Commons_Data/mngt_residue_data.csv',
              overwrite = TRUE)
 
 
-# Format Irrigation data
+# ... Format Irrigation data ----------------------------------------------
 mngt_irrigation %>%
   # round up variables
   RoundNumber(COL = "irrigation_amount") %>%
   ReplaceIDs() %>%
-  arrange(siteid, irrigation_structure, date_irrigation_start) %>%
+  arrange(siteid, plotid, irrigation_structure, date_irrigation_start) %>%
   select(-temp) -> irrigation_EXP
 
 write_csv(irrigation_EXP, 'Ag_Commons_Data/mngt_irrigation_data.csv')
@@ -637,13 +666,13 @@ drive_upload(media = 'Ag_Commons_Data/mngt_irrigation_data.csv',
              overwrite = TRUE)
 
 
-# Format DWM data
+# ... Format DWM data -----------------------------------------------------
 mngt_dwm %>%
   # round up variables
   RoundNumber(COL = "outlet_depth", ROUND = 1) %>%
   RoundNumber(COL = "outlet_height", ROUND = 1) %>%
   ReplaceIDs() %>%
-  arrange(siteid, control_structure, date) %>%
+  arrange(siteid, plotid, control_structure, date) %>%
   select(-temp) -> dwm_EXP
 
 write_csv(dwm_EXP, 'Ag_Commons_Data/mngt_dwm_data.csv')
@@ -653,7 +682,7 @@ drive_upload(media = 'Ag_Commons_Data/mngt_dwm_data.csv',
              overwrite = TRUE)
 
 
-# Format Notes data
+# ... Format Notes data ---------------------------------------------------
 mngt_notes %>%
   ReplaceIDs() %>%
   arrange(siteid, year_calendar) -> notes_EXP

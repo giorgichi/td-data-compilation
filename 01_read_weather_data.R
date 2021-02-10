@@ -198,12 +198,19 @@ ReadExcelSheets('Input_Data/WEATHER/HICKORY Weather.xlsx') %>%
 
 
 # HICKS_B -----------------------------------------------------------------
-# should we rename it to HICKS_P?
 ReadExcelSheets('Input_Data/WEATHER/HICKS_B Weather.xlsx') %>%
   pluck(1) -> weather_HICKS_B_hourly
 
 ReadExcelSheets('Input_Data/WEATHER/HICKS_B Weather.xlsx') %>%
   pluck(2) -> weather_HICKS_B_daily
+
+
+# HICKS_P -----------------------------------------------------------------
+ReadExcelSheets('Input_Data/WEATHER/HICKS_B Weather.xlsx') %>%
+  pluck(1) -> weather_HICKS_P_hourly
+
+ReadExcelSheets('Input_Data/WEATHER/HICKS_B Weather.xlsx') %>%
+  pluck(2) -> weather_HICKS_P_daily
 
 
 # MAASS -------------------------------------------------------------------
@@ -324,7 +331,11 @@ ReadExcelSheets('Input_Data/WEATHER/WILKIN1 Weather.xlsx') %>%
 
 
 # WILKIN2 -----------------------------------------------------------------
-# ReadExcelSheets('Input_Data/WEATHER/WILKIN2 Weather.xlsx') 
+ReadExcelSheets('Input_Data/WEATHER/WILKIN3 Weather.xlsx') %>%
+  pluck(1) -> weather_WILKIN2_hourly
+
+ReadExcelSheets('Input_Data/WEATHER/WILKIN3 Weather.xlsx') %>%
+  pluck(2) -> weather_WILKIN2_daily
 
 
 # WILKIN3 -----------------------------------------------------------------
@@ -350,10 +361,11 @@ mget(ls(pattern = 'weather_[[:graph:]]+_hourly')) %>%
   select(siteid, station = Station, tmsp, key, value) %>%
   # only HICKS_B has Min and Max Hourly Air Temp
   filter(!key %in% c('Min Air Temperature', 'Max Air Temperature')) %>%
-  mutate(key = ifelse(key == 'Ave Air Temperature', 'Air Temperature', key)) -> weather_ALL_hourly
+  mutate(key = ifelse(key == 'Ave Air Temperature', 'Air Temperature', key)) -> 
+  weather_ALL_hourly
 
 
-# Combnine all daily weather data
+# Combine all daily weather data
 rm(weather_ALL_daily)
 mget(ls(pattern = 'weather_[[:graph:]]+_daily')) %>%
   map(~ .x %>% gather(key, value, -Date, -sheet, -starts_with('Station'))) %>%

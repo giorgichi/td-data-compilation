@@ -25,7 +25,7 @@ agr_ALL %>%
                                siteid == 'SWROC' & crop == 'corn' & location != '0 N' ~ 
                                  paste('Urea at', word(location, 1), 'lbs N/acre'),
                                TRUE ~ trt_value)) %>%
-  # coorect units 
+  # correct units 
   mutate(value_new = as.numeric(value),
          # corn final population is in plant per acre - convert to per ha
          value = ifelse(siteid == 'VANWERT' & str_detect(key, 'AGR1 '), as.character(value_new * 2.47105), value),
@@ -53,6 +53,26 @@ agr_ALL_correct %>%
          location = ifelse(siteid == 'FAIRM' & plotid == 'CD/SI', 'East and West plots', location),
          plotid = ifelse(siteid == 'FAIRM' & plotid == 'CD/SI', 'SI', plotid),
          plotid = ifelse(siteid == 'FAIRM' & str_detect(plotid, 'CD'), word(plotid, 2), plotid)) %>%
+  # add locations to SERF_IA 
+  mutate(temp = ifelse(siteid == 'SERF_IA', as.numeric(year) %% 2, NA),
+         location = case_when(siteid == 'SERF_IA' & crop == 'corn' &
+                                plotid %in% c('S1','S2','S4','S7') & temp == 0 ~ 'North half',
+                              siteid == 'SERF_IA' & crop == 'corn' &
+                                plotid %in% c('S3','S5','S6','S8') & temp == 0 ~ 'South half',
+                              siteid == 'SERF_IA' & crop == 'corn' &
+                                plotid %in% c('S1','S2','S4','S7') & temp == 1 ~ 'South half',
+                              siteid == 'SERF_IA' & crop == 'corn' &
+                                plotid %in% c('S3','S5','S6','S8') & temp == 1 ~ 'North half',
+                              siteid == 'SERF_IA' & crop == 'soybean' &
+                                plotid %in% c('S1','S2','S4','S7') & temp == 0 ~ 'South half',
+                              siteid == 'SERF_IA' & crop == 'soybean' &
+                                plotid %in% c('S3','S5','S6','S8') & temp == 0 ~ 'North half',
+                              siteid == 'SERF_IA' & crop == 'soybean' &
+                                plotid %in% c('S1','S2','S4','S7') & temp == 1 ~ 'North half',
+                              siteid == 'SERF_IA' & crop == 'soybean' &
+                                plotid %in% c('S3','S5','S6','S8') & temp == 1 ~ 'South half',
+                              TRUE ~ location)) %>%
+  select(-temp) %>%
   # standardize crop names
   mutate(crop = ifelse(crop == 'soy', 'soybean', crop)) %>%
   # update variable names
@@ -66,7 +86,17 @@ agr_ALL_correct %>%
   mutate(action = ifelse(siteid == 'ACRE' & harvested_area < 0.81, 'remove', action)) %>%
   select(siteid, plotid, location, crop, trt, trt_value, year, date, 
          var_NEW = NEW_CODE, value, action, harvested_area) %>%
-  filter(!is.na(value)) ->
+  # address some items from GitHub issue #343
+  mutate(trt_value = ifelse(trt_value == "C-shank field cult", "field cultivate", trt_value)) %>%
+  filter(!is.na(value)) %>%
+  # separate SI into East and West plots at FAIRM
+  add_row(filter(., siteid == 'FAIRM' & plotid == 'SI') %>%
+            mutate(plotid = 'West')) %>%
+  mutate(plotid = ifelse(siteid == 'FAIRM' & plotid == 'SI', 'East', plotid),
+         location = ifelse(siteid == 'FAIRM', NA, location )) %>%
+  # standardize hybrid/variety names, see GitHub datateam/issues/343
+  mutate(trt_value = str_replace(trt_value, "Kruger 2114 RR", "Kruger 2114RR")) %>%
+  arrange(siteid, year) ->
   agr_ALL_standard
 
 

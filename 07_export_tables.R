@@ -7,6 +7,8 @@ library(googledrive)
 
 
 
+# Connect to SQLite DB -----------------------------------------------------------------------
+
 # Create a connection to a new database for storing all data
 conn_final <- dbConnect(RSQLite::SQLite(), 'Final_Database//TD_FINAL_Data.db')
 
@@ -175,8 +177,12 @@ agr %>%
   select(-key, -DIGITS) %>%
   spread(EXPORT_VAR_NAME, value) %>%
   ReplaceIDs() %>%
-  arrange(siteid, plotid, location, year) %>%
-  select(siteid:date,
+  arrange(siteid, year, plotid, location, trt) %>% 
+  select(siteid:crop,
+         trt_2 = trt,
+         trt_value_2 = trt_value,
+         year,
+         date,
          leaf_area_index,
          final_plant_population,
          grain_moisture,
@@ -518,7 +524,7 @@ clim %>%
   left_join(codes %>% filter(CROP == 'DAILY') %>% select(-TYPE, -(CROP:UNITS)), 
             by = c('key' = 'NEW_CODE')) %>%
   mutate(value = round(value, DIGITS)) %>%
-  select(-key, -DIGITS) %>%
+  select(-key, -DIGITS, -ACTION) %>%
   spread(EXPORT_VAR_NAME, value) %>%
   # combine ET data for export
   mutate(et = ifelse(is.na(reference_ET_pm_sg),
@@ -536,6 +542,7 @@ clim %>%
          precipitation,
          relative_humidity = relative_humidity_avg,
          air_temp_avg, air_temp_min, air_temp_max,
+         dew_point_temp_avg,
          solar_radiation,
          wind_speed, wind_direction,
          et, et_method) %>% 

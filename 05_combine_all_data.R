@@ -111,7 +111,7 @@ planting_DB %>%
   filter(action != "remove") %>%
   # this location was removed due to harvest area criteria
   filter(!(siteid == 'ACRE' & location == 'Field 8')) %>%
-  select(-action) -> planting_FINAL_DB
+  select(-action, -operation) -> planting_FINAL_DB
 dbWriteTable(conn_final, "mngt_planting", planting_FINAL_DB, overwrite = TRUE)
 
 # ... Harvesting ----------------------------------------------------------
@@ -125,7 +125,7 @@ harvesting_DB %>%
   filter(action != "remove") %>%
   # this location was removed due to harvest area criteria
   filter(!(siteid == 'ACRE' & location == 'Field 8')) %>%
-  select(-action) -> harvesting_FINAL_DB
+  select(-action, -operation) -> harvesting_FINAL_DB
 dbWriteTable(conn_final, "mngt_harvesting", harvesting_FINAL_DB, overwrite = TRUE)
 
 # ... Fertilizing ---------------------------------------------------------
@@ -159,7 +159,7 @@ tillage_DB %>%
   # this location was removed due to harvest area criteria
   filter(!(siteid == 'ACRE' & location == 'Field 8')) %>%
   # select variables of high value, quality and abundance 
-  select(-action) -> tillage_FINAL_DB
+  select(-action, -operation) -> tillage_FINAL_DB
 dbWriteTable(conn_final, "mngt_tillage", tillage_FINAL_DB, overwrite = TRUE)
 
 # ... DWM -----------------------------------------------------------------
@@ -200,15 +200,6 @@ notes %>%
   filter(!siteid %in% c('BATH_A', 'HICKS_S')) -> notes_FINAL_DB
 dbWriteTable(conn_final, "mngt_notes", notes_FINAL_DB, overwrite = TRUE)
 
-# ... Pesticide (not included in public dataset) --------------------------
-pesticide <- read_rds('Standard_Data/pesticide_ALL.rds')
-
-pesticide %>%
-  mutate_at(vars(starts_with("date")), as.character) %>%
-  select(action, everything()) -> pesticide_DB
-dbWriteTable(conn, "mngt_pesticide", pesticide_DB, overwrite = TRUE)
-
-
 # ... Reside --------------------------------------------------------------
 residue <- read_rds('Standard_Data/residue_ALL.rds')
 
@@ -220,6 +211,14 @@ residue_DB %>%
   select(-action)  -> residue_FINAL_DB
 dbWriteTable(conn_final, "mngt_residue", residue_FINAL_DB, overwrite = TRUE)
 
+# ... Pesticide (not included in public dataset) --------------------------
+pesticide <- read_rds('Standard_Data/pesticide_ALL.rds')
+
+pesticide %>%
+  mutate_at(vars(starts_with("date")), as.character) %>%
+  select(action, everything()) -> pesticide_DB
+dbWriteTable(conn, "mngt_pesticide", pesticide_DB, overwrite = TRUE)
+
 
 
 # Agronomic Data ----------------------------------------------------------
@@ -230,15 +229,6 @@ agr %>%
   mutate(year = as.integer(year),
          date = as.character(date)) %>%
   spread(var_NEW, value) %>%
-  # separate (by duplication) SI into East and West plots at FAIRM
-  add_row(filter(., siteid == 'FAIRM' & plotid == 'SI')) %>%
-  group_by(siteid, plotid, crop, year) %>%
-  mutate(temp = ifelse(siteid == 'FAIRM' & !is.na(location), 1:n(), NA_real_)) %>%
-  ungroup() %>%
-  mutate(plotid = case_when(siteid == 'FAIRM' & temp == 1 ~ 'East',
-                            siteid == 'FAIRM' & temp == 2 ~ 'West',
-                            TRUE ~ plotid),
-         location = ifelse(siteid == 'FAIRM', NA_character_, location)) %>%
   arrange(siteid, plotid, year, date) -> agr_DB
 
 dbWriteTable(conn, "agronomic", agr_DB, overwrite = TRUE)
@@ -279,6 +269,21 @@ agr_DB %>%
   filter(!(siteid == 'CLAY_R' & year == 2012)) %>%
   # remove CRAWF data due to quality issues noted by Ehsan Ghane
   filter(siteid != 'CRAWF') %>%
+  # see GitHub datatea/issues/343
+  mutate(trt = ifelse(siteid == 'MUDS1' & year %in% 2004:2005, NA, trt),
+         trt_value = ifelse(siteid == 'MUDS1' & year %in% 2004:2005, NA, trt_value),
+         trt_value = 
+           ifelse(siteid == 'MUDS1' & year %in% 2006:2007 & trt == 'N-treatment Corn',
+                  NA, trt_value),
+         trt = 
+           ifelse(siteid == 'MUDS1' & year %in% 2006:2007 & trt == 'N-treatment Corn', 
+                  NA, trt),
+         trt_value = 
+           ifelse(siteid == 'MUDS1' & year %in% 2009:2010 & str_detect(trt, 'Fungicide'),
+                  NA, trt_value),
+         trt = 
+           ifelse(siteid == 'MUDS1' & year %in% 2009:2010 & str_detect(trt, 'Fungicide'), 
+                  NA, trt)) %>%
   # select variables of high value, quality and abundance 
   select(-action, -harvested_area, 
          -AGR90.01.10, 
@@ -641,7 +646,7 @@ weather_hourly %>%
   mutate(date = format(date, '%Y-%m-%d')) ->
   weather_hourly_DB
 
-dbWriteTable(conn, "weather_hourly", weather_hourly_DB)
+dbWriteTable(conn, "weather_hourly", weather_hourly_DB, overwrite = TRUE)
 
 # count sites per variable
 weather_hourly_DB %>%
@@ -700,7 +705,7 @@ weather_daily_DB %>%
 
 # Save selected data (variables) for FINAL DB. > NOTE: only DAILY WEATHER goes to the FINAL DB
 weather_daily_DB %>%
-  select(siteid:date, CLIM01, CLIM03.01.01, CLIM03.01.02, CLIM03.01.03,
+  select(siteid:date, CLIM01, CLIM03.01.01, CLIM03.01.02, CLIM03.01.03, CLIM03.02.01, 
          CLIM04.01.01, CLIM05.02, CLIM06.01, CLIM06.02, 
          CLIM07.03.01, CLIM07.03.03, CLIM07.04.01) %>%
   # remove 0 solar radiation readings

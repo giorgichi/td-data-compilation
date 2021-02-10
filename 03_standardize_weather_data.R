@@ -10,9 +10,10 @@ weather_ALL_daily <- read_rds('Inter_Data/weather_ALL_daily.rds')
 
 # HOURLY WEATHER DATA -----------------------------------------------------
 
-# Standartize timestamps (make hourly steps)
+# Standardize timestamps (make hourly steps)
 # do sites with identical temporal data together
-# NOTE: check is there are some missing Precipitation data since it will take extra step so no 0 is inserted when all are NAs
+# NOTE: check is there are some missing Precipitation data since
+# it will take extra step so no 0 is inserted when all are NAs
 
 weather_ALL_hourly %>%
   filter(siteid %in% c('AUGLA', 'DEFI_M', 'HARDIN_NW', 'HENRY',
@@ -74,16 +75,28 @@ weather_ALL_hourly %>%
          Precipitation = ifelse(is.na(Precip_CHECK), NA, Precipitation)) %>%
   select(-Precip_CHECK) %>%
   gather(key, value, -siteid, -station, -date) -> df4
+
+weather_ALL_hourly %>%
+  filter(siteid %in% c('WILKIN1', 'WILKIN2', 'WILKIN3')) %>%
+  spread(key, value) %>%
+  mutate(tmsp = round_date(tmsp, "5 minutes"),
+         date = floor_date(tmsp, unit = 'hour')) %>%
+  group_by(siteid, station, date) %>%
+  summarise(Precipitation = sum(Precipitation),
+            `Air Temperature` = mean(`Air Temperature`, na.rm = TRUE),
+            `Dew-Point Temperature` = mean(`Dew-Point Temperature`, na.rm = TRUE)) %>%
+  ungroup() %>%
+  gather(key, value, -siteid, -station, -date) -> df5
   
-bind_rows(df1, df2, df3, df4) %>%
+bind_rows(df1, df2, df3, df4, df5) %>%
   rename(tmsp = date) -> df_all
   
 
 
 # Combine datasets with uniform timestamp
 weather_ALL_hourly %>%
-  filter(!siteid %in% c('AUGLA', 'CRAWF', 'DEFI_M', 'HARDIN_NW', 'HENRY',
-                       'CLAY_U', 'FULTON', 'VANWERT')) %>%
+  filter(!siteid %in% c('AUGLA', 'CRAWF', 'DEFI_M', 'HARDIN_NW', 'HENRY', 'CLAY_U', 
+                        'FULTON', 'VANWERT', 'WILKIN1', 'WILKIN2', 'WILKIN3')) %>%
   filter(!(siteid == 'DEFI_R' & station == 'Station')) %>%
   bind_rows(df_all) %>%
   # remove questionable data
@@ -98,6 +111,7 @@ weather_ALL_hourly_correct %>%
   # add variable codes
   left_join(tibble(key = c('Precipitation',    
                            'Air Temperature',
+                           'Dew-Point Temperature',
                            'Relative Humidity',
                            'Solar Radiation',
                            'Wind Speed',
@@ -105,6 +119,7 @@ weather_ALL_hourly_correct %>%
                            'Wind Gust'),
                    code = c('CLIM01',
                             'CLIM03.01',
+                            'CLIM03.02',
                             'CLIM04.01',
                             'CLIM05.01',
                             'CLIM06.01',
@@ -121,7 +136,8 @@ weather_ALL_hourly_correct %>%
                                        'DEFI_R', 'FULTON', 'VANWERT',
                                        'TIDE') ~ tmsp + hours(5), 
                          siteid %in% c('BEAR', 'BEAR2', 'BENTON', 'DIKE', 'HICKORY', 'MAASS', 'SHEARER',
-                                       'HICKS_B', 'CLAY_U', 'SERF_SD') ~ tmsp + hours(6)),
+                                       'HICKS_B', 'HICKS_P', 'CLAY_U', 'SERF_SD',
+                                       'WILKIN1', 'WILKIN2', 'WILKIN3') ~ tmsp + hours(6)),
          UTC = format(UTC, '%Y-%m-%dT%H:%M:%S+00:00'),     # format according to ISO 8601 standard 
          timestamp_type = 'I') %>%
   select(siteid, station, date, time, UTC, timestamp_type, tmsp, 
@@ -150,7 +166,7 @@ weather_ALL_hourly %>%
   mutate(hourly = 'yes') %>%
   full_join(weather_ALL_daily %>%
               filter(!str_detect(key, 'Reference ET'),
-                     !str_detect(key, 'Dew|Run|Density|Photo'),
+                     !str_detect(key, 'Run|Density|Photo'),
                      !str_detect(key, 'Min Solar'),
                      !str_detect(key, 'Max Solar'),
                      !str_detect(key, 'Min Rel'),
@@ -189,7 +205,7 @@ weather_ALL_hourly %>%
          `Max Air Temperature` = ifelse(temp_CHECK < 19, NA, `Max Air Temperature`)) %>%
   select(-count, -contains('CHECK')) %>%
   ungroup() %>%
-  gather(key, value, -siteid, -station, -date) -> df5
+  gather(key, value, -siteid, -station, -date) -> df6
   
 
 weather_ALL_hourly %>%
@@ -213,7 +229,7 @@ weather_ALL_hourly %>%
          `Max Air Temperature` = ifelse(temp_CHECK < 19, NA, `Max Air Temperature`)) %>%
   select(-count, -contains('CHECK')) %>%
   ungroup() %>%
-  gather(key, value, -siteid, -station, -date) -> df6
+  gather(key, value, -siteid, -station, -date) -> df7
 
 # calculate daily wind gust for WIRSIS sites
 weather_ALL_hourly %>%
@@ -233,7 +249,7 @@ weather_ALL_hourly %>%
                            siteid == 'DEFI_R' & date == ymd(20070508) ~ NA_real_,
                            siteid == 'DEFI_R' & date %in% ymd(20040105):ymd(20040107) ~ NA_real_,
                            TRUE ~ value)) %>%
-  ungroup() -> df7
+  ungroup() -> df8
 
 # calculate daily wind direction for WIRSIS sites
 weather_ALL_hourly %>%
@@ -251,10 +267,10 @@ weather_ALL_hourly %>%
             `Wind Speed` = mean(`Wind Speed`, na.rm = TRUE),
             x = mean(x, na.rm = TRUE),
             y = mean(y, na.rm = TRUE)) %>%
-  # combine components of wind diraction and convert to degrees
+  # combine components of wind direction and convert to degrees
   mutate(WD = atan2(y, x)/pi*180,
          WD = ifelse(WD < 0, 360 + WD, WD)) %>%
-  # after checking that they are close to simple average substitude them
+  # after checking that they are close to simple average substitute them
   mutate(`Wind Direction` = WD) %>%
   select(-x, -y, -WD) %>%
   gather(key, value, 5:6) %>%
@@ -264,7 +280,7 @@ weather_ALL_hourly %>%
   # remove erroneous 0 readings
   mutate(value = case_when(siteid == 'DEFI_R' & date %in% ymd(20040105):ymd(20040107) ~ NA_real_,
                            TRUE ~ value)) %>%
-  ungroup() -> df8
+  ungroup() -> df9
 
 # calculate daily solar radiation at DPAC
 weather_ALL_hourly %>%
@@ -280,7 +296,7 @@ weather_ALL_hourly %>%
   mutate(value = value  * 60 * 60 * 24 / 10^6) %>%
   mutate(value = ifelse(count < 19, NA, value),
          value = ifelse(is.infinite(value), NA, value)) %>%
-  select(-count, -CHECK) -> df9
+  select(-count, -CHECK) -> df10
   
 
 
@@ -293,14 +309,15 @@ weather_ALL_daily %>%
                          str_detect(key, 'ET$') ~ str_replace(key, 'ET', 'ET (Thornthwaite Grass)'),   # NEED to check again
                          TRUE ~ key)) %>%
   # get rid of duplicated WIND SPEED measurements at WIRSIS
-  left_join(df8 %>% mutate(value = 'Y') %>% select(everything(), DUPS = value), 
+  left_join(df9 %>% mutate(value = 'Y') %>% select(everything(), DUPS = value), 
             by = c("siteid", "station", "date", "key")) %>%
   filter(is.na(DUPS)) %>%
   select(-DUPS) %>%
   # combine with the rest of the daily data
-  bind_rows(df5, df6, df7, df8, df9) %>%
+  bind_rows(df6, df7, df8, df9, df10) %>%
   # standardize variable names (some variables have two names)
   mutate(key = case_when(key == 'Relative Humidity' ~ 'Ave Relative Humidity',
+                         key == 'Dew-Point Temperature' ~ 'Ave Dew-Point Temperature',
                          TRUE ~ key)) %>%
   # add variable codes
   left_join(tibble(key = c('Precipitation',
@@ -308,7 +325,7 @@ weather_ALL_daily %>%
                            'Ave Air Temperature',
                            'Min Air Temperature',
                            'Max Air Temperature',
-                           'Dew-Point Temperature',
+                           'Ave Dew-Point Temperature',
                            'Ave Relative Humidity',
                            'Min Relative Humidity',
                            'Max Relative Humidity',
@@ -341,7 +358,7 @@ weather_ALL_daily %>%
                             'CLIM03.01.01',
                             'CLIM03.01.02',
                             'CLIM03.01.03',
-                            'CLIM03.02',
+                            'CLIM03.02.01',
                             'CLIM04.01.01',
                             'CLIM04.01.02',
                             'CLIM04.01.03',
@@ -370,7 +387,7 @@ weather_ALL_daily %>%
                             'CLIM08.04.02',
                             'CLIM08.04.03')),
             by = "key") %>%
-  select(-key) %>% 
+  select(-key) %>%
   spread(code, value) %>%
   # standardize timestamp
   mutate(timestamp_type = 'D') %>%
@@ -387,9 +404,6 @@ weather_ALL_daily_standard %>%
 weather_ALL_daily_standard %>%
   arrange(siteid, station, date) %>%
   write_rds('Standard_Data/weather_daily_all_variable.rds', compress = 'xz')
-
-
-
 
 
 

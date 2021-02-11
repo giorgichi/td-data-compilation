@@ -13,6 +13,9 @@ irr_ALL_daily <- read_rds('Inter_Data/irr_ALL_daily.rds')
 
 # Standardize tile flow and discharge data
 tf_ALL_daily %>%
+  # remove questionable data at ACRE
+  mutate(value = ifelse(siteid == 'ACRE' & plotid == "Outlet" & var_NEW == "WAT05" &
+                          between(date, ymd(20080915), ymd(20081013)), NA, value)) %>%
   # convert discharge from m3/hr to m3/day
   mutate(value = ifelse(var_NEW == 'WAT05', value *24, value)) %>%
   # add locations and assign plots
@@ -50,7 +53,8 @@ tf_ALL_daily %>%
 # Update discharge data for SB --------------------------------------------
 tf_ALL_daily_standard %>%
   filter(!siteid %in% c('BEAR', 'BEAR2', 'BENTON', 'DIKE', 'HICKORY', 'MAASS', 'SHEARER')) %>%
-  bind_rows(read_rds('Input_Data/WATER/discharge_Iowa_SBs_DAILY.rds')) -> tf_ALL_daily_standard_UPDATED
+  bind_rows(read_rds('Input_Data/WATER/discharge_Iowa_SBs_DAILY.rds')) -> 
+  tf_ALL_daily_standard_UPDATED
 
 
 

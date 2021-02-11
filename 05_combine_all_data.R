@@ -6,6 +6,8 @@ library(janitor)
 
 
 
+# Connect to SQLite DB -----------------------------------------------------------------------
+
 # Create a connection to a new database for storing all data
 conn <- dbConnect(RSQLite::SQLite(), 'Final_Database//TD_ALL_Data.db')
 conn_final <- dbConnect(RSQLite::SQLite(), 'Final_Database//TD_FINAL_Data.db')
@@ -68,7 +70,9 @@ site_history_DB %>%
                            latitude),
          longitude = ifelse(siteid %in% private_farms,
                             paste0(str_sub(longitude, 1, -2), "X"),
-                            longitude)) -> site_history_FINAL_DB
+                            longitude)) %>% 
+  select(-PI_institution_unit, -drainage_intensity,
+         -kirkham_coefficient) -> site_history_FINAL_DB
 dbWriteTable(conn_final, "meta_site_history", site_history_FINAL_DB, overwrite = TRUE)
 
 # ... Plot ID -------------------------------------------------------------
@@ -104,6 +108,9 @@ dbWriteTable(conn_final, "meta_treatment_years", trt_by_year_FINAL_DB, overwrite
 planting <- read_rds('Standard_Data/planting_ALL.rds')
 
 planting %>%
+  mutate(plant_rate_units = ifelse(is.na(plant_rate_units),
+                                   "n/a",
+                                   paste(plant_rate_units, "per ha"))) %>%
   mutate_at(vars(starts_with("date")), as.character) -> planting_DB
 dbWriteTable(conn, "mngt_planting", planting_DB, overwrite = TRUE)
 
@@ -149,6 +156,7 @@ dbWriteTable(conn_final, "mngt_fertilizing", fertilizing_FINAL_DB, overwrite = T
 tillage <- read_rds('Standard_Data/tillage_ALL.rds')
 
 tillage %>%
+  rename(tillage_type = operation_type) %>%
   # standardize location names for SWROC
   mutate(location = ifelse(siteid == 'SWROC', str_remove(location, "^0{1,2}"), location)) %>%
   mutate_at(vars(starts_with("date")), as.character) -> tillage_DB
@@ -338,6 +346,9 @@ wq_DB %>%
 
 # Save selected data (variables) for FINAL DB. > NOTE: only DAILY values goes to the FINAL DB
 wq_hourly %>%
+  # remove locations due to questionable flow data
+  filter(!(siteid == 'DEFI_R' & location %in% c("Reservoir Out", "A", "B", "M", "Offsite"))) %>%
+  filter(!(siteid == 'VANWERT' & location %in% c("Reservoir Out", "Offsite"))) %>%
   # select variables of high value, quality and abundance 
   filter(var_NEW %in% c('WAT15',
                         'WAT30', 'WAT31', 'WAT33', 'WAT34', 'WAT35',
@@ -367,7 +378,7 @@ wq_hourly %>%
             value_BDL = max(value_BDL),
             value_LES = max(value_LES)) %>% 
   ungroup() %>%
-  # THIRD - substitude average of BDLs with BDL for HOURLY data
+  # THIRD - substitute average of BDLs with BDL for HOURLY data
   mutate(value_parse = ifelse(is.nan(value_parse), NA_real_, round(value_parse, 5)),
          value = ifelse(timestamp_type == 'I', as.character(value_parse), value),
          value = ifelse(timestamp_type == 'I' & value_BDL == 1 & is.na(value), 'BDL', value)) %>%
@@ -397,6 +408,17 @@ read_rds('Standard_Data/tf_ALL_daily.rds') -> tf_daily
 read_csv('Input_Data/WATER/tile_flow_for_ANOVA_2020-03-09.csv') -> tf_filled
 
 tf_daily %>%
+  # remove locations with questionable data
+  filter(!(siteid == 'DEFI_R' & location %in% c("A", "B", "Offsite"))) %>%
+  filter(!(siteid == 'VANWERT' & location %in% c("Reservoir Out", "Offsite"))) %>%
+  # cut off any questionable high flow (some are double of Des Moines river!)
+  mutate(value = case_when(
+    siteid == 'DEFI_R' & location == "I" & value > 1000 ~ NA_real_,
+    siteid == 'DEFI_R' & location == "J" & value > 1000 ~ NA_real_,
+    siteid == 'DEFI_R' & location == "C" & value > 1500 ~ NA_real_,
+    siteid == 'DEFI_R' & location == "D" & value > 5000 ~ NA_real_,
+    siteid == 'DEFI_R' & location == "Wetland Out" & value > 25000 ~ NA_real_,
+    TRUE ~ value)) %>%
   select(-time, -UTC, -timestamp_type) %>%
   spread(var_NEW, value) %>%
   full_join(tf_filled %>% select(-trt, -rep, -year, -season), 
@@ -525,7 +547,7 @@ nl_DB %>%
 
 
 
-# Water Table and Stage Data ----------------------------------------------
+# Water Table -------------------------------------------------------------
 
 # Water table, water level and piezometric head data
 read_rds('Standard_Data/water_table_daily_ALL.rds') -> wt_daily
@@ -581,8 +603,10 @@ wt_DB %>%
   select(-CHECK) ->
   wt_FINAL_DB
 
-dbWriteTable(conn_final, "water_table", wt_FINAL_DB)
+dbWriteTable(conn_final, "water_table", wt_FINAL_DB, overwrite = TRUE)
 
+
+# Stage Data --------------------------------------------------------------
 
 # Stage and water storage data
 read_rds('Standard_Data/stage_hourly_ALL.rds') -> stage_hourly
@@ -598,6 +622,8 @@ dbWriteTable(conn, "water_stage", stage_hourly_DB)
 
 # count sites per variable
 stage_hourly_DB %>%
+  # leave only wetland
+  filter(location != 'Reservoir') %>%
   gather(code, value, starts_with('WAT')) %>%
   filter(!is.na(value)) %>%
   distinct(siteid, code) %>%
@@ -618,6 +644,8 @@ stage_hourly_DB %>%
 
 # Save selected data (variables) for FINAL DB. > NOTE: only DAILY values goes to the FINAL DB
 stage_hourly_DB %>%
+  # leave only wetland
+  filter(location != 'Reservoir') %>%
   # calculate daily data
   group_by(siteid, plotid, location, reading_type, date) %>%
   summarise(WAT04 = mean(WAT04, na.rm = TRUE)) %>%
@@ -625,7 +653,7 @@ stage_hourly_DB %>%
   ungroup() ->
   stage_FINAL_DB
 
-dbWriteTable(conn_final, "water_stage", stage_FINAL_DB)
+dbWriteTable(conn_final, "water_stage", stage_FINAL_DB, overwrite = TRUE)
 
 
 rm(wt, wt_daily, wt_hourly, wt_DB, wt_FINAL_DB,

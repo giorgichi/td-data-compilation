@@ -88,8 +88,9 @@ wt_ALL_hourly %>%
          value = ifelse(siteid == 'SERF_IA' & plotid == 'S1' & tmsp > ymd_h(2017040523), NA_real_, value)) %>%
   # correct measurement units (convert to meters)
   mutate(value = case_when(siteid == 'FAIRM' ~ value * 0.3048 * 0.01, # adjusted based on plots published by Rijal, 2012
-                           siteid %in% c('ACRE', 'CLAY_C', 'CLAY_R', 'CLAY_U', 'DEFI_R', 'TIDE',
-                                         'DPAC', 'HICKS_B', 'SERF_IA', 'SERF_SD') ~ value * 0.01,  # from cm
+                           siteid %in% c('ACRE', 'CLAY_C', 'CLAY_R', 'CLAY_U', 
+                                         'DEFI_R', 'TIDE', 'DPAC', 'HICKS_B', 
+                                         'SERF_IA', 'SERF_SD', 'WILKIN1') ~ value * 0.01,  # from cm
                            siteid == 'STJOHNS' & var_NEW == 'WAT01' ~ value * 0.01,                # from cm
                            TRUE ~ value)) %>%
   # standardize timestamp
@@ -97,7 +98,7 @@ wt_ALL_hourly %>%
          time = format(tmsp, '%H:%M'),
          UTC = case_when(siteid %in% c('ACRE', 'DPAC', 'DEFI_R', 'STJOHNS', 'TIDE') ~ tmsp + hours(5), 
                          siteid %in% c('BEAR2', 'CLAY_C', 'CLAY_R', 'CLAY_U', 'FAIRM', 
-                                       'HICKS_B', 'SERF_IA', 'SERF_SD') ~ tmsp + hours(6)),
+                                       'HICKS_B', 'SERF_IA', 'SERF_SD', 'WILKIN1') ~ tmsp + hours(6)),
          UTC = format(UTC, '%Y-%m-%dT%H:%M:%S+00:00'),     # format according to ISO 8601 standard 
          timestamp_type = 'I') %>%
   select(siteid, plotid, location, tmsp, date, time, UTC, timestamp_type, 
@@ -129,7 +130,7 @@ st_ALL_hourly %>%
                           siteid == 'DEFI_R' & location == 'Wetland' & var_NEW == 'WAT14' &
                             tmsp == ymd_hm(200802111330) & value < 340.0 ~ tmsp + days(1),
                           TRUE ~ tmsp)) %>%
-  # remove duplicated datas
+  # remove duplicated data
   filter(!duplicated(.)) %>%
   # correct measurement units (convert to meters)
   mutate(value = case_when(var_NEW == 'WAT04' ~ value * 0.01,                # from cm

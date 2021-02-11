@@ -336,7 +336,7 @@ wt %>%
          water_table_depth) -> wt_EXP
 
 
-write_csv(wt_EXP, 'Ag_Commons_Data/water_table_data.csv')
+write_csv(wt_EXP, 'Ag_Commons_Data/water_table_data.csv', na = "n/a")
 
 drive_upload(media = 'Ag_Commons_Data/water_table_data.csv',
              path = as_id('1zblZuTiEUdZOq1_IHgO_gEtR018TidRq'), 
@@ -360,7 +360,7 @@ st %>%
   filter(year(date) < 2019) %>%
   ReplaceIDs() %>%
   arrange(siteid, plotid, location, reading_type, date) %>%
-  select(siteid:date,
+  select(siteid, location, date,
          stage) -> st_EXP
 
 
@@ -418,7 +418,6 @@ drive_upload(media = 'Ag_Commons_Data/water_quality_data.csv',
 
 
 
-
 # Tile Flow and N Load data -----------------------------------------------
 tf <- dbReadTable(conn_final, 'tile_flow') %>% as_tibble() %>% mutate(date = as_date(date))
 nl <- dbReadTable(conn_final, 'n_loads') %>% as_tibble() %>% mutate(date = as_date(date)) %>% filter(!is.na(date))
@@ -442,7 +441,8 @@ tf %>%
   ReplaceIDs() %>%
   # add dwm treatment
   mutate(year = year(date)) %>%
-  left_join(treatment_EXP %>% select(-dwr)) %>%
+  left_join(treatment_EXP) %>%
+  rename(dwm = drainage_water_management) %>%
   mutate(dwm = ifelse(SITEID == 'AUGLA' & plotid == 'East' & year == 2012 & date > ymd(20120617),
                       'Controlled Drainage', dwm),
          dwm = ifelse(SITEID == 'AUGLA' & plotid == 'West' & year == 2012 & date > ymd(20120617),
@@ -456,7 +456,7 @@ tf %>%
                                           SITEID == 'DEFI_R' & plotid == 8 ~ "J",
                                           TRUE ~ NA_character_)) %>% 
               filter(!is.na(location)) %>%
-              select(siteid, location, year, dwm2 = dwm)) %>%
+              select(siteid, location, year, dwm2 = drainage_water_management)) %>%
   mutate(dwm = ifelse(is.na(dwm2), dwm, dwm2)) %>%
   arrange(siteid, plotid, location, date) %>% 
   select(siteid:date,
@@ -584,7 +584,7 @@ mngt_planting %>%
   arrange(siteid, plotid, location, date) %>%
   select(-temp) -> planting_EXP
 
-write_csv(planting_EXP, 'Ag_Commons_Data/mngt_planting_data.csv')
+write_csv(planting_EXP, 'Ag_Commons_Data/mngt_planting_data.csv', na = "n/a")
 
 drive_upload(media = 'Ag_Commons_Data/mngt_planting_data.csv',
              path = as_id('1zblZuTiEUdZOq1_IHgO_gEtR018TidRq'), 
@@ -633,12 +633,12 @@ drive_upload(media = 'Ag_Commons_Data/mngt_fertilizing_data.csv',
 
 
 
-# ... Format Harvesting data ----------------------------------------------
+# ... Format Tillage data ----------------------------------------------
 mngt_tillage %>%
   ReplaceIDs() %>%
   arrange(siteid, plotid, location, date) -> tillage_EXP
 
-write_csv(tillage_EXP, 'Ag_Commons_Data/mngt_tillage_data.csv')
+write_csv(tillage_EXP, 'Ag_Commons_Data/mngt_tillage_data.csv', na = "n/a")
 
 drive_upload(media = 'Ag_Commons_Data/mngt_tillage_data.csv',
              path = as_id('1zblZuTiEUdZOq1_IHgO_gEtR018TidRq'), 

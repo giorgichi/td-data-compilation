@@ -199,6 +199,9 @@ ReadExcelSheets('Input_Data/WATER/WATER_TABLE/VANWERT Wetland Stage 2008-2009.xl
 # WILKIN1 -----------------------------------------------------------------
 ReadExcelSheets('Input_Data/WATER/WATER_TABLE/WILKIN1 Water Table Depth.xlsx') 
 
+read_rds('Input_Data/WATER/WATER_TABLE/WILKIN1_water_table.rds') %>%
+  select(tmsp, contains('WAT4 Water')) -> wt_WILKIN1_hourly
+
 
 # WILKIN2 -----------------------------------------------------------------
 ReadExcelSheets('Input_Data/WATER/WATER_TABLE/WILKIN2 Piezometer.xlsx') #%>%
@@ -216,7 +219,7 @@ ReadExcelSheets('Input_Data/WATER/WATER_TABLE/WILKIN3 Water Table Depth.xlsx')
 # COMBINE .................................................................
 
 
-# Combnine all hourly water table data
+# Combine all hourly water table data
 rm(wt_ALL_hourly) 
 mget(ls(pattern = 'wt_[[:graph:]]+_hourly')) %>%
   map(~ .x %>% gather(key, value, -tmsp)) %>%
@@ -229,7 +232,7 @@ mget(ls(pattern = 'wt_[[:graph:]]+_hourly')) %>%
   wt_ALL_hourly
 
 
-# Combnine all daily water table data
+# Combine all daily water table data
 rm(wt_ALL_daily)
 mget(ls(pattern = '(wt|pz)_[[:graph:]]+_daily')) %>%
   map(~ .x %>% gather(key, value, -date)) %>%
@@ -242,7 +245,7 @@ mget(ls(pattern = '(wt|pz)_[[:graph:]]+_daily')) %>%
   wt_ALL_daily
 
 
-# Combnine all hourly stage data
+# Combine all hourly stage data
 rm(st_ALL_hourly)
 mget(ls(pattern = 'stage_[[:graph:]]+_hourly')) %>%
   bind_rows() ->

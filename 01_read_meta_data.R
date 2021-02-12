@@ -76,7 +76,7 @@ site_history %>%
          type_of_water_storage_system = `Type of Water Storage System`,
          water_storage_capacity = `Water Storage Capacity`,
          pond_surface_area = `Pond Surface Area`,
-         lanscape_slope = `Landscape Slope`,
+         landscape_slope = `Landscape Slope`,
          tile_depth = `Depth of Tile`,
          tile_spacing = `Tile Spacing`,
          tile_main_diameter = `Tile Main Diameter`,
@@ -170,17 +170,30 @@ plot_keys %>%
   # swap plot ID with Name at FAIRM
   mutate(Plot_ID = ifelse(str_detect(Plot_ID, 'Sump'), Plot_Name, Plot_ID)) %>%
   # remove plot IDs for SB sites
-  mutate(Plot_ID = ifelse(DWM == 'saturated buffer', NA_character_, Plot_ID)) %>%
+  mutate(Plot_ID = ifelse(DWM == 'saturated buffer' & Site_ID != "WILKIN3", 
+                          NA_character_, Plot_ID)) %>%
   # round up numbers
-  mutate(Plot_Area_Agro = round(as.numeric(Plot_Area_Agro), 2),
-         Plot_Area_Drain = round(as.numeric(Plot_Area_Drain), 2),
-         Tile_Depth = round(as.numeric(Tile_Depth), 2),
-         Tile_Spacing = ifelse(Tile_Spacing == 'varies', Tile_Spacing, 
-                               as.character(round(as.numeric(Tile_Spacing), 2))),
-         Tile_Grade = round(as.numeric(Tile_Grade), 2),
-         Tile_Diameter = round(as.numeric(Tile_Diameter), 1),
-         Sub_Main_Diameter = round(as.numeric(Sub_Main_Diameter), 1),
-         Main_Diameter = round(as.numeric(Main_Diameter), 1)) %>%
+  mutate(
+    Plot_Area_Agro = round(as.numeric(Plot_Area_Agro), 2),
+    Plot_Area_Drain = round(as.numeric(Plot_Area_Drain), 2),
+    Tile_Depth = ifelse(Tile_Depth == "unknown", 
+                        Tile_Depth, 
+                        round(as.numeric(Tile_Depth), 2)),
+    Tile_Spacing = ifelse(Tile_Spacing %in% c("varies", "unknown", "random"), 
+                          Tile_Spacing, 
+                          as.character(round(as.numeric(Tile_Spacing), 1))),
+    Tile_Grade = ifelse(Tile_Grade == "unknown",
+                        Tile_Grade, 
+                        round(as.numeric(Tile_Grade), 2)),
+    Tile_Diameter = ifelse(Tile_Diameter == "unknown",
+                           Tile_Diameter,
+                           round(as.numeric(Tile_Diameter), 1)),
+    Sub_Main_Diameter = round(as.numeric(Sub_Main_Diameter), 1),
+    Main_Diameter = ifelse(Main_Diameter == "unknown",
+                           Main_Diameter,
+                           round(as.numeric(Main_Diameter), 1)),
+    Tile_Depth = ifelse(Tile_Depth == "1", "1.00", Tile_Depth)
+         ) %>%
   # remove redundant comments
   mutate(Comments = case_when(str_detect(Comments, 'soil types in the wetland') ~ NA_character_,
                               str_detect(Comments, 'for SB Plot_Area_Agro') ~ NA_character_,

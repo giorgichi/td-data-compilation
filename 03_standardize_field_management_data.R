@@ -358,6 +358,8 @@ residue %>%
   select(action, siteid, plotid, location, 
          year_calendar, year_crop, crop,
          notill, comments) %>%
+  # remove all comments are UBWC, see GitHub datateam/issues/340
+  mutate(comments = ifelse(siteid == 'UBWC', NA, comments)) %>%
   arrange(siteid, year_calendar) -> residue_standard
 
 

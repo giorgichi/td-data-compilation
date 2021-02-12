@@ -236,12 +236,24 @@ sm_SWROC %>%
 
 
 
+# WILKIN1 -----------------------------------------------------------------
+read_rds('Input_Data/SOIL/SM/WILKIN1_soil_moisture.rds') -> sm_WILKIN1
+
+# format table
+sm_WILKIN1 %>% 
+  mutate(location = as.character(location)) %>%
+  select(siteid, plotid, location, depth, date, tmsp,
+         soil_moisture, soil_temp) ->
+  soil_WILKIN1_sm
+
+
+
 # ALL ---------------------------------------------------------------------
 # COMBINE .................................................................
 
 
 
-# Combnine all hourly soil moisture data
+# Combine all hourly soil moisture data
 mget(ls(pattern = 'soil_[[:graph:]]+_sm')) %>%
   bind_rows() -> sm_ALL
 

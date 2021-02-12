@@ -59,6 +59,10 @@ soil_ALL %>%
                             SOIL23.05)) %>%
   # correct type at ACRE
   mutate(SOIL25.01 = ifelse(SOIL25.01 == '2014', '204', SOIL25.01)) %>%
+  # add estimated sampling date based on information entered in the management form
+  mutate(date = ifelse(siteid == 'STJOHNS' & year == 2014 & !is.na(SOIL32.04),
+                       ymd(20141020), date),
+         date = as_date(date)) %>%
   select(-temp) -> soil_ALL_correct
 
 
@@ -106,7 +110,10 @@ soil_ALL_correct %>%
                            siteid == 'STORY' & !is.na(SOIL32.04) & depth == '42 to 48 cm' ~ '107 to 122 cm',
                            TRUE ~ depth),
          depth = ifelse(is.na(depth), "unknown", depth)) %>%
-  mutate(SOIL03 = as.character(round(as.numeric(SOIL03), 4))) -> soil_ALL_standard
+  mutate(SOIL03 = as.character(round(as.numeric(SOIL03), 4))) %>% 
+  # alight location ids with soil moisture locations at STJOHNS
+  mutate(location = ifelse(siteid == 'STJOHNS' & !is.na(location),
+                           paste0(plotid, location), location)) -> soil_ALL_standard
 
 
 # Save standardized data --------------------------------------------------

@@ -774,6 +774,8 @@ sm_DB %>%
   arrange(siteid, plotid, location, depth, date) %>%
   ungroup() %>%
   mutate(location = ifelse(str_detect(siteid, 'CLAY'), str_sub(location, 4, 5), location)) %>%
+  # remove negative soil moisture readings
+  mutate(SOIL09 = ifelse(SOIL09 < 0 & !is.na(SOIL09), 0, SOIL09)) %>%
   select(-timestamp_type) ->
   sm_FINAL_DB
 

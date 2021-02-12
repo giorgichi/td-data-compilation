@@ -1,5 +1,5 @@
-# This script compiles finilized (clean) soil moisture and temperature (and EC) data of hieghest temporal resolution
-# for future preservation.
+# This script compiles finalized (clean) soil moisture and temperature (and EC) data 
+# of highest temporal resolution for future preservation.
 # This data does not goes to the repository, but rather kept locally at ISU Agronomy server and Gio's desktop
 
 # NOTE: this scrips should be run after 01_read_soil_moisture_data.R without cleaning its environment!
@@ -18,7 +18,8 @@ bind_rows(soil_ACRE_sm,
           soil_DPAC_sm,
           soil_HICKS_B_sm,
           soil_SERF_IA_sm,
-          soil_STJOHNS_sm) %>%
+          soil_STJOHNS_sm,
+          soil_WILKIN1_sm) %>%
   # standardize timestamp
   mutate(timestamp_type = 'I',
          date = as_date(tmsp),

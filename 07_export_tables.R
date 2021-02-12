@@ -1,6 +1,7 @@
 # Load the RSQLite Library
 library(RSQLite)
 library(tidyverse)
+library(readxl)
 library(lubridate)
 library(janitor)
 library(googledrive)
@@ -71,7 +72,8 @@ meta_site_history %>%
   ReplaceIDs() %>%
   arrange(siteid) -> site_history_EXP
 
-write_csv(site_history_EXP, 'Ag_Commons_Data/meta_site_characteristics.csv')
+write_csv(site_history_EXP, 'Ag_Commons_Data/meta_site_characteristics.csv',
+          na = "n/a")
 
 drive_upload(media = 'Ag_Commons_Data/meta_site_characteristics.csv',
              path = as_id('1zblZuTiEUdZOq1_IHgO_gEtR018TidRq'), 
@@ -85,10 +87,13 @@ plotids_locations <- read_excel('Final_Database/summaries/IDs.xlsx')
 
 # Format Plot ID data
 plotids_locations %>%
+  rename(commentsid = comments) %>%
   full_join(meta_plotids, by = c('siteid', 'plotid')) %>%
   select(-ID) %>%
   ReplaceIDs() %>%
-  mutate(comments = str_replace_all(comments, '\n', '; ')) %>%
+  mutate(comments = str_replace_all(comments, '\n', '; '),
+         comments = ifelse(is.na(comments) & !is.na(commentsid),
+                           commentsid, comments)) %>%
   select(siteid, plotid, 
          # dwm_treatment, dwmid, # THIS IS MOVED TO treatment_identifier
          # irrigation_type, irrid, # THIS IS MOVED TO treatment_identifier
@@ -97,7 +102,8 @@ plotids_locations %>%
          comments) %>%
   arrange(siteid, plotid) -> plotids_EXP
 
-write_csv(plotids_EXP, 'Ag_Commons_Data/meta_plot_characteristics.csv')
+write_csv(plotids_EXP, 'Ag_Commons_Data/meta_plot_characteristics.csv',
+          na = 'n/a')
 
 drive_upload(media = 'Ag_Commons_Data/meta_plot_characteristics.csv',
              path = as_id('1zblZuTiEUdZOq1_IHgO_gEtR018TidRq'), 
@@ -121,7 +127,7 @@ meta_trt_year %>%
 
 treatment_EXP %>% 
   select(-SITEID) %>%
-  write_csv('Ag_Commons_Data/meta_treatment_identifier.csv')
+  write_csv('Ag_Commons_Data/meta_treatment_identifier.csv', na = 'n/a')
 
 drive_upload(media = 'Ag_Commons_Data/meta_treatment_identifier.csv',
              path = as_id('1zblZuTiEUdZOq1_IHgO_gEtR018TidRq'),
@@ -155,7 +161,7 @@ meta_methods %>%
   mutate(method_description = str_replace(method_description, "at RX", "at R8")) %>%
   arrange(siteid, data_category) -> methods_EXP
 
-write_csv(methods_EXP, 'Ag_Commons_Data/meta_methods.csv')
+write_csv(methods_EXP, 'Ag_Commons_Data/meta_methods.csv', na = 'n/a')
 
 drive_upload(media = 'Ag_Commons_Data/meta_methods.csv',
              path = as_id('1zblZuTiEUdZOq1_IHgO_gEtR018TidRq'), 
@@ -308,7 +314,7 @@ sm %>%
          soil_ec) -> sm_EXP
 
 
-write_csv(sm_EXP, 'Ag_Commons_Data/soil_moisture_data.csv')
+write_csv(sm_EXP, 'Ag_Commons_Data/soil_moisture_data.csv', na = "n/a")
 
 drive_upload(media = 'Ag_Commons_Data/soil_moisture_data.csv',
              path = as_id('1zblZuTiEUdZOq1_IHgO_gEtR018TidRq'), 
@@ -364,7 +370,7 @@ st %>%
          stage) -> st_EXP
 
 
-write_csv(st_EXP, 'Ag_Commons_Data/water_stage_data.csv')
+write_csv(st_EXP, 'Ag_Commons_Data/water_stage_data.csv', na = 'n/a')
 
 drive_upload(media = 'Ag_Commons_Data/water_stage_data.csv',
              path = as_id('1zblZuTiEUdZOq1_IHgO_gEtR018TidRq'), 
@@ -410,7 +416,7 @@ wq %>%
          water_ec) -> wq_EXP
 
 
-write_csv(wq_EXP, 'Ag_Commons_Data/water_quality_data.csv')
+write_csv(wq_EXP, 'Ag_Commons_Data/water_quality_data.csv', na = 'n/a')
 
 drive_upload(media = 'Ag_Commons_Data/water_quality_data.csv',
              path = as_id('1zblZuTiEUdZOq1_IHgO_gEtR018TidRq'), 
@@ -477,7 +483,7 @@ tf %>%
                                  nitrate_N_load)) -> tf_EXP
 
 
-write_csv(tf_EXP, 'Ag_Commons_Data/tile_flow_and_N_loads_data.csv')
+write_csv(tf_EXP, 'Ag_Commons_Data/tile_flow_and_N_loads_data.csv', na = "n/a")
 
 drive_upload(media = 'Ag_Commons_Data/tile_flow_and_N_loads_data.csv',
              path = as_id('1zblZuTiEUdZOq1_IHgO_gEtR018TidRq'), 
@@ -508,7 +514,7 @@ irr %>%
          irrigation_amount) -> irr_EXP
 
 
-write_csv(irr_EXP, 'Ag_Commons_Data/irrigation_data.csv')
+write_csv(irr_EXP, 'Ag_Commons_Data/irrigation_data.csv', na = "n/a")
 
 drive_upload(media = 'Ag_Commons_Data/irrigation_data.csv',
              path = as_id('1zblZuTiEUdZOq1_IHgO_gEtR018TidRq'), 
@@ -550,7 +556,7 @@ clim %>%
   filter(!(siteid == 'IA_Boone' & date == ymd(20160609))) -> clim_EXP
 
 
-write_csv(clim_EXP, 'Ag_Commons_Data/weather_data.csv')
+write_csv(clim_EXP, 'Ag_Commons_Data/weather_data.csv', na = "n/a")
 
 drive_upload(media = 'Ag_Commons_Data/weather_data.csv',
              path = as_id('1zblZuTiEUdZOq1_IHgO_gEtR018TidRq'), 
@@ -597,7 +603,7 @@ mngt_harvesting %>%
   ReplaceIDs() %>%
   arrange(siteid, plotid, location, date) -> harvesting_EXP
 
-write_csv(harvesting_EXP, 'Ag_Commons_Data/mngt_harvesting_data.csv')
+write_csv(harvesting_EXP, 'Ag_Commons_Data/mngt_harvesting_data.csv', na = "n/a")
 
 drive_upload(media = 'Ag_Commons_Data/mngt_harvesting_data.csv',
              path = as_id('1zblZuTiEUdZOq1_IHgO_gEtR018TidRq'), 
@@ -625,7 +631,7 @@ mngt_fertilizing %>%
   arrange(siteid, plotid, location, date) %>%
   select(-temp) -> fertilizing_EXP
 
-write_csv(fertilizing_EXP, 'Ag_Commons_Data/mngt_fertilizing_data.csv')
+write_csv(fertilizing_EXP, 'Ag_Commons_Data/mngt_fertilizing_data.csv', na = "n/a")
 
 drive_upload(media = 'Ag_Commons_Data/mngt_fertilizing_data.csv',
              path = as_id('1zblZuTiEUdZOq1_IHgO_gEtR018TidRq'), 
@@ -651,7 +657,7 @@ mngt_residue %>%
   ReplaceIDs() %>%
   arrange(siteid, year_calendar) -> residue_EXP
 
-write_csv(residue_EXP, 'Ag_Commons_Data/mngt_residue_data.csv')
+write_csv(residue_EXP, 'Ag_Commons_Data/mngt_residue_data.csv', na = "n/a")
 
 drive_upload(media = 'Ag_Commons_Data/mngt_residue_data.csv',
              path = as_id('1zblZuTiEUdZOq1_IHgO_gEtR018TidRq'), 
@@ -666,7 +672,7 @@ mngt_irrigation %>%
   arrange(siteid, plotid, irrigation_structure, date_irrigation_start) %>%
   select(-temp) -> irrigation_EXP
 
-write_csv(irrigation_EXP, 'Ag_Commons_Data/mngt_irrigation_data.csv')
+write_csv(irrigation_EXP, 'Ag_Commons_Data/mngt_irrigation_data.csv', na = "n/a")
 
 drive_upload(media = 'Ag_Commons_Data/mngt_irrigation_data.csv',
              path = as_id('1zblZuTiEUdZOq1_IHgO_gEtR018TidRq'), 
@@ -682,7 +688,7 @@ mngt_dwm %>%
   arrange(siteid, plotid, control_structure, date) %>%
   select(-temp) -> dwm_EXP
 
-write_csv(dwm_EXP, 'Ag_Commons_Data/mngt_dwm_data.csv')
+write_csv(dwm_EXP, 'Ag_Commons_Data/mngt_dwm_data.csv', na = "n/a")
 
 drive_upload(media = 'Ag_Commons_Data/mngt_dwm_data.csv',
              path = as_id('1zblZuTiEUdZOq1_IHgO_gEtR018TidRq'), 
@@ -694,7 +700,7 @@ mngt_notes %>%
   ReplaceIDs() %>%
   arrange(siteid, year_calendar) -> notes_EXP
 
-write_csv(notes_EXP, 'Ag_Commons_Data/mngt_notes_data.csv')
+write_csv(notes_EXP, 'Ag_Commons_Data/mngt_notes_data.csv', na = "n/a")
 
 drive_upload(media = 'Ag_Commons_Data/mngt_notes_data.csv',
              path = as_id('1zblZuTiEUdZOq1_IHgO_gEtR018TidRq'), 

@@ -1,125 +1,24 @@
-# Keys
-tribble(
-  ~ table_name, ~var_code, ~var_name, ~var_units,
-  
-  'soil_moisture',   'SOIL09',   'soil_moisture_content',                 'cm3/cm3',
-  'soil_moisture',   'SOIL10',   'soil_temperature',                      'degree C',
-  'soil_moisture',   'SOIL12',   'soil_bulk_electrical_conductivity',     'dS/m',
-  
-  'soil_properties', 'SOIL01',       'soil_texture',                      '',
-  'soil_properties', 'SOIL02.01',    'percent_sand',                      '%',
-  'soil_properties', 'SOIL02.02',    'percent_silt',                      '%',
-  'soil_properties', 'SOIL02.03',    'percent_clay',                      '%',
-  'soil_properties', 'SOIL03',       'soil_bulk_density',                 'g/cm3',
-  'soil_properties', 'SOIL06.01',    'saturated_hydraulic_conductivity',  'cm/hr',
-  'soil_properties', 'SOIL06.02',    'infiltration_rate',                 'cm/hr',
-  'soil_properties', 'SOIL08.01',    'matric_potential',                  'bar',
-  'soil_properties', 'SOIL08.02',    'water_content',                     'cm3/cm3',
-  'soil_properties', 'SOIL15',       'soil_organic_matter',               'g/kg',
-  'soil_properties', 'SOIL20.03',    'soil_pH_water',                     '',
-  'soil_properties', 'SOIL20.07',    'soil_pH_salt',                      '',
-  'soil_properties', 'SOIL21.01',    'lime_test_index',                   '',
-  'soil_properties', 'SOIL21.02',    'neutralizable_acidity',             'cmol/kg',
-  'soil_properties', 'SOIL22',       'cation_exchange_capacity',          'cmol/kg',
-  'soil_properties', 'SOIL23.01',    'K_saturation',                      '%',
-  'soil_properties', 'SOIL23.02',    'Ca_saturation',                     '%',
-  'soil_properties', 'SOIL23.03',    'Mg_saturation',                     '%',
-  'soil_properties', 'SOIL24.01',    'K_content',                         'g/kg',
-  'soil_properties', 'SOIL24.02',    'Ca_content',                        'g/kg',
-  'soil_properties', 'SOIL24.03',    'Mg_content',                        'g/kg',
-  'soil_properties', 'SOIL25.01',    'K_amount',                          'kg/ha',
-  'soil_properties', 'SOIL25.02',    'Ca_amount',                         'kg/ha',
-  'soil_properties', 'SOIL25.03',    'Mg_amount',                         'kg/ha',
-  'soil_properties', 'SOIL26',       'sodium_adsorption_ratio',           '',
-  'soil_properties', 'SOIL27.02',    'soil_salinity_in_saturated_paste_extract', 'dS/m',
-  'soil_properties', 'SOIL27.03',    'soil_salinity_in_water',            'dS/m',
-  'soil_properties', 'SOIL30.01',    'soil_organic_carbon',     '%',   # <- THIS - units to change to g/kg?
-  'soil_properties', 'SOIL32.01',    'soil_total_nitrogen',     '%',   # <- THIS - units to change to g/kg?
-  'soil_properties', 'SOIL32.04',    'soil_nitrate_content',              'mg N/kg',
-  'soil_properties', 'SOIL32.05',    'soil_ammonium_content',             'mg N/kg',
-  'soil_properties', 'SOIL33.04',    'soil_nitrate_amount',               'kg N/ha',
-  'soil_properties', 'SOIL33.05',    'soil_ammonium_amount',              'kg N/ha',
-  'soil_properties', 'SOIL34.01',    'soil_phosphorus_content',           'ug P/kg',
-  'soil_properties', 'SOIL34.01.01', 'soil_phosphorus_content_Bray_1',    'ug P/kg',
-  'soil_properties', 'SOIL34.01.04', 'soil_phosphorus_content_Mehlich_3', 'ug P/kg',
-  'soil_properties', 'SOIL35.01.01', 'soil_phosphorus_amount_Bray_1',     'kg P/ha',
-  'soil_properties', 'SOIL35.01.04', 'soil_phosphorus_amount_Mehlich_3',  'kg P/ha',
-  
-  'weather_daily', 'CLIM01',       'Precipitation',       'mm',
-  'weather_daily', 'CLIM03.01',    'Air Temperature',     'degree C',
-  'weather_daily', 'CLIM04.01',    'Relative Humidity',   '%',
-  'weather_daily', 'CLIM05.01',    'Solar Irradiance',    'W/m2',
-  'weather_daily', 'CLIM06.01',    'Wind Speed',          'm/s',
-  'weather_daily', 'CLIM06.02',    'Wind Direction',      'degree',
-  'weather_daily', 'CLIM06.03',    'Wind Gust',           'm/s',
-  
-  'weather_hourly', 'CLIM01',       'Precipitation',                           'mm',
-  'weather_hourly', 'CLIM01.02',    'Snowfall',                                'mm',
-  'weather_hourly', 'CLIM03.01.01', 'Ave Air Temperature',                     'degree C',
-  'weather_hourly', 'CLIM03.01.02', 'Min Air Temperature',                     'degree C',
-  'weather_hourly', 'CLIM03.01.03', 'Max Air Temperature',                     'degree C',
-  'weather_hourly', 'CLIM03.02',    'Dew-Point Temperature',                   'degree C',
-  'weather_hourly', 'CLIM04.01.01', 'Ave Relative Humidity',                   '%',
-  'weather_hourly', 'CLIM04.01.02', 'Min Relative Humidity',                   '%',
-  'weather_hourly', 'CLIM04.01.03', 'Max Relative Humidity',                   '%',
-  'weather_hourly', 'CLIM05.01.01', 'Ave Solar Irradiance',                    'W/m2',
-  'weather_hourly', 'CLIM05.01.02', 'Min Solar Irradiance',                    'W/m2',
-  'weather_hourly', 'CLIM05.01.03', 'Max Solar Irradiance',                    'W/m2',
-  'weather_hourly', 'CLIM05.02',    'Solar Radiation',                         'MJ/m2',
-  'weather_hourly', 'CLIM05.03',    'Photosynthetically Active Radiation',     'micromol/s m2',
-  'weather_hourly', 'CLIM06.01',    'Wind Speed',                              'm/s',
-  'weather_hourly', 'CLIM06.02',    'Wind Direction',                          'degree',
-  'weather_hourly', 'CLIM06.03',    'Wind Gust',                               'm/s',
-  'weather_hourly', 'CLIM06.04',    'Wind Run',                                'km',
-  'weather_hourly', 'CLIM06.05',    'Max Wind Speed',                          'm/s',
-  'weather_hourly', 'CLIM07.01',    'Pan Evaporation',                         'mm',
-  'weather_hourly', 'CLIM07.02',    'Reference ET',                            'mm',
-  'weather_hourly', 'CLIM07.02.01', 'Reference ET (Penman-Monteith)',          'mm',
-  'weather_hourly', 'CLIM07.02.02', 'Reference ET (Short Grass)',              'mm',
-  'weather_hourly', 'CLIM07.02.03', 'Reference ET (Tall Grass)',               'mm',
-  'weather_hourly', 'CLIM07.02.04', 'Reference ET (Short Crop)',               'mm',
-  'weather_hourly', 'CLIM08.01.01', 'Ave Bare Soil Temperature (10 cm depth)', 'degree C',
-  'weather_hourly', 'CLIM08.01.02', 'Min Bare Soil Temperature (10 cm depth)', 'degree C',
-  'weather_hourly', 'CLIM08.01.03', 'Max Bare Soil Temperature (10 cm depth)', 'degree C',
-  'weather_hourly', 'CLIM08.02.02', 'Min Bare Soil Temperature (2" depth)',    'degree C',
-  'weather_hourly', 'CLIM08.02.03', 'Max Bare Soil Temperature (2" depth)',    'degree C',
-  'weather_hourly', 'CLIM08.03.02', 'Min Bare Soil Temperature (4" depth)',    'degree C',
-  'weather_hourly', 'CLIM08.03.03', 'Max Bare Soil Temperature (4" depth)',    'degree C',
-  'weather_hourly', 'CLIM08.04.02', 'Min Bare Soil Temperature (8" depth)',    'degree C',
-  'weather_hourly', 'CLIM08.04.03', 'Max Bare Soil Temperature (8" depth)',    'degree C',
-  
-  'water_table',    'WAT01', 'Water Table Depth',          'm',
-  'water_table',    'WAT02', 'Groundwater Level',          'm',
-  'water_table',    'WAT03', 'Piezometric Head',           'm',
-  
-  'water_stage',    'WAT04', 'Stage',                      'm',
-  'water_stage',    'WAT14', 'Water Storage',              'm3',
-  
-  
-  'water_quality',  'WAT15', 'Water Electrical Conductivity',                             'uS/cm',
-  'water_quality',  'WAT16', 'Water Temperature',                                         'degree C',
-  'water_quality',  'WAT20', 'Turbidity',                                                 'NTU',
-  'water_quality',  'WAT22', 'Total Suspended Solids',                                    'mg/l',
-  'water_quality',  'WAT23', 'Total Filterable Solids',                                   'mg/l',
-  'water_quality',  'WAT30', 'Nitrate-Nitrite (NO3-N + NO2-N) Concentration',             'mg N/l',
-  'water_quality',  'WAT31', 'Nitrate (NO3-N) Concentration',                             'mg N/l',
-  'water_quality',  'WAT33', 'Ammonia (NH3-N) Concentration',                             'mg N/l',
-  'water_quality',  'WAT34', 'Total N Concentration (filtered)',                          'mg N/l',
-  'water_quality',  'WAT35', 'Total N Concentration (unfiltered)',                        'mg N/l',
-  'water_quality',  'WAT36', 'Total Kjeldhal N Concentration',                            'mg N/l',
-  'water_quality',  'WAT37', 'Organic N Concentration',                                   'mg N/l',
-  'water_quality',  'WAT38', 'Particulate N Concentration',                               'mg N/l',
-  'water_quality',  'WAT40', 'Dissolved Reactive P (ortho-P) Concentration (filtered)',   'ug P/l',
-  'water_quality',  'WAT41', 'Reactive P (ortho-P) Concentration (unfiltered)',           'ug P/l',
-  'water_quality',  'WAT42', 'Total Dissolved P Concentration (filtered)',                'ug P/l',
-  'water_quality',  'WAT43', 'Total P Concentration (unfiltered)',                        'ug P/l',
-  'water_quality',  'WAT44', 'Organic P Concentration',                                   'ug P/l',
-  'water_quality',  'WAT45', 'Particulate P Concentration',                               'ug P/l',
-  'water_quality',  'WAT50', 'Dissolved Organic Carbon (DOC) (filtered)',                 'mg C/l',
-  'water_quality',  'WAT51', 'Total Organic Carbon (TOC) (unfiltered)',                   'mg C/l',
-  'water_quality',  'WAT52', 'Inorganic Carbon (filtered)',                               'mg C/l',
-  'water_quality',  'WAT60', 'Water pH',                                                  ''
-  
-  # 'water_quality',  'WAT70', 'Nitrate-Nitrite (NO3-N + NO2-N) Loads',                   'kg N/ha'                                                  ''
-  
-)
+library(tidyverse)
+library(googlesheets4)
+
+
+
+# read data dictionary
+dd <- read_sheet(as_sheets_id('1QU858NHlkZ4L23dmAZ7zwFsVdEmmu-vhbF5o1EFk8pw')) %>%
+  as_tibble(.name_repair = janitor::make_clean_names)
+
+
+# format and prepare for publication
+data_dictionary <-
+  dd %>%
+  select(file_name:accepts_null_value, -character_length) %>%
+  mutate(acceptable_values = ifelse(data_type == 'double', NA, acceptable_values)) %>%
+  ungroup()
+
+
+write_csv(data_dictionary, 'Ag_Commons_Data/data_dictionary.csv',
+          na = "n/a")
+
+# drive_upload(media = 'Ag_Commons_Data/data_dictionary.csv',
+#              path = as_id('1zblZuTiEUdZOq1_IHgO_gEtR018TidRq'), 
+#              overwrite = TRUE)

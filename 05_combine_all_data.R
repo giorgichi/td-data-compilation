@@ -13,10 +13,11 @@ conn <- dbConnect(RSQLite::SQLite(), 'Final_Database//TD_ALL_Data.db')
 conn_final <- dbConnect(RSQLite::SQLite(), 'Final_Database//TD_FINAL_Data.db')
 
 # Create list of private farms
-private_farms <- c("AUGLA", "BEAR", "BEAR2", "BENTON", "CLAY_C", "CLAY_R", "CLAY_U", "CRAWF", 
-                   "DEFI_M", "DEFI_R", "DIKE", "FAIRM", "FULTON", "HARDIN", "HARDIN_NW", "HENRY", 
-                   "HICKORY", "HICKS_B", "HICKS_P", "MAASS", "MUDS4", "SHEARER", "STJOHNS", 
-                   "STORY", "UBWC", "VANWERT", "WILKIN1", "WILKIN2", "WILKIN3")
+private_farms <- c("AUGLA", "CRAWF", "DEFI_M", "HARDIN", "HARDIN_NW", "HENRY", "STJOHNS",
+                   "BEAR", "BEAR2", "BENTON", "DIKE", "HICKORY", "MAASS", "SHEARER", "STORY", 
+                   #"CLAY_C", "CLAY_R", "CLAY_U", "FAIRM", "UBWC", 
+                   #"DEFI_R",  "FULTON", "VANWERT", "WILKIN1", "WILKIN2", "WILKIN3"
+                   "HICKS_B", "HICKS_P", "MUDS4")
 
 
 
@@ -31,7 +32,15 @@ site_history <- read_rds('Standard_Data/meta_site_history.rds')
 site_history %>%
   mutate(drainage_retention_practice = ifelse(siteid == 'FAIRM', 
                                               'Other', 
-                                              drainage_retention_practice)) -> site_history_DB
+                                              drainage_retention_practice),
+         drainage_retention_practice =
+           ifelse(drainage_retention_practice == "DW Recycle",
+                  "Drainage Water Recycling",
+                  drainage_retention_practice),
+         drainage_retention_practice =
+           ifelse(drainage_retention_practice == "Saturated Buffers",
+                  "Saturated Buffer",
+                  drainage_retention_practice)) -> site_history_DB
 dbWriteTable(conn, "meta_site_history", site_history_DB, overwrite = TRUE)
 
 site_history_DB %>%
@@ -46,16 +55,16 @@ site_history_DB %>%
                      drainage_coefficient == '13.95 and 13.19' ~ '14.0 and 13.2',
                      drainage_coefficient == '20.22 and 36.87' ~ '20.2 and 36.9',
                      TRUE ~ drainage_coefficient),
-         tile_depth =
-           case_when(tile_depth == '1.0' ~ '1.00',
-                     tile_depth == '1.2192' ~ '1.22',
-                     tile_depth == '0.9144' ~ '0.91',
-                     TRUE ~ tile_depth),
-         tile_spacing = 
-           case_when(tile_spacing == '10' ~ '10.0',
-                     tile_spacing == '2.4 and 4.9 (subirrigated); 6 and 12 (conventional)' ~
+         drain_depth =
+           case_when(drain_depth == '1.0' ~ '1.00',
+                     drain_depth == '1.2192' ~ '1.22',
+                     drain_depth == '0.9144' ~ '0.91',
+                     TRUE ~ drain_depth),
+         drain_spacing = 
+           case_when(drain_spacing == '10' ~ '10.0',
+                     drain_spacing == '2.4 and 4.9 (subirrigated); 6 and 12 (conventional)' ~
                        '2.4 and 4.9 (subirrigated); 6.0 and 12.0 (conventional)',
-                     TRUE ~ tile_spacing),
+                     TRUE ~ drain_spacing),
          latitude = 
            case_when(str_length(latitude) == 2 ~ paste0(latitude, ".00"),
                      str_length(latitude) == 4 ~ paste0(latitude, "0"),
@@ -77,9 +86,13 @@ dbWriteTable(conn_final, "meta_site_history", site_history_FINAL_DB, overwrite =
 
 # ... Plot ID -------------------------------------------------------------
 plot_ids <- read_rds('Standard_Data/meta_plot_ids.rds')
-dbWriteTable(conn, "meta_plotids", plot_ids, overwrite = TRUE)
-
 plot_ids %>%
+  # fix spelling error in the database
+  mutate(drain_material = 
+           ifelse(drain_material == "pvs", "pvc", drain_material)) -> plot_ids_DB
+dbWriteTable(conn, "meta_plotids", plot_ids_DB, overwrite = TRUE)
+
+plot_ids_DB %>%
   select(-(dwm_treatment:irrigation_type), -comments_dwm) -> plot_ids_FINAL_DB
 dbWriteTable(conn_final, "meta_plotids", plot_ids_FINAL_DB, overwrite = TRUE)
 

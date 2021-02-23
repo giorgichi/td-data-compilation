@@ -63,12 +63,19 @@ GetSQLiteTable <- function(){
 
 
 # Metadata --------------------------------------------------------
-# ....  Site History ---------
+# ....  Site Characteristics ---------
 meta_site_history <- dbReadTable(conn_final, 'meta_site_history') %>% as_tibble()
 
 
 # Format Site History data
 meta_site_history %>%
+  rename(drain_depth_site = drain_depth,
+         drain_spacing_site = drain_spacing,
+         drain_main_diameter_site = drain_main_diameter,
+         drain_submain_diameter_site = drain_submain_diameter,
+         drain_lateral_diameter_site = drain_lateral_diameter,
+         irrigation_water_source_1 = source_of_irrigation_water_1,
+         irrigation_water_source_2 = source_of_irrigation_water_2) %>%
   ReplaceIDs() %>%
   arrange(siteid) -> site_history_EXP
 
@@ -81,7 +88,7 @@ drive_upload(media = 'Ag_Commons_Data/meta_site_characteristics.csv',
 
 
 
-# ....  Plot IDs ---------
+# ....  Plot Characteristics ---------
 meta_plotids <- dbReadTable(conn_final, 'meta_plotids') %>% as_tibble()
 plotids_locations <- read_excel('Final_Database/summaries/IDs.xlsx')
 
@@ -97,7 +104,7 @@ plotids_locations %>%
   select(siteid, plotid, 
          # dwm_treatment, dwmid, # THIS IS MOVED TO treatment_identifier
          # irrigation_type, irrid, # THIS IS MOVED TO treatment_identifier
-         drainage_area:tile_material,
+         drainage_area:drain_material,
          starts_with('location'),
          comments) %>%
   arrange(siteid, plotid) -> plotids_EXP
@@ -151,17 +158,21 @@ meta_methods %>%
   ungroup() %>%
   # remove entries without method description
   filter(method_description != 'Method not available') %>%
-  left_join(codes %>% select(-TYPE, -CROP, -(UNITS:EXPORT_VAR_NAME)), 
+  left_join(codes %>% select(-TYPE, -CROP, -(UNITS:DIGITS)), 
             by = 'NEW_CODE') %>%
   # remove variables not included in the public database
   filter(ACTION == 'YES' | is.na(ACTION)) %>%
-  select(siteid, data_category, variable_name = NEW_VAR_NAME, method_description) %>%
+  select(siteid, data_category, variable_name = EXPORT_VAR_NAME, method_description) %>%
   ReplaceIDs() %>%
   # implement edits suggested by Lori GitHub issue # 224
   mutate(method_description = str_replace(method_description, "at RX", "at R8")) %>%
+  # align ET name with one in the tables
+  mutate(variable_name = ifelse(str_detect(variable_name, "reference_ET_"),
+                                "et", variable_name)) %>%
   arrange(siteid, data_category) -> methods_EXP
 
-write_csv(methods_EXP, 'Ag_Commons_Data/meta_methods.csv', na = 'n/a')
+write.csv(methods_EXP, 'Ag_Commons_Data/meta_methods.csv', na = 'n/a', 
+          row.names = FALSE)
 
 drive_upload(media = 'Ag_Commons_Data/meta_methods.csv',
              path = as_id('1zblZuTiEUdZOq1_IHgO_gEtR018TidRq'), 
@@ -297,6 +308,10 @@ sm <- dbReadTable(conn_final, 'soil_moisture') %>% as_tibble()
 
 # Format data
 sm %>%
+  # standardize depth and make it numeric
+  mutate(depth = round(parse_number(depth)*2, 0)/2,
+         depth = ifelse(depth < 10, depth, round(depth, 0)),
+         depth = as.character(depth)) %>%
   gather(key, value, starts_with('SOIL')) %>%
   left_join(codes %>% select(-TYPE, -(CROP:UNITS)), 
             by = c('key' = 'NEW_CODE')) %>%
@@ -483,9 +498,9 @@ tf %>%
                                  nitrate_N_load)) -> tf_EXP
 
 
-write_csv(tf_EXP, 'Ag_Commons_Data/tile_flow_and_N_loads_data.csv', na = "n/a")
+write_csv(tf_EXP, 'Ag_Commons_Data/drain_flow_and_N_loads_data.csv', na = "n/a")
 
-drive_upload(media = 'Ag_Commons_Data/tile_flow_and_N_loads_data.csv',
+drive_upload(media = 'Ag_Commons_Data/drain_flow_and_N_loads_data.csv',
              path = as_id('1zblZuTiEUdZOq1_IHgO_gEtR018TidRq'), 
              overwrite = TRUE)
 

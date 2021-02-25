@@ -96,6 +96,12 @@ agr_ALL_correct %>%
          location = ifelse(siteid == 'FAIRM', NA, location )) %>%
   # standardize hybrid/variety names, see GitHub datateam/issues/343
   mutate(trt_value = str_replace(trt_value, "Kruger 2114 RR", "Kruger 2114RR")) %>%
+  # match year of date with year (fix errors introduced from the Google sheets)
+  mutate(year = ifelse(siteid == "MUDS3_OLD", 
+                       as.character(year(date)), year),
+         date = ifelse(siteid == "STORY" & year == 2006,
+                       update(date, year = 2006), date),
+         date = as_date(date)) %>%
   arrange(siteid, year) ->
   agr_ALL_standard
 

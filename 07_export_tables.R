@@ -74,6 +74,7 @@ meta_site_history %>%
          drain_main_diameter_site = drain_main_diameter,
          drain_submain_diameter_site = drain_submain_diameter,
          drain_lateral_diameter_site = drain_lateral_diameter,
+         water_storage_system = type_of_water_storage_system,
          irrigation_water_source_1 = source_of_irrigation_water_1,
          irrigation_water_source_2 = source_of_irrigation_water_2) %>%
   ReplaceIDs() %>%
@@ -195,6 +196,13 @@ agr %>%
   spread(EXPORT_VAR_NAME, value) %>%
   ReplaceIDs() %>%
   arrange(siteid, year, plotid, location, trt) %>% 
+  mutate(standard_moisture = 
+           case_when(crop == "corn" ~ '155',
+                     crop == "soybean" ~ '130',
+                     crop == "popcorn" ~ '135',
+                     crop == "wheat" ~ '135',
+                     crop == "sugar beet" ~ 'fresh',
+                     TRUE ~ NA_character_)) %>%
   select(siteid:crop,
          trt_2 = trt,
          trt_value_2 = trt_value,
@@ -204,11 +212,12 @@ agr %>%
          final_plant_population,
          grain_moisture,
          crop_yield,
-         biomass_yield,
+         standard_moisture,
          whole_plant_biomass,
          vegetative_biomass,
          grain_biomass,
          corn_cob_biomass,
+         forage_biomass = biomass_yield,
          whole_plant_total_N,
          vegetative_total_N,
          grain_total_N,

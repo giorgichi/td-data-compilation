@@ -490,7 +490,7 @@ tf %>%
   mutate(dwm = ifelse(is.na(dwm2), dwm, dwm2)) %>%
   arrange(siteid, plotid, location, date) %>% 
   select(siteid:date,
-         dwm_treatment = dwm,
+         # dwm_treatment = dwm,
          tile_flow,
          discharge,
          nitrate_N_load,
